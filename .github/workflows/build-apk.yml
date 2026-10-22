@@ -22,12 +22,18 @@ jobs:
           java-version: '21'
       - name: Capacitor Kurulumu
         run: |
-          rm -rf package.json package-lock.json node_modules android
+          rm -rf package.json package-lock.json node_modules android capacitor.config.*
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/camera @capacitor/geolocation @capacitor/filesystem @capacitor/local-notifications @capacitor/share @capacitor/device @capacitor/network
-          npx cap init "${{ github.event.inputs.app_name }}" "${{ github.event.inputs.app_id }}" --web-dir dist
+          npm install --legacy-peer-deps @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
           mkdir -p dist
-          cp index.html dist/index.html || true
+          if [ -f index.html ]; then
+            cp index.html dist/index.html
+          elif [ ! -f dist/index.html ]; then
+            echo "<!DOCTYPE html><html><body><h1>Omni-Apex Hazir</h1></body></html>" > dist/index.html
+          fi
+          APP_NAME="${{ github.event.inputs.app_name }}"
+          APP_ID="${{ github.event.inputs.app_id }}"
+          npx cap init "${APP_NAME:-OmniApexStudio}" "${APP_ID:-com.fariqo.omniapex}" --web-dir dist
           npx cap add android
       - name: Izinleri Ekle ve APK Derle
         run: |
