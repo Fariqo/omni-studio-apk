@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>OMNI-APEX: AI Studio & Antigravity Mobile OS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { background: #060911; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; }
+    .glass { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.08); }
+    .tab-active { color: #38bdf8; border-bottom: 2px solid #38bdf8; background: rgba(56, 189, 248, 0.08); }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #0284c7; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-16">
+
+  <!-- ÜST SİSTEM ÇUBUĞU -->
+  <header class="glass sticky top-0 z-40 px-3 py-2.5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+      <div>
+        <h1 class="font-extrabold text-sm tracking-wider bg-gradient-to-r from-sky-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
+          OMNI-APEX STUDIO OS
+        </h1>
+        <p class="text-[10px] text-slate-400" id="activeAgentBadge">Aktif Ajan: Baş Mimar (120+ Ajan Hazır)</p>
+      </div>
+    </div>
+    <div class="flex gap-1.5">
+      <button onclick="syncToGoogleDrive()" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-700/60 text-emerald-300">
+        ☁️ Drive
+      </button>
+      <button onclick="toggleModal('settingsModal')" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+        ⚙️ Ayarlar
+      </button>
+    </div>
+  </header>
+
+  <!-- ANA SEKMELER -->
+  <nav class="glass flex text-[11px] font-semibold border-b border-slate-800 sticky top-[52px] z-30">
+    <button onclick="switchMainView('studio')" id="nav_studio" class="flex-1 py-2.5 tab-active">⚡ Stüdyo & APK</button>
+    <button onclick="switchMainView('agents')" id="nav_agents" class="flex-1 py-2.5 text-slate-400">🧠 120+ Ajan</button>
+    <button onclick="switchMainView('hardware')" id="nav_hardware" class="flex-1 py-2.5 text-slate-400">🛡️ İzinler & Cihaz</button>
+    <button onclick="switchMainView('files')" id="nav_files" class="flex-1 py-2.5 text-slate-400">📂 Dosya & Git</button>
+  </nav>
+
+  <main class="flex-1 p-3 max-w-3xl mx-auto w-full space-y-3">
+
+    <!-- 1. GÖRÜNÜM: AI STUDIO & ANTIGRAVITY APK FACTORY -->
+    <section id="view_studio" class="space-y-3">
+      <!-- Model & Çalışma Modu Seçimi -->
+      <div class="glass rounded-xl p-3 grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[10px] text-slate-400 block mb-1">Gemini Motoru</label>
+          <select id="modelSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+            <option value="gemini-2.5-flash">Gemini Flash (Hızlı & Düşük Maliyet)</option>
+            <option value="gemini-2.5-pro">Gemini Pro / Argon (Derin Mimari)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-400 block mb-1">Hedef Mod (Yeni APK / Kendini Geliştir)</label>
+          <select id="buildTargetMode" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-amber-300">
+            <option value="dist/index.html">📱 Yeni Uygulama Üret (dist/index.html)</option>
+            <option value="index.html">🧬 KENDİNİ GELİŞTİR (Ana Sistemi Güncelle)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Komut & Sesli Giriş Paneli -->
+      <div class="glass rounded-xl p-3 space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-sky-400">Otonom Görev & Kod İstemi</span>
+          <div class="flex items-center gap-2">
+            <button onclick="startVoicePrompt()" class="text-[11px] bg-rose-600/30 border border-rose-500 text-rose-300 px-2 py-0.5 rounded-md">
+              🎙️ Sesle Yazdır
+            </button>
+            <span id="tokenStats" class="text-[10px] text-slate-400">0 token</span>
+          </div>
+        </div>
+
+        <textarea id="promptInput" rows="3"
+          placeholder="Yapılacak uygulamayı veya ana sisteme eklenecek özelliği yazın... (Örn: Kamera ile barkod okuyan, haritada konumu kaydeden ve IndexedDB'de tutan tam kapsamlı saha uygulaması yap)"
+          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-sky-500"></textarea>
+
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="runAutonomousGeneration(false)" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            ✨ Sıfırdan Üret
+          </button>
+          <button onclick="runAutonomousGeneration(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            🔧 Kodu Evrimleştir
+          </button>
+          <button onclick="runMultiAgentPipeline()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            🐝 3 Ajanlı Otonom
+          </button>
+        </div>
+      </div>
+
+      <!-- Canlı Önizleme ve Kod Düzenleyici -->
+      <div class="glass rounded-xl overflow-hidden flex flex-col" style="height: 390px;">
+        <div class="flex border-b border-slate-800 bg-slate-900/70 text-[11px]">
+          <button onclick="toggleStudioSubTab('preview')" id="sub_preview" class="flex-1 py-2 font-bold text-sky-400 border-b-2 border-sky-400">
+            📱 Canlı Emülatör
+          </button>
+          <button onclick="toggleStudioSubTab('code')" id="sub_code" class="flex-1 py-2 font-bold text-slate-400">
+            💻 AST & Kod (<span id="lineCounter">0</span> satır)
+          </button>
+          <button onclick="toggleStudioSubTab('logs')" id="sub_logs" class="flex-1 py-2 font-bold text-slate-400">
+            📡 Ajan Kayıtları
+          </button>
+        </div>
+
+        <div id="subview_preview" class="flex-1 bg-white">
+          <iframe id="livePreview" class="w-full h-full border-0" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
+        </div>
+        <div id="subview_code" class="flex-1 hidden bg-slate-950 p-2">
+          <textarea id="codeWorkspace" oninput="refreshPreview()" class="w-full h-full bg-transparent text-emerald-400 font-mono text-[11px] focus:outline-none resize-none"></textarea>
+        </div>
+        <div id="subview_logs" class="flex-1 hidden bg-slate-950 p-3 overflow-y-auto font-mono text-[11px] space-y-1 text-slate-300" id="agentLogBox">
+          <div>[SİSTEM] Omni-Apex Çekirdeği başlatıldı.</div>
+        </div>
+      </div>
+
+      <!-- Bulut APK Derleme Tetikleyicisi -->
+      <div class="glass rounded-xl p-3 space-y-2 border border-emerald-500/30">
+        <div class="flex justify-between items-center">
+          <input id="apkAppName" type="text" value="OmniGeneratedApp" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white w-1/2" placeholder="APK Adı" />
+          <span id="apkTimer" class="text-xs font-mono text-amber-400"></span>
+        </div>
+        <p id="apkStatusMsg" class="text-[11px] text-slate-400">GitHub Actions ile tam donanım izinli APK derlemeye hazır.</p>
+        <div class="flex gap-2">
+          <button onclick="buildCloudApk()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs">
+            🚀 GitHub'a Senkronize Et & APK Derle
+          </button>
+          <a id="apkDownloadLink" href="#" target="_blank" class="hidden bg-amber-500 text-slate-950 font-extrabold px-4 py-2.5 rounded-lg text-xs items-center">
+            📥 APK İndir
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GÖRÜNÜM: 120+ UZMAN AJAN MATRİSİ -->
+    <section id="view_agents" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-2">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs font-bold text-sky-400">🧠 120+ Uzman Ajan Ordusu (Seçilen Ajan Stüdyoya Liderlik Eder)</h2>
+          <input id="agentSearch" oninput="renderAgentGrid()" type="text" placeholder="Ajan ara (örn: Android, Güvenlik, Ses)..."
+            class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-[11px] text-white w-44" />
+        </div>
+        <div id="agentGrid" class="grid grid-cols-2 gap-2 max-h-[520px] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- 3. GÖRÜNÜM: DONANIM, SENSÖR VE İZİN YÖNETİCİSİ -->
+    <section id="view_hardware" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3">
+        <h2 class="text-xs font-bold text-emerald-400">🛡️ Tam Donanım & Yönetici İzinleri Kontrol Merkezi</h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="requestCameraAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-sky-400">📷 Kamera & Görsel AI</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_cam">Durum: Bekleniyor</div>
+          </button>
+          <button onclick="requestMicAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-rose-400">🎙️ Mikrofon & Ses Analizi</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_mic">Durum: Bekleniyor</div>
+          </button>
+          <button onclick="requestLocationAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-amber-400">📍 GPS & Canlı Harita</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_geo">Durum: Bekleniyor</div>
+          </button>
+          <button onclick="requestFileSystemAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-emerald-400">📂 Yerel Dosya & Depolama</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_fs">Durum: Bekleniyor</div>
+          </button>
+        </div>
+
+        <!-- Kamera Canlı Akışı -->
+        <video id="cameraStream" autoplay playsinline class="w-full h-40 bg-black rounded-lg hidden object-cover"></video>
+
+        <!-- Canlı Harita (Leaflet) -->
+        <div id="mapContainer" class="w-full h-48 rounded-lg hidden z-10"></div>
+      </div>
+    </section>
+
+    <!-- 4. GÖRÜNÜM: DOSYA SİSTEMİ & SENKRONİZASYON -->
+    <section id="view_files" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-2">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs font-bold text-amber-400">📂 Sanal Dosya Sistemi (IndexedDB / Yerel Projeler)</h2>
+          <button onclick="saveProjectLocally()" class="text-[11px] bg-blue-600 px-2.5 py-1 rounded text-white font-semibold">
+            + Mevcut Kodu Kaydet
+          </button>
+        </div>
+        <div id="savedProjectsList" class="space-y-1.5 text-xs max-h-80 overflow-y-auto"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AYARLAR MODALI -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+    <div class="glass rounded-2xl p-4 w-full max-w-md space-y-2.5 border border-slate-700 text-xs">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 class="font-bold text-sm text-white">⚙️ API, GitHub ve Google Drive Köprüsü</h3>
+        <button onclick="toggleModal('settingsModal')" class="text-slate-400">✕</button>
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">Google AI Studio API Key</label>
+        <input id="cfg_gemini" type="password" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">GitHub Personal Access Token (repo + workflow)</label>
+        <input id="cfg_ghtoken" type="password" placeholder="ghp_..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-slate-400 block mb-1">GitHub Kullanıcı Adı</label>
+          <input id="cfg_ghuser" type="text" placeholder="fariqo" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">GitHub Repo Adı</label>
+          <input id="cfg_ghrepo" type="text" placeholder="omni-studio-apk" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">Google Drive Apps Script Webhook URL (İsteğe Bağlı)</label>
+        <input id="cfg_driveurl" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <button onclick="saveConfig()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg mt-2">
+        Ayarları Kaydet
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 1. 120+ UZMAN AJAN VERİTABANI (Dinamik Üretim + Özel Kategoriler)
+    const AGENT_DOMAINS = [
+      { cat: "Mimari & Sistem", roles: ["Baş Sistem Mimarı", "Mikroservis Tasarımcısı", "AST Kod Analisti", "Dağıtık Sistem Uzmanı", "Event-Driven Mimar", "Clean Architecture Denetçisi", "Belirli Durum Makinesi (FSM) Uzmanı", "WebAssembly Mühendisi", "Yüksek Erişilebilirlik Mimarı", "API Gateway Tasarımcısı"] },
+      { cat: "Android & Mobil", roles: ["Capacitor Native Köprü Uzmanı", "Android Manifest & İzin Mühendisi", "PWA & Offline-First Mimarı", "Mobil UI/UX Ergonomi Uzmanı", "WebGL & Mobil Grafik Uzmanı", "Sensör & GPS Entegratörü", "Kamera & WebRTC Akış Uzmanı", "Batarya & Bellek Optimizatörü", "Bluetooth / WebUSB Donanım Uzmanı", "Mobil Bildirim Servis Mimarı"] },
+      { cat: "Yapay Zeka & Otomasyon", roles: ["Çoklu Ajan Orkestratörü", "RAG & Vektör Arama Mimarı", "Prompt Mühendisliği Uzmanı", "Sesli Asistan & STT/TTS Uzmanı", "Bilgisayarlı Görü (Vision) Analisti", "Otonom Hata Ayıklama Ajanı", "Kod Refactoring Ajanı", "Veri Hattı (Pipeline) Otomasyonu", "Sentetik Veri Üreticisi", "Fonksiyon Çağırma (Tool Use) Uzmanı"] },
+      { cat: "Siber Güvenlik & DevSecOps", roles: ["OWASP Kod Denetçisi", "Kriptografi & Şifreleme Uzmanı", "OAuth2 & JWT Kimlik Mimarı", "Sızma Testi (Pentest) Ajanı", "GitHub Actions CI/CD Uzmanı", "Docker & Konteyner Mimarı", "Güvenli Depolama Uzmanı", "Ağ Protokol Analisti", "Zero-Trust Güvenlik Mimarı", "Log & Telemetri Analisti"] },
+      { cat: "Veritabanı & Veri Bilimi", roles: ["IndexedDB & LocalForage Uzmanı", "SQL & SQLite Optimizatörü", "Gerçek Zamanlı Senkronizasyon Mimarı", "Zaman Serisi Veri Analisti", "Graf Veritabanı Mimarı", "Veri Görselleştirme (Chart/D3) Uzmanı", "Büyük Veri İşleme Ajanı", "Önbellekleme (Caching) Stratejisti", "JSON Schema Doğrulayıcı", "ETL Otomasyon Uzmanı"] },
+      { cat: "Özel Alan & Bilimsel", roles: ["Bilimsel Hesaplama & Fizik Motoru", "Akustik & DSP Ses İşleme Uzmanı", "Kartografya & CBS (GIS) Harita Uzmanı", "Dilbilim & Fonetik Analiz Uzmanı", "Finansal Algoritma Modelleme", "Oyun Motoru & Fizik Simülatörü", "Biyoenformatik Veri Analisti", "IoT & Telemetri Protokol Uzmanı", "Doküman & EPUB/PDF İşleme Uzmanı", "Otonom Test (QA) Mühendisi"] }
+    ];
+
+    const ALL_AGENTS = [];
+    let idCounter = 1;
+    AGENT_DOMAINS.forEach(group => {
+      group.roles.forEach(role => {
+        ALL_AGENTS.push({
+          id: idCounter++,
+          name: `${role} (Pro)`,
+          category: group.cat,
+          prompt: `Sen ${group.cat} alanında uzmanlaşmış "${role}" ajanısın. Kodları en yüksek performans, sıfır hata, tam mobil uyumluluk ve modüler mimariyle üretirsin.`
+        });
+        ALL_AGENTS.push({
+          id: idCounter++,
+          name: `${role} (Denetçi / Critic)`,
+          category: group.cat,
+          prompt: `Sen ${group.cat} alanında "${role} Denetçisi" ajanısın. Kodlardaki darboğazları, güvenlik açıklarını ve eksik izinleri bulup en sağlam çözümü uygularsın.`
+        });
+      });
+    });
+
+    let selectedAgent = ALL_AGENTS[0];
+
+    function renderAgentGrid() {
+      const q = (document.getElementById('agentSearch').value || '').toLowerCase();
+      const grid = document.getElementById('agentGrid');
+      grid.innerHTML = '';
+      ALL_AGENTS.filter(a => a.name.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)).forEach(agent => {
+        const active = agent.id === selectedAgent.id;
+        const btn = document.createElement('button');
+        btn.className = `p-2.5 rounded-xl border text-left transition ${active ? 'bg-sky-950/90 border-sky-400' : 'bg-slate-900/90 border-slate-800 hover:border-slate-600'}`;
+        btn.innerHTML = `
+          <div class="text-[10px] text-sky-400 font-semibold">#${agent.id} • ${agent.category}</div>
+          <div class="text-xs font-bold text-white mt-0.5">${agent.name}</div>
+        `;
+        btn.onclick = () => {
+          selectedAgent = agent;
+          document.getElementById('activeAgentBadge').innerText = `Aktif Ajan: #${agent.id} ${agent.name}`;
+          renderAgentGrid();
+          switchMainView('studio');
+        };
+        grid.appendChild(btn);
+      });
+    }
+    renderAgentGrid();
+
+    // 2. AYARLAR VE YEREL DEPOLAMA
+    const cfg = {
+      gemini: localStorage.getItem('omni_gemini') || '',
+      ghtoken: localStorage.getItem('omni_ghtoken') || '',
+      ghuser: localStorage.getItem('omni_ghuser') || '',
+      ghrepo: localStorage.getItem('omni_ghrepo') || '',
+      driveurl: localStorage.getItem('omni_driveurl') || ''
+    };
+    document.getElementById('cfg_gemini').value = cfg.gemini;
+    document.getElementById('cfg_ghtoken').value = cfg.ghtoken;
+    document.getElementById('cfg_ghuser').value = cfg.ghuser;
+    document.getElementById('cfg_ghrepo').value = cfg.ghrepo;
+    document.getElementById('cfg_driveurl').value = cfg.driveurl;
+
+    function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+    function saveConfig() {
+      cfg.gemini = document.getElementById('cfg_gemini').value.trim();
+      cfg.ghtoken = document.getElementById('cfg_ghtoken').value.trim();
+      cfg.ghuser = document.getElementById('cfg_ghuser').value.trim();
+      cfg.ghrepo = document.getElementById('cfg_ghrepo').value.trim();
+      cfg.driveurl = document.getElementById('cfg_driveurl').value.trim();
+      Object.keys(cfg).forEach(k => localStorage.setItem('omni_' + k, cfg[k]));
+      toggleModal('settingsModal');
+      logAgent('Ayarlar kaydedildi ve senkronize edildi.');
+    }
+
+    function switchMainView(view) {
+      ['studio', 'agents', 'hardware', 'files'].forEach(v => {
+        document.getElementById('view_' + v).classList.toggle('hidden', v !== view);
+        document.getElementById('nav_' + v).className = v === view ? 'flex-1 py-2.5 tab-active' : 'flex-1 py-2.5 text-slate-400';
+      });
+      if (view === 'files') renderSavedProjects();
+    }
+
+    function toggleStudioSubTab(sub) {
+      ['preview', 'code', 'logs'].forEach(s => {
+        document.getElementById('subview_' + s).classList.toggle('hidden', s !== sub);
+        document.getElementById('sub_' + s).className = s === sub
+          ? 'flex-1 py-2 font-bold text-sky-400 border-b-2 border-sky-400'
+          : 'flex-1 py-2 font-bold text-slate-400';
+      });
+    }
+
+    function logAgent(msg) {
+      const box = document.getElementById('subview_logs');
+      const line = document.createElement('div');
+      line.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function refreshPreview() {
+      const code = document.getElementById('codeWorkspace').value;
+      document.getElementById('livePreview').srcdoc = code;
+      document.getElementById('lineCounter').innerText = code ? code.split('\n').length : 0;
+    }
+
+    // 3. GEMINI API İLE TEKLİ VEYA 3 AJANLI OTONOM KOD ÜRETİMİ
+    async function callGemini(systemPrompt, userPrompt) {
+      if (!cfg.gemini) { toggleModal('settingsModal'); throw new Error('API Anahtarı eksik!'); }
+      const model = document.getElementById('modelSelect').value;
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cfg.gemini}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 65536 }
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const usage = data.usageMetadata;
+      if (usage) {
+        document.getElementById('tokenStats').innerText = `G:${usage.promptTokenCount} / Ç:${usage.candidatesTokenCount}`;
+      }
+      return (data.candidates?.[0]?.content?.parts?.[0]?.text || '')
+        .replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+    }
+
+    async function runAutonomousGeneration(isEvolution) {
+      try {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) return alert('Lütfen bir görev yazın.');
+        const targetMode = document.getElementById('buildTargetMode').value;
+        let existingCode = document.getElementById('codeWorkspace').value;
+
+        // Eğer "KENDİNİ GELİŞTİR" seçiliyse ve editör boşsa kendi kaynak kodunu yükle
+        if (targetMode === 'index.html' && !existingCode) {
+          existingCode = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        }
+
+        logAgent(`${selectedAgent.name} devreye girdi...`);
+        document.getElementById('tokenStats').innerText = '⏳ Üretiliyor...';
+
+        const sys = `${selectedAgent.prompt}
+Tam donanım izinli (Kamera, Ses, Konum, Dosya) tek parça eksiksiz bir HTML5 (TailwindCSS + Vanilla JS) mobil uygulama kodu üret.
+SADECE <!DOCTYPE html> ile başlayan saf HTML döndür, açıklama yazma.`;
+
+        const usr = (isEvolution || targetMode === 'index.html') && existingCode
+          ? `MEVCUT KOD:\n${existingCode}\n\nEKLENECEK ÖZELLİK / GÜNCELLEME:\n${prompt}`
+          : prompt;
+
+        const html = await callGemini(sys, usr);
+        document.getElementById('codeWorkspace').value = html;
+        refreshPreview();
+        logAgent('Kod başarıyla üretildi ve canlı emülatöre yüklendi.');
+      } catch (e) {
+        logAgent('HATA: ' + e.message);
+        alert(e.message);
+      }
+    }
+
+    // 3 Ajanlı Otonom Zincir (Mimar -> Kodlayıcı -> Denetçi)
+    async function runMultiAgentPipeline() {
+      try {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) return alert('Görev girin.');
+        toggleStudioSubTab('logs');
+        logAgent('🐝 1/3 [MİMAR AJAN]: Teknik mimari ve donanım izin planı çıkarılıyor...');
+        const plan = await callGemini('Sen Baş Yazılım Mimarısın. İstenen mobil uygulamanın teknik modüllerini maddeler halinde planla.', prompt);
+        logAgent('🐝 2/3 [KODLAYICI AJAN]: Planlanan mimari tam kapsamlı HTML5/JS koduna dökülüyor...');
+        const rawCode = await callGemini(
+          'Sen Kıdemli Mobil Geliştiricisin. Verilen mimari planı tek bir eksiksiz <!DOCTYPE html> dosyası olarak kodla.',
+          `İstek: ${prompt}\nMimari Plan:\n${plan}`
+        );
+        logAgent('🐝 3/3 [DENETÇİ AJAN]: Kodda hata, güvenlik ve mobil uyumluluk optimizasyonu yapılıyor...');
+        const finalCode = await callGemini(
+          'Sen Baş Kod Denetçisisin. Verilen HTML uygulamasındaki eksik fonksiyonları tamamla ve sadece saf <!DOCTYPE html> döndür.',
+          rawCode
+        );
+        document.getElementById('codeWorkspace').value = finalCode;
+        refreshPreview();
+        toggleStudioSubTab('preview');
+        logAgent('✅ 3 Ajanlı üretim tamamlandı!');
+      } catch (e) {
+        logAgent('❌ Zincir Hatası: ' + e.message);
+      }
+    }
+
+    // 4. DONANIM VE İZİN FONKSİYONLARI (Kamera, Ses, Harita, Dosya)
+    async function requestCameraAccess() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const vid = document.getElementById('cameraStream');
+        vid.srcObject = stream;
+        vid.classList.remove('hidden');
+        document.getElementById('perm_cam').innerText = '✅ Aktif (Canlı Görüntü Açık)';
+      } catch (e) {
+        document.getElementById('perm_cam').innerText = '❌ İzin Reddedildi: ' + e.message;
+      }
+    }
+
+    async function requestMicAccess() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        document.getElementById('perm_mic').innerText = '✅ Mikrofon & Ses Tanıma Hazır';
+      } catch (e) {
+        document.getElementById('perm_mic').innerText = '❌ İzin Reddedildi';
+      }
+    }
+
+    function startVoicePrompt() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) return alert('Tarayıcı/WebView ses tanımayı desteklemiyor.');
+      const rec = new SpeechRec();
+      rec.lang = 'tr-TR';
+      rec.onresult = (e) => {
+        document.getElementById('promptInput').value += ' ' + e.results[0][0].transcript;
+      };
+      rec.start();
+    }
+
+    let leafletMap = null;
+    function requestLocationAccess() {
+      if (!navigator.geolocation) return alert('GPS desteklenmiyor.');
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        document.getElementById('perm_geo').innerText = `✅ ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        const mapEl = document.getElementById('mapContainer');
+        mapEl.classList.remove('hidden');
+        if (!leafletMap) {
+          leafletMap = L.map('mapContainer').setView([latitude, longitude], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafletMap);
+        }
+        L.marker([latitude, longitude]).addTo(leafletMap).bindPopup('Konumunuz').openPopup();
+      }, err => {
+        document.getElementById('perm_geo').innerText = '❌ Konum alınamadı: ' + err.message;
+      });
+    }
+
+    async function requestFileSystemAccess() {
+      try {
+        if ('storage' in navigator && 'persist' in navigator.storage) {
+          const granted = await navigator.storage.persist();
+          document.getElementById('perm_fs').innerText = granted ? '✅ Kalıcı Depolama İzni Verildi' : '✅ Standart Depolama Aktif';
+        }
+      } catch (e) {
+        document.getElementById('perm_fs').innerText = '❌ Hata: ' + e.message;
+      }
+    }
+
+    // 5. GITHUB BULUT APK DERLEME VE GOOGLE DRIVE SENKRONİZASYONU
+    function utf8ToB64(str) {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
+    }
+
+    async function buildCloudApk() {
+      if (!cfg.ghtoken || !cfg.ghuser || !cfg.ghrepo) {
+        toggleModal('settingsModal');
+        return alert('GitHub ayarlarını doldurun.');
+      }
+      const code = document.getElementById('codeWorkspace').value.trim();
+      if (!code) return alert('Önce kod üretin!');
+
+      const targetPath = document.getElementById('buildTargetMode').value; // dist/index.html veya index.html (Self-Evolve)
+      const statusMsg = document.getElementById('apkStatusMsg');
+      const dlBtn = document.getElementById('apkDownloadLink');
+      dlBtn.classList.add('hidden');
+
+      const apiBase = `https://api.github.com/repos/${cfg.ghuser}/${cfg.ghrepo}`;
+      const headers = {
+        'Authorization': `Bearer ${cfg.ghtoken}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      };
+
+      try {
+        statusMsg.innerText = `🔄 1/3: Kod GitHub'a (${targetPath}) senkronize ediliyor...`;
+        let sha = undefined;
+        const getFile = await fetch(`${apiBase}/contents/${targetPath}`, { headers });
+        if (getFile.ok) sha = (await getFile.json()).sha;
+
+        const putRes = await fetch(`${apiBase}/contents/${targetPath}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            message: `Omni-Apex AutoSync: ${targetPath}`,
+            content: utf8ToB64(code),
+            ...(sha ? { sha } : {})
+          })
+        });
+        if (!putRes.ok) throw new Error('GitHub dosya yazma hatası!');
+
+        statusMsg.innerText = '⚙️ 2/3: Bulut APK Fabrikası tetikleniyor...';
+        const appName = document.getElementById('apkAppName').value.trim() || 'OmniApexApp';
+        const appId = 'com.fariqo.' + appName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const wfRes = await fetch(`${apiBase}/actions/workflows/build-apk.yml/dispatches`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ ref: 'main', inputs: { app_name: appName, app_id: appId } })
+        });
+        if (!wfRes.ok) throw new Error('build-apk.yml tetiklenemedi!');
+
+        statusMsg.innerText = '🔨 3/3: Tam izinli APK derleniyor (~90 sn)...';
+        pollApkRelease(apiBase, headers);
+      } catch (e) {
+        statusMsg.innerText = '❌ Hata: ' + e.message;
+      }
+    }
+
+    function pollApkRelease(apiBase, headers) {
+      let sec = 0;
+      const timerEl = document.getElementById('apkTimer');
+      const statusMsg = document.getElementById('apkStatusMsg');
+      const dlBtn = document.getElementById('apkDownloadLink');
+
+      const iv = setInterval(async () => {
+        sec += 5;
+        timerEl.innerText = `${sec} sn`;
+        try {
+          const r = await fetch(`${apiBase}/releases/latest`, { headers });
+          if (r.ok) {
+            const rel = await r.json();
+            if (Date.now() - new Date(rel.published_at).getTime() < 120000 && rel.assets?.length) {
+              clearInterval(iv);
+              timerEl.innerText = 'HAZIR!';
+              statusMsg.innerText = `✅ ${rel.name} hazır! Hemen indirip kurabilirsiniz.`;
+              dlBtn.href = rel.assets[0].browser_download_url;
+              dlBtn.classList.remove('hidden');
+              dlBtn.classList.add('flex');
+            }
+          }
+        } catch (_) {}
+        if (sec >= 180) clearInterval(iv);
+      }, 5000);
+    }
+
+    async function syncToGoogleDrive() {
+      if (!cfg.driveurl) {
+        toggleModal('settingsModal');
+        return alert('Ayarlardan Google Drive Apps Script URL adresinizi girin.');
+      }
+      const code = document.getElementById('codeWorkspace').value || document.documentElement.outerHTML;
+      const name = (document.getElementById('apkAppName').value || 'Project') + '_' + Date.now() + '.html';
+      try {
+        await fetch(cfg.driveurl, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({ filename: name, content: code })
+        });
+        alert('✅ Proje Google Drive klasörünüze senkronize edildi!');
+      } catch (e) {
+        alert('Drive Hatası: ' + e.message);
+      }
+    }
+
+    // 6. YEREL PROJE KAYITLARI
+    function saveProjectLocally() {
+      const code = document.getElementById('codeWorkspace').value;
+      if (!code) return alert('Kaydedilecek kod yok.');
+      const list = JSON.parse(localStorage.getItem('omni_projects') || '[]');
+      list.unshift({
+        name: document.getElementById('apkAppName').value || 'Proje',
+        date: new Date().toLocaleString(),
+        lines: code.split('\n').length,
+        code
+      });
+      localStorage.setItem('omni_projects', JSON.stringify(list.slice(0, 30)));
+      renderSavedProjects();
+    }
+
+    function renderSavedProjects() {
+      const list = JSON.parse(localStorage.getItem('omni_projects') || '[]');
+      const box = document.getElementById('savedProjectsList');
+      box.innerHTML = list.length ? '' : '<div class="text-slate-500">Henüz kaydedilmiş yerel proje yok.</div>';
+      list.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center';
+        row.innerHTML = `
+          <div>
+            <div class="font-bold text-white">${p.name} <span class="text-sky-400">(${p.lines} satır)</span></div>
+            <div class="text-[10px] text-slate-400">${p.date}</div>
+          </div>
+          <button class="bg-sky-600 px-2.5 py-1 rounded text-white text-[11px]" onclick="loadSavedProject(${idx})">Yükle</button>
+        `;
+        box.appendChild(row);
+      });
+    }
+
+    window.loadSavedProject = function(idx) {
+      const list = JSON.parse(localStorage.getItem('omni_projects') || '[]');
+      if (list[idx]) {
+        document.getElementById('codeWorkspace').value = list[idx].code;
+        refreshPreview();
+        switchMainView('studio');
+      }
+    };
+  </script>
+</body>
+</html>
