@@ -1,0 +1,83 @@
+name: Omni-Apex Full Native APK Factory
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'Uygulama Adı'
+        required: true
+        default: 'OmniApexStudio'
+      app_id:
+        description: 'Paket Kimliği'
+        required: true
+        default: 'com.fariqo.omniapex'
+
+permissions:
+  contents: write
+
+jobs:
+  build-native-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu Çek
+        uses: actions/checkout@v4
+
+      - name: Node.js 20 ve Java 21 Kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Capacitor ve Tüm Native Donanım Eklentilerini Kur
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android \
+                      @capacitor/camera @capacitor/geolocation @capacitor/filesystem \
+                      @capacitor/local-notifications @capacitor/share @capacitor/device \
+                      @capacitor/network
+          npx cap init "${{ github.event.inputs.app_name }}" "${{ github.event.inputs.app_id }}" --web-dir dist
+          mkdir -p dist
+          if [ -f dist/index.html ]; then
+            echo "dist/index.html mevcut, o kullanılıyor."
+          else
+            cp index.html dist/index.html
+          fi
+          npx cap add android
+
+      - name: AndroidManifest.xml İçine Tüm Donanım ve Yönetici İzinlerini Enjekte Et
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          PERMS='
+          <uses-permission android:name="android.permission.INTERNET" />
+          <uses-permission android:name="android.permission.CAMERA" />
+          <uses-permission android:name="android.permission.RECORD_AUDIO" />
+          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+          <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+          <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+          <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+          <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+          <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+          <uses-permission android:name="android.permission.VIBRATE" />
+          <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+          <uses-permission android:name="android.permission.WAKE_LOCK" />'
+          sed -i "/<\/manifest>/i $(echo $PERMS | tr '\n' ' ')" "$MANIFEST"
+          sed -i 's/<application/<application android:usesCleartextTraffic="true" android:requestLegacyExternalStorage="true"/g' "$MANIFEST"
+
+      - name: Native Köprüleri Senkronize Et ve APK Derle
+        run: |
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: APK Dosyasını GitHub Releases Üzerinde Yayınla
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "🚀 ${{ github.event.inputs.app_name }} v1.0.${{ github.run_number }}"
+          files: android/app/build/outputs/apk/debug/app-debug.apk
