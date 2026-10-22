@@ -17,23 +17,24 @@ permissions:
 
 jobs:
   build-native-apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Kodu Çek
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Node.js 20 ve Java 21 Kurulumu
-        uses: actions/setup-node@v4
+      - name: Node.js 22 ve Java 21 Kurulumu (Hatasız)
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
-      - uses: actions/setup-java@v4
+          node-version: 22
+      - name: Java 21 Kurulumu
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
 
       - name: Capacitor ve Tüm Native Donanım Eklentilerini Kur
         run: |
+          rm -rf package.json package-lock.json node_modules android
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android \
                       @capacitor/camera @capacitor/geolocation @capacitor/filesystem \
@@ -51,22 +52,27 @@ jobs:
       - name: AndroidManifest.xml İçine Tüm Donanım ve Yönetici İzinlerini Enjekte Et
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          PERMS='
-          <uses-permission android:name="android.permission.INTERNET" />
-          <uses-permission android:name="android.permission.CAMERA" />
-          <uses-permission android:name="android.permission.RECORD_AUDIO" />
-          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-          <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-          <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-          <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-          <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-          <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-          <uses-permission android:name="android.permission.VIBRATE" />
-          <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-          <uses-permission android:name="android.permission.WAKE_LOCK" />'
-          sed -i "/<\/manifest>/i $(echo $PERMS | tr '\n' ' ')" "$MANIFEST"
-          sed -i 's/<application/<application android:usesCleartextTraffic="true" android:requestLegacyExternalStorage="true"/g' "$MANIFEST"
+          node -e '
+            const fs = require("fs");
+            let xml = fs.readFileSync("'"$MANIFEST"'", "utf8");
+            const perms = `
+              <uses-permission android:name="android.permission.CAMERA" />
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+              <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.VIBRATE" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+              <uses-permission android:name="android.permission.WAKE_LOCK" />
+            `;
+            xml = xml.replace("</manifest>", perms + "\n</manifest>");
+            xml = xml.replace("<application", "<application android:usesCleartextTraffic=\"true\" android:requestLegacyExternalStorage=\"true\"");
+            fs.writeFileSync("'"$MANIFEST"'", xml, "utf8");
+          '
 
       - name: Native Köprüleri Senkronize Et ve APK Derle
         run: |
