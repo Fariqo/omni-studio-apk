@@ -3,1154 +3,1659 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENTINEL-OSINT | Kurumsal EASM & CTI Platformu</title>
+    <title>OMNI-MATH PRO | Evrensel Hesaplamalı Zeka ve Matematik Platformu</title>
+    
+    <!-- Harici Bilimsel ve Görselleştirme Kütüphaneleri (CDN) -->
+    <!-- Tailwind CSS (Kurumsal Karanlık Tema UI için) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Math.js (Nümerik & Matris Hesaplama Motoru) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.2/math.js"></script>
+    <!-- Nerdamer (Sembolik Hesaplama / CAS - Türev, İntegral, Cebir, Laplace) -->
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/nerdamer.core.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Algebra.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Calculus.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Solve.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Extra.js"></script>
+    <!-- KaTeX (Yüksek Kaliteli LaTeX Matematik Dizgisi + Auto-Render) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- Plotly.js (WebGL Destekli 2D/3D Bilimsel & Finansal Görselleştirme) -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Simple Statistics (İstatistik & Veri Bilimi) -->
+    <script src="https://unpkg.com/simple-statistics@7.8.3/dist/simple-statistics.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bgMain: '#090d16',
+                        bgPanel: '#0f1623',
+                        bgCard: '#162032',
+                        borderCol: '#23314b',
+                        accent: '#3b82f6',
+                        accentGlow: '#60a5fa',
+                        quantGreen: '#10b981',
+                        quantRed: '#ef4444',
+                        casPurple: '#8b5cf6',
+                        pdeAmber: '#f59e0b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        :root {
-            --bg-dark: #070b14;
-            --bg-panel: #0f172a;
-            --bg-card: #1e293b;
-            --border-color: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-blue: #38bdf8;
-            --accent-green: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-red: #ef4444;
-            --accent-purple: #a855f7;
-            --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
-        input, textarea, .stix-viewer, .detail-val, .log-msg {
-            user-select: text;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: var(--font-sans);
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Üst Bilgi Çubuğu (Header & Zero Trust Bar) */
-        header {
-            height: 56px;
-            background-color: var(--bg-panel);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 10;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            font-size: 1.1rem;
-        }
-
-        .brand-badge {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--accent-blue);
-            border: 1px solid var(--accent-blue);
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-family: var(--font-mono);
-        }
-
-        .search-bar {
-            display: flex;
-            align-items: center;
-            background: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 6px 12px;
-            width: 450px;
-            transition: border-color 0.2s;
-        }
-
-        .search-bar:focus-within {
-            border-color: var(--accent-blue);
-        }
-
-        .search-bar input {
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            width: 100%;
-            outline: none;
-            margin-left: 8px;
-        }
-
-        .system-status {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 0.8rem;
-            font-family: var(--font-mono);
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--accent-green);
-            box-shadow: 0 0 8px var(--accent-green);
-        }
-
-        /* Ana Çalışma Alanı */
-        .workspace {
-            display: grid;
-            grid-template-columns: 280px 1fr 340px;
-            grid-template-rows: 1fr 220px;
-            height: calc(100vh - 56px);
-            gap: 1px;
-            background-color: var(--border-color);
-        }
-
-        .panel {
-            background-color: var(--bg-panel);
-            display: flex;
-            flex-direction: column;
+            background-color: #090d16;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
             overflow: hidden;
         }
 
-        .panel-header {
-            padding: 12px 16px;
-            background-color: rgba(15, 23, 42, 0.8);
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-content {
-            padding: 16px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        /* Sol Panel: Veri Toplama & Mimari Katmanlar */
-        .sidebar-left {
-            grid-row: 1 / 3;
-        }
-
-        .module-group {
-            margin-bottom: 20px;
-        }
-
-        .module-title {
-            font-size: 0.75rem;
-            color: var(--accent-blue);
-            font-family: var(--font-mono);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .connector-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .connector-card:hover {
-            border-color: var(--accent-blue);
-            transform: translateX(2px);
-        }
-
-        .connector-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .connector-sub {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-        }
-
-        .badge {
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: var(--font-mono);
-            font-weight: 600;
-        }
-
-        .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
-        .badge-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
-        .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
-        .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
-        .badge-purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
-
-        /* Orta Üst: WebGL/Canvas Graf Görselleştirme & GIS Sekmeleri */
-        .center-main {
-            position: relative;
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(rgba(51, 65, 85, 0.4) 1px, transparent 1px);
-            background-size: 24px 24px;
-        }
-
-        .canvas-toolbar {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 5;
-            display: flex;
-            gap: 8px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 6px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(4px);
-        }
-
-        .btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            font-family: var(--font-sans);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .btn:hover, .btn.active {
-            background: var(--accent-blue);
-            color: var(--bg-dark);
-            border-color: var(--accent-blue);
-            font-weight: 600;
-        }
-
-        .graph-legend {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            z-index: 5;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            gap: 14px;
-            font-size: 0.75rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        #graphCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            cursor: grab;
-        }
-
-        #graphCanvas:active {
-            cursor: grabbing;
-        }
-
-        #gisView {
-            display: none;
-            width: 100%;
-            height: 100%;
-            padding: 60px 24px 24px 24px;
-            overflow-y: auto;
-        }
-
-        .gis-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 16px;
-        }
-
-        .gis-card {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        /* Sağ Panel: Varlık Çözümleme & Risk Skorlama (Analytics Engine) */
-        .sidebar-right {
-            grid-row: 1 / 3;
-        }
-
-        .risk-score-box {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.9));
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            border-radius: 8px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .score-circle {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--accent-red);
-            font-family: var(--font-mono);
-        }
-
-        .entity-details {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 16px;
-            font-size: 0.85rem;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-        }
-
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-
-        .detail-label {
-            color: var(--text-muted);
-            flex-shrink: 0;
-        }
-
-        .detail-val {
-            font-family: var(--font-mono);
-            color: var(--text-main);
-            text-align: right;
-            word-break: break-all;
-        }
-
-        .stix-viewer {
-            background: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-            color: var(--accent-green);
-            overflow-x: auto;
-            white-space: pre-wrap;
-            max-height: 220px;
-            overflow-y: auto;
-        }
-
-        /* Orta Alt: Kafka Event Stream & Değiştirilemez Denetim Kayıtları (Audit Logs) */
-        .bottom-console {
-            grid-column: 2 / 3;
-            grid-row: 2 / 3;
-            background-color: #05080f;
-        }
-
-        .console-tabs {
-            display: flex;
-            gap: 16px;
-        }
-
-        .console-tab {
-            cursor: pointer;
-            padding-bottom: 2px;
-            border-bottom: 2px solid transparent;
-        }
-
-        .console-tab.active {
-            color: var(--accent-blue);
-            border-bottom-color: var(--accent-blue);
-        }
-
-        .log-container {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            line-height: 1.6;
-            padding: 10px 16px;
-            overflow-y: auto;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .log-entry {
-            display: flex;
-            gap: 12px;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.2);
-            padding: 2px 0;
-        }
-
-        .log-time { color: var(--text-muted); min-width: 85px; }
-        .log-source { color: var(--accent-purple); min-width: 110px; }
-        .log-msg { color: var(--text-main); flex: 1; }
-        .log-hash { color: #64748b; font-size: 0.68rem; }
-
-        /* Scrollbar Tasarımı */
+        /* Özel Kaydırma Çubuğu */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #23314b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        .code-editor {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #0b101b;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .katex-display { margin: 0.5em 0 !important; overflow-x: auto; overflow-y: hidden; }
+        
+        .glow-border:focus-within {
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+            border-color: #3b82f6;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0) 100%);
+            border-left: 3px solid #3b82f6;
+            color: #60a5fa;
+        }
+
+        /* Bloomberg / Terminal Grid Çizgileri */
+        .terminal-grid {
+            background-size: 25px 25px;
+            background-image: 
+                linear-gradient(to right, rgba(35, 49, 75, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(35, 49, 75, 0.2) 1px, transparent 1px);
+        }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col select-none">
 
-    <!-- Üst Bilgi Çubuğu (Zero Trust, RBAC & Arama Motoru) -->
-    <header>
-        <div class="brand">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                <polyline points="2 17 12 22 22 17"></polyline>
-                <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
-            SENTINEL-OSINT
-            <span class="brand-badge">EASM & CTI v4.2</span>
+    <!-- ÜST DURUM ÇUBUĞU (HPC & Sistem Telemetrisi - Bloomberg Hibriti) -->
+    <header class="h-12 bg-bgPanel border-b border-borderCol flex items-center justify-between px-4 z-20 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center font-mono font-bold text-white shadow-lg shadow-blue-500/20">
+                Ω
+            </div>
+            <div>
+                <span class="font-bold tracking-wider text-sm text-white">OMNI-MATH <span class="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-mono">ENTERPRISE v9.4</span></span>
+                <p class="text-[10px] text-slate-400 font-mono">CAS • HPC LINEAR ALGEBRA • PDE/ODE • QUANT • MANIFOLD ENGINE</p>
+            </div>
         </div>
 
-        <div class="search-bar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="osintSearch" placeholder="OpenSearch Pasif Sorgu (Örn: acme-corp.internal, ASN, IP, CVE)..." value="fintech-global.example.com">
-            <button type="button" class="btn" onclick="triggerPassiveScan()" style="padding: 3px 8px; font-size: 0.7rem;">Sorgula</button>
+        <!-- Canlı Çekirdek Telemetrisi -->
+        <div class="hidden xl:flex items-center space-x-6 font-mono text-xs">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-quantGreen animate-pulse"></span>
+                <span class="text-slate-400">ENGINE:</span>
+                <span class="text-slate-200">WASM/WebGL-JIT</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-400"></i>
+                <span class="text-slate-400">PRECISION:</span>
+                <span class="text-amber-400">IEEE-754 / Symbolic Exact</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="activity" class="w-3.5 h-3.5 text-purple-400"></i>
+                <span class="text-slate-400">MEM:</span>
+                <span id="telemetry-mem" class="text-slate-200">142.8 MB</span>
+            </div>
+            <div class="border-l border-borderCol pl-4 flex items-center space-x-3">
+                <span class="text-quantGreen">SPX 5,842.10 (+0.42%)</span>
+                <span class="text-blue-400">VIX 14.22</span>
+                <span class="text-purple-400">US10Y 4.18%</span>
+            </div>
         </div>
 
-        <div class="system-status">
-            <div class="status-item" title="Mikroservisler arası karşılıklı TLS aktif">
-                <span class="dot"></span>
-                <span>Zero-Trust: mTLS</span>
-            </div>
-            <div class="status-item" title="Rol Tabanlı Erişim Kontrolü">
-                <span class="badge badge-blue">RBAC: SOC_LEAD</span>
-            </div>
-            <div class="status-item" title="KVKK / GDPR Etik Uyumluluk Modu">
-                <span class="badge badge-green">YASAL PASİF MOD</span>
-            </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="openKnowledgeModal()" class="px-2.5 py-1.5 text-xs font-mono bg-bgCard hover:bg-slate-800 border border-borderCol rounded flex items-center space-x-1.5 text-slate-300 transition">
+                <i data-lucide="database" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Bilgi Grafiği & Sabitler</span>
+            </button>
+            <button onclick="exportSession()" class="px-2.5 py-1.5 text-xs font-mono bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/40 rounded flex items-center space-x-1.5 text-blue-300 transition">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>JSON Dışa Aktar</span>
+            </button>
         </div>
     </header>
 
-    <!-- Ana Çalışma Alanı -->
-    <div class="workspace">
-
-        <!-- SOL PANEL: 1. Veri Toplama, 2. ETL & 3. Polyglot Persistence Durumu -->
-        <aside class="panel sidebar-left">
-            <div class="panel-header">
-                <span>Altyapı & Toplayıcılar</span>
-                <span class="badge badge-green">AKTİF</span>
-            </div>
-            <div class="panel-content">
+    <!-- ANA ÇALIŞMA ALANI -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- SOL MODÜL NAVİGASYONU -->
+        <aside class="w-64 bg-bgPanel border-r border-borderCol flex flex-col justify-between shrink-0 z-10">
+            <div class="p-3 space-y-1 overflow-y-auto">
+                <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500 px-3 py-1.5">Çekirdek Motorlar</div>
                 
-                <div class="module-group">
-                    <div class="module-title">
-                        <span>1. ASENKRON TOPLAYICILAR (Go/Rust)</span>
-                        <span>EPS: 14.2K</span>
+                <button onclick="switchTab('notebook')" id="nav-notebook" class="nav-item active w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="terminal" class="w-4 h-4 text-blue-400"></i>
+                    <div class="text-left">
+                        <div>İnteraktif Notebook</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Çoklu-Paradigma DSL</div>
                     </div>
-                    <div class="connector-card" onclick="filterGraph('all')">
-                        <div class="connector-info">
-                            <strong>CT Log Streamer</strong>
-                            <span class="connector-sub">SSL/TLS Şeffaflık Kayıtları</span>
-                        </div>
-                        <span class="badge badge-green">ONLINE</span>
-                    </div>
-                    <div class="connector-card" onclick="injectSimulatedNode('DNS')">
-                        <div class="connector-info">
-                            <strong>Passive DNS & WHOIS</strong>
-                            <span class="connector-sub">A, AAAA, MX, TXT, SOA</span>
-                        </div>
-                        <span class="badge badge-green">ONLINE</span>
-                    </div>
-                    <div class="connector-card" onclick="injectSimulatedNode('BGP')">
-                        <div class="connector-info">
-                            <strong>BGP & ASN Routeviews</strong>
-                            <span class="connector-sub">Altyapı & IP Blok Haritası</span>
-                        </div>
-                        <span class="badge badge-green">ONLINE</span>
-                    </div>
-                    <div class="connector-card" onclick="injectSimulatedNode('CVE')">
-                        <div class="connector-info">
-                            <strong>Shodan / Censys API</strong>
-                            <span class="connector-sub">Açık Port & Banner Analizi</span>
-                        </div>
-                        <span class="badge badge-amber">SYNCING</span>
-                    </div>
-                </div>
+                </button>
 
-                <div class="module-group">
-                    <div class="module-title">
-                        <span>2. İŞLEME & ZENGİNLEŞTİRME (ETL)</span>
+                <button onclick="switchTab('cas')" id="nav-cas" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="sigma" class="w-4 h-4 text-purple-400"></i>
+                    <div class="text-left">
+                        <div>Sembolik Cebir (CAS)</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Türev • İntegral • Laplace</div>
                     </div>
-                    <div class="connector-card">
-                        <div class="connector-info">
-                            <strong>Apache Kafka Kümesi</strong>
-                            <span class="connector-sub">Topic: raw-osint-ingest</span>
-                        </div>
-                        <span class="badge badge-blue">LAG: 2ms</span>
-                    </div>
-                    <div class="connector-card">
-                        <div class="connector-info">
-                            <strong>NLP / NER Varlık Çıkarımı</strong>
-                            <span class="connector-sub">STIX 2.1 Normalizasyonu</span>
-                        </div>
-                        <span class="badge badge-purple">AI AKTİF</span>
-                    </div>
-                    <div class="connector-card">
-                        <div class="connector-info">
-                            <strong>Redis Tekilleştirme</strong>
-                            <span class="connector-sub">SHA-256 Bloom Filter</span>
-                        </div>
-                        <span class="badge badge-green">%99.4 HIT</span>
-                    </div>
-                </div>
+                </button>
 
-                <div class="module-group">
-                    <div class="module-title">
-                        <span>3. POLYGLOT PERSISTENCE</span>
+                <button onclick="switchTab('linalg')" id="nav-linalg" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="grid" class="w-4 h-4 text-cyan-400"></i>
+                    <div class="text-left">
+                        <div>Lineer & İleri Cebir</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Özdeğer • LU/SVD • Grup/Cisim</div>
                     </div>
-                    <div class="connector-card">
-                        <div class="connector-info">
-                            <strong>Neo4j Graf DB</strong>
-                            <span class="connector-sub">Varlık İlişki Haritası</span>
-                        </div>
-                        <span class="badge badge-green">4.8M Düğüm</span>
-                    </div>
-                    <div class="connector-card">
-                        <div class="connector-info">
-                            <strong>OpenSearch & Timescale</strong>
-                            <span class="connector-sub">Tam Metin & Zaman Serisi</span>
-                        </div>
-                        <span class="badge badge-green">12ms Sorgu</span>
-                    </div>
-                    <div class="connector-card">
-                        <div class="connector-info">
-                            <strong>MinIO S3 Veri Gölü</strong>
-                            <span class="connector-sub">Ham OSINT Arşivi</span>
-                        </div>
-                        <span class="badge badge-blue">84.6 TB</span>
-                    </div>
-                </div>
+                </button>
 
+                <button onclick="switchTab('diffeq')" id="nav-diffeq" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="waves" class="w-4 h-4 text-amber-400"></i>
+                    <div class="text-left">
+                        <div>Diferansiyel & PDE</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Laplace PDE • RK4 • Lorenz</div>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('geometry')" id="nav-geometry" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="box" class="w-4 h-4 text-pink-400"></i>
+                    <div class="text-left">
+                        <div>Geometri & Manifold</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Trigonometri • 3D Topoloji</div>
+                    </div>
+                </button>
+
+                <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500 px-3 pt-4 pb-1.5">Uzmanlık Katmanları</div>
+
+                <button onclick="switchTab('quant')" id="nav-quant" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                    <div class="text-left">
+                        <div>Kantitatif Finans</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Black-Scholes • Monte Carlo</div>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('stats')" id="nav-stats" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-400"></i>
+                    <div class="text-left">
+                        <div>İstatistik & Veri Bilimi</div>
+                        <div class="text-[10px] text-slate-500 font-mono">Regresyon • Hipotez • Bayes</div>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('eng')" id="nav-eng" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-r text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition">
+                    <i data-lucide="radio" class="w-4 h-4 text-rose-400"></i>
+                    <div class="text-left">
+                        <div>Mühendislik & Sinyal</div>
+                        <div class="text-[10px] text-slate-500 font-mono">FFT Spektrum • Bode Kontrol</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Alt Bilgi Kartı -->
+            <div class="p-3 border-t border-borderCol bg-bgMain/60">
+                <div class="text-[11px] font-mono text-slate-400 flex justify-between">
+                    <span>Çekirdek Durumu:</span>
+                    <span class="text-quantGreen">HAZIR</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-full w-11/12"></div>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1.5 font-mono">AST + WebGL Render Aktif</p>
             </div>
         </aside>
 
-        <!-- ORTA ÜST PANEL: 5. Sunum & WebGL/Canvas Graf Arayüzü + GIS -->
-        <main class="panel center-main">
-            <div class="canvas-toolbar">
-                <button type="button" class="btn active" id="btnGraph" onclick="switchView('graph')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                    İlişki Grafiği (Link Analysis)
-                </button>
-                <button type="button" class="btn" id="btnGis" onclick="switchView('gis')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    Coğrafi İstihbarat (GIS)
-                </button>
-                <button type="button" class="btn" onclick="resetGraphPhysics()">Merkezle</button>
-                <button type="button" class="btn" onclick="exportToSIEM()" title="GraphQL / REST API üzerinden SOAR'a aktar">SIEM/SOAR Aktar</button>
-            </div>
+        <!-- MERKEZ İÇERİK PANELLERİ -->
+        <main class="flex-1 overflow-y-auto terminal-grid p-5 select-text relative">
 
-            <!-- Etkileşimli Graf Kanvası -->
-            <canvas id="graphCanvas"></canvas>
-
-            <div class="graph-legend" id="graphLegend">
-                <div class="legend-item"><span class="legend-dot" style="background: #38bdf8;"></span> Kök Alan Adı / Alt Alan Adı</div>
-                <div class="legend-item"><span class="legend-dot" style="background: #10b981;"></span> IPv4 / ASN Bloğu</div>
-                <div class="legend-item"><span class="legend-dot" style="background: #a855f7;"></span> SSL/TLS Sertifikası</div>
-                <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span> Pasif CVE / Açık Yüzey</div>
-            </div>
-
-            <!-- GIS Coğrafi Görünüm -->
-            <div id="gisView">
-                <h3 style="margin-bottom: 16px; font-size: 1rem; color: var(--accent-blue);">Açık Kaynak Altyapı Coğrafi Dağılımı (BGP / GeoIP)</h3>
-                <div class="gis-grid" id="gisGridContainer"></div>
-            </div>
-        </main>
-
-        <!-- SAĞ PANEL: 4. Analitik, Varlık Çözümleme & STIX 2.1 Çıktısı -->
-        <aside class="panel sidebar-right">
-            <div class="panel-header">
-                <span>Varlık & Risk Analizi</span>
-                <span class="badge badge-purple">STIX/TAXII</span>
-            </div>
-            <div class="panel-content">
-                
-                <div class="risk-score-box">
+            <!-- ========================================== -->
+            <!-- 1. İNTERAKTİF NOTEBOOK (Mathematica / Jupyter Hibriti) -->
+            <!-- ========================================== -->
+            <section id="tab-notebook" class="tab-content space-y-4 max-w-6xl mx-auto">
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-bgPanel p-4 rounded-lg border border-borderCol">
                     <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Saldırı Yüzeyi Risk Skoru</div>
-                        <div style="font-size: 0.85rem; margin-top: 4px;" id="selectedRiskLabel">Yüksek Kritiklik (Pasif Tespit)</div>
+                        <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-5 h-5 text-blue-400"></i>
+                            Evrensel Hesaplamalı Zeka Defteri (Notebook UI)
+                        </h1>
+                        <p class="text-xs text-slate-400">Temel aritmetikten matris cebirine, karmaşık sayılardan birim dönüşümlerine kadar doğrudan ifadeleri çalıştırın. (<kbd class="px-1.5 py-0.5 bg-slate-800 rounded font-mono text-[10px]">Shift + Enter</kbd> ile çalıştır)</p>
                     </div>
-                    <div class="score-circle" id="selectedRiskScore">78</div>
+                    <div class="flex space-x-2">
+                        <button onclick="addNotebookCell('')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-mono flex items-center gap-1.5 transition shadow">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Yeni Hücre
+                        </button>
+                        <button onclick="runAllCells()" class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 rounded text-xs font-mono flex items-center gap-1.5 transition">
+                            <i data-lucide="play" class="w-3.5 h-3.5"></i> Tümünü Çalıştır
+                        </button>
+                    </div>
                 </div>
 
-                <div class="module-title">SEÇİLİ DÜĞÜM (ENTITY RESOLUTION)</div>
-                <div class="entity-details" id="entityInspector">
-                    <!-- JS ile doldurulur -->
+                <!-- Hızlı Örnek Şablonları -->
+                <div class="flex flex-wrap gap-2 text-xs font-mono">
+                    <span class="text-slate-500 self-center">Hızlı Yükle:</span>
+                    <button onclick="addNotebookCell('det([1, 2, 3; 4, 5, 6; 7, 8, 10])')" class="px-2 py-1 bg-bgCard border border-borderCol rounded hover:border-blue-500 text-slate-300">Matris Determinant</button>
+                    <button onclick="addNotebookCell('e^(i * pi) + 1')" class="px-2 py-1 bg-bgCard border border-borderCol rounded hover:border-blue-500 text-slate-300">Euler Özdeşliği</button>
+                    <button onclick="addNotebookCell('derivative(&quot;x^4 * sin(x)&quot;, &quot;x&quot;)')" class="px-2 py-1 bg-bgCard border border-borderCol rounded hover:border-blue-500 text-slate-300">Sembolik Türev</button>
+                    <button onclick="addNotebookCell('plot2d(&quot;sin(x)*exp(-0.1*x)&quot;, -10, 20)')" class="px-2 py-1 bg-bgCard border border-borderCol rounded hover:border-blue-500 text-slate-300">Sönümlü Dalga Çiz</button>
                 </div>
 
-                <div class="module-title">
-                    <span>STIX 2.1 İSTİHBARAT ÇIKTISI</span>
-                    <span style="cursor:pointer; color:var(--text-main);" onclick="copyStix()">[Kopyala]</span>
-                </div>
-                <div class="stix-viewer" id="stixOutput"></div>
+                <!-- Hücre Listesi -->
+                <div id="notebook-cells" class="space-y-4"></div>
+            </section>
 
-                <div class="module-title" style="margin-top: 16px;">PASİF GÜVENLİK BULGULARI (EASM)</div>
-                <div id="findingsList" style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem;">
-                    <div class="connector-card" style="border-left: 3px solid var(--accent-red);" onclick="selectEntityById('n3')">
-                        <div class="connector-info">
-                            <strong>Unutulmuş Geliştirme Sunucusu</strong>
-                            <span class="connector-sub">dev-vault.fintech-global.example.com</span>
+            <!-- ========================================== -->
+            <!-- 2. SEMBOLİK CEBİR MOTORU (CAS - Algebra, Calculus, Laplace) -->
+            <!-- ========================================== -->
+            <section id="tab-cas" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="sigma" class="w-5 h-5 text-purple-400"></i>
+                        Sembolik Hesaplama Motoru (CAS - Computer Algebra System)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Soyut Sözdizimi Ağacı (AST) tabanlı tam analitik çözümleme: Polinom çarpanlarına ayırma, analitik türev/integral, Taylor serisi, denklem çözümü ve Laplace dönüşümleri.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Girdi Kontrolleri -->
+                    <div class="lg:col-span-1 bg-bgPanel p-4 rounded-lg border border-borderCol space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Matematiksel İfade $f(x, t, s)$:</label>
+                            <input id="cas-expr" type="text" value="x^3 * exp(2*x)" class="w-full bg-bgMain border border-borderCol rounded px-3 py-2 font-mono text-sm text-white focus:outline-none focus:border-purple-500">
                         </div>
-                        <span class="badge badge-red">CVE-2023-44487</span>
-                    </div>
-                    <div class="connector-card" style="border-left: 3px solid var(--accent-amber);" onclick="selectEntityById('n6')">
-                        <div class="connector-info">
-                            <strong>Süresi Dolmak Üzere Olan TLS</strong>
-                            <span class="connector-sub">CT Log Kaydı - Kalan: 4 Gün</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Değişken:</label>
+                                <input id="cas-var" type="text" value="x" class="w-full bg-bgMain border border-borderCol rounded px-3 py-1.5 font-mono text-sm text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Mertebe / Nokta:</label>
+                                <input id="cas-param" type="text" value="1" class="w-full bg-bgMain border border-borderCol rounded px-3 py-1.5 font-mono text-sm text-white">
+                            </div>
                         </div>
-                        <span class="badge badge-amber">ORTA</span>
+
+                        <div class="space-y-2 pt-2">
+                            <div class="text-[11px] font-mono text-slate-400">Analitik Operasyon Seçin:</div>
+                            <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                                <button onclick="executeCAS('diff')" class="p-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/40 rounded text-purple-200 transition">∂/∂x Türev Al</button>
+                                <button onclick="executeCAS('integrate')" class="p-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/40 rounded text-purple-200 transition">∫ Belirsiz İntegral</button>
+                                <button onclick="executeCAS('factor')" class="p-2 bg-bgCard hover:bg-slate-700 border border-borderCol rounded text-slate-200 transition">Çarpanlara Ayır</button>
+                                <button onclick="executeCAS('expand')" class="p-2 bg-bgCard hover:bg-slate-700 border border-borderCol rounded text-slate-200 transition">İfadeyi Aç (Expand)</button>
+                                <button onclick="executeCAS('solve')" class="p-2 bg-bgCard hover:bg-slate-700 border border-borderCol rounded text-slate-200 transition">Kökleri Bul (=0)</button>
+                                <button onclick="executeCAS('taylor')" class="p-2 bg-bgCard hover:bg-slate-700 border border-borderCol rounded text-slate-200 transition">Taylor Serisi (N=5)</button>
+                                <button onclick="executeCAS('laplace')" class="p-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded text-amber-300 transition">ℒ{f(t)} Laplace</button>
+                                <button onclick="executeCAS('ilaplace')" class="p-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded text-amber-300 transition">ℒ⁻¹{F(s)} Ters Lap.</button>
+                            </div>
+                        </div>
+
+                        <!-- Hazır CAS Örnekleri -->
+                        <div class="pt-3 border-t border-borderCol space-y-1.5">
+                            <div class="text-[10px] font-mono text-slate-500 uppercase">Hazır Sembolik Problemler:</div>
+                            <button onclick="loadCASPreset('x^4 - 16', 'x', 'factor')" class="w-full text-left text-xs font-mono text-blue-400 hover:underline">• Cebir: x⁴ - 16 Çarpanlara Ayırma</button>
+                            <button onclick="loadCASPreset('sin(3*t)*exp(-2*t)', 't', 'laplace')" class="w-full text-left text-xs font-mono text-amber-400 hover:underline">• Laplace: ℒ{sin(3t)·e⁻²ᵗ} → s uzayı</button>
+                            <button onclick="loadCASPreset('1/(s^2 + 9)', 's', 'ilaplace')" class="w-full text-left text-xs font-mono text-amber-400 hover:underline">• Ters Laplace: ℒ⁻¹{1/(s² + 9)} → t uzayı</button>
+                            <button onclick="loadCASPreset('x^2 * cos(x)', 'x', 'integrate')" class="w-full text-left text-xs font-mono text-purple-400 hover:underline">• Kısmi İntegral: ∫ x²·cos(x) dx</button>
+                        </div>
+                    </div>
+
+                    <!-- Çıktı ve Görselleştirme -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="bg-bgPanel p-5 rounded-lg border border-borderCol">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs font-mono text-purple-400 uppercase tracking-wider">Sembolik LaTeX Çıktısı</span>
+                                <span id="cas-time" class="text-[11px] font-mono text-slate-500">0.4 ms</span>
+                            </div>
+                            <div id="cas-latex-input" class="p-3 bg-bgMain/60 rounded border border-borderCol/60 text-slate-300 mb-3 overflow-x-auto"></div>
+                            <div id="cas-latex-output" class="p-5 bg-bgMain rounded border border-purple-500/40 text-xl text-white min-h-[85px] flex items-center justify-center overflow-x-auto"></div>
+                            <div class="mt-3 flex items-center justify-between text-xs font-mono bg-bgCard px-3 py-2 rounded">
+                                <span class="text-slate-400">Ham AST Dizgesi: <span id="cas-raw-output" class="text-emerald-400 select-all"></span></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                            <div class="text-xs font-mono text-slate-400 mb-2">Girdi $f(x)$ ve Sonuç $g(x)$ Analitik Karşılaştırma Grafiği</div>
+                            <div id="cas-plot" class="w-full h-72"></div>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-            </div>
-        </aside>
-
-        <!-- ORTA ALT PANEL: Mesaj Kuyruğu Akışı & 6. Değiştirilemez Denetim Kayıtları -->
-        <section class="panel bottom-console">
-            <div class="panel-header">
-                <div class="console-tabs">
-                    <span class="console-tab active" id="tabAudit" onclick="switchConsole('audit')">6. Değiştirilemez Denetim Kayıtları (Immutable Audit Logs)</span>
-                    <span class="console-tab" id="tabKafka" onclick="switchConsole('kafka')">Apache Kafka Canlı Veri Akışı (Ingest Stream)</span>
+            <!-- ========================================== -->
+            <!-- 3. LİNEER CEBİR & SOYUT CEBİR MOTORU -->
+            <!-- ========================================== -->
+            <section id="tab-linalg" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="grid" class="w-5 h-5 text-cyan-400"></i>
+                        Nümerik Lineer Cebir & Soyut Cebir (Grup/Halka/Cisim) Motoru
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Matris ayrıştırmaları (LU, QR), Özdeğer/Özvektör (Eigen-decomposition), Determinant, Ters Matris ve Sonlu Cisim $\mathbb{Z}_n$ (Galois/Modüler Grup) Cayley tabloları.</p>
                 </div>
-                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green);">SHA-256 İMZALI / KVKK UYUMLU</span>
-            </div>
-            <div class="log-container" id="consoleOutput"></div>
-        </section>
 
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <!-- Matris Analizörü -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-cyan-400 font-mono">1. Matris & Özdeğer Çözücü</h3>
+                            <div class="space-x-1 text-xs font-mono">
+                                <button onclick="setSampleMatrix('sym')" class="px-2 py-1 bg-bgCard rounded border border-borderCol hover:border-cyan-400">Simetrik 3x3</button>
+                                <button onclick="setSampleMatrix('hilbert')" class="px-2 py-1 bg-bgCard rounded border border-borderCol hover:border-cyan-400">Hilbert 4x4</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400">Satırları noktalı virgül veya yeni satır ile, elemanları virgül/boşluk ile ayırın:</p>
+                        <textarea id="matrix-input" rows="4" class="w-full bg-bgMain border border-borderCol rounded p-3 font-mono text-sm text-white focus:outline-none focus:border-cyan-400">4, -1, 1
+-1, 3, -2
+1, -2, 3</textarea>
+                        <button onclick="analyzeMatrix()" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs rounded transition font-semibold">
+                            Tam Spektral & Cebirsel Analiz Çalıştır (Eigen, LU, Inv, Norm)
+                        </button>
+                        <div id="matrix-results" class="space-y-3 text-xs font-mono bg-bgMain p-4 rounded border border-borderCol max-h-96 overflow-y-auto"></div>
+                    </div>
+
+                    <!-- Soyut Cebir: Grup ve Cisim Teorisi -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-purple-400 font-mono">2. İleri Soyut Cebir ($\mathbb{Z}_n$ Halka / Cisim Analizi)</h3>
+                            <span class="text-[10px] font-mono px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded">Galois & Grup Teorisi</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Modül $n$ ($2 \le n \le 13$):</label>
+                                <input id="group-n" type="number" min="2" max="13" value="7" class="w-full bg-bgMain border border-borderCol rounded px-3 py-1.5 font-mono text-sm text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Grup İşlemi:</label>
+                                <select id="group-op" class="w-full bg-bgMain border border-borderCol rounded px-3 py-1.5 font-mono text-sm text-white">
+                                    <option value="mul">Çarpımsal Grup (ℤₙ* mod n)</option>
+                                    <option value="add">Toplamsal Grup (ℤₙ mod n)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="generateAbstractAlgebra()" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs rounded transition font-semibold">
+                            Cisim Özelliklerini Denetle & Cayley Tablosu Üret
+                        </button>
+                        <div id="abstract-algebra-info" class="p-3 bg-bgMain rounded border border-borderCol text-xs font-mono space-y-1"></div>
+                        <div id="cayley-table-container" class="overflow-x-auto"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 4. DİFERANSİYEL DENKLEMLER (Laplace PDE & ODE RK4) -->
+            <!-- ========================================== -->
+            <section id="tab-diffeq" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="waves" class="w-5 h-5 text-amber-400"></i>
+                        Diferansiyel Denklem Çözücü (2D Laplace PDE & Runge-Kutta 4 ODE Sistemi)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Kısmi Diferansiyel Denklemler ($\nabla^2 u = \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2} = 0$ Sonlu Farklar Çözümü) ve Kaotik/Doğrusal Olmayan ODE Sistemleri.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <!-- 2D Laplace Denklemi Çözücü -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-amber-400 font-mono">Kısmi Diferansiyel: 2D Laplace Denklemi ($\nabla^2 \Phi = 0$)</h3>
+                            <span class="text-[10px] font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">Gauss-Seidel SOR Solver</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Dirichlet sınır koşulları altında elektrostatik potansiyel veya kararlı-hal ısı dağılımı:</p>
+                        <div class="grid grid-cols-4 gap-2 text-xs font-mono">
+                            <div>
+                                <label class="text-slate-400">Üst ($V_{top}$)</label>
+                                <input id="pde-top" type="number" value="100" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Alt ($V_{bot}$)</label>
+                                <input id="pde-bot" type="number" value="0" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Sol ($V_{left}$)</label>
+                                <input id="pde-left" type="number" value="50" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Sağ ($V_{right}$)</label>
+                                <input id="pde-right" type="number" value="-50" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                        </div>
+                        <button onclick="solveLaplacePDE()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-mono text-xs rounded transition font-semibold">
+                            40x40 Mesh Üzerinde Laplace PDE Çöz & 3D Yüzey Çiz
+                        </button>
+                        <div id="pde-stats" class="text-[11px] font-mono text-emerald-400"></div>
+                        <div id="laplace-plot" class="w-full h-80"></div>
+                    </div>
+
+                    <!-- ODE Runge-Kutta 4 (RK4) Çözücü -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-blue-400 font-mono">Adi Diferansiyel (ODE): 4. Derece Runge-Kutta</h3>
+                            <select id="ode-preset" onchange="updateODEPreset()" class="bg-bgMain border border-borderCol rounded px-2 py-1 text-xs font-mono text-white">
+                                <option value="lorenz">Lorenz Kaotik Çekicisi (3D)</option>
+                                <option value="vanderpol">Van der Pol Osilatörü (Faz Uzayı)</option>
+                                <option value="pendulum">Sönümlü Sarkaç (θ'' + bθ' + sin(θ)=0)</option>
+                            </select>
+                        </div>
+                        <div id="ode-formula-desc" class="p-2 bg-bgMain rounded border border-borderCol text-xs font-mono text-slate-300">
+                            dx/dt = σ(y - x), dy/dt = x(ρ - z) - y, dz/dt = xy - βz (σ=10, ρ=28, β=8/3)
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+                            <div>
+                                <label class="text-slate-400">Parametre 1 (σ / μ)</label>
+                                <input id="ode-p1" type="number" step="0.1" value="10" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Parametre 2 (ρ / ω)</label>
+                                <input id="ode-p2" type="number" step="0.1" value="28" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Adım Sayısı (N)</label>
+                                <input id="ode-steps" type="number" value="3500" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                        </div>
+                        <button onclick="solveODE()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs rounded transition font-semibold">
+                            RK4 Nümerik İntegrasyon Çalıştır
+                        </button>
+                        <div id="ode-plot" class="w-full h-80 mt-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 5. GEOMETRİ, TRİGONOMETRİ & DİFERANSİYEL MANİFOLDLAR -->
+            <!-- ========================================== -->
+            <section id="tab-geometry" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="box" class="w-5 h-5 text-pink-400"></i>
+                        Trigonometri, Öklid Geometrisi ve Diferansiyel Geometri (Riemann Manifoldları)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">İnteraktif birim çember ve harmonik trigonometrik özdeşliklerden, 3 boyutlu parametrik topolojik manifoldlara (Möbius Şeridi, Torus, Eyer Yüzeyi ve Gauss Eğriliği).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <!-- Trigonometri & Öklid Çözücü -->
+                    <div class="lg:col-span-5 bg-bgPanel p-4 rounded-lg border border-borderCol space-y-4">
+                        <h3 class="text-sm font-bold text-pink-400 font-mono">Trigonometrik Analiz & Özdeşlikler</h3>
+                        <div>
+                            <label class="text-xs font-mono text-slate-400 flex justify-between">
+                                <span>Açı $\theta$ (Derece):</span>
+                                <span id="trig-deg-val" class="text-pink-400 font-bold">45° (π/4 rad)</span>
+                            </label>
+                            <input id="trig-slider" type="range" min="0" max="360" value="45" oninput="updateTrig()" class="w-full accent-pink-500 mt-2">
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <canvas id="unit-circle-canvas" width="240" height="240" class="bg-bgMain rounded border border-borderCol"></canvas>
+                        </div>
+
+                        <div id="trig-values" class="grid grid-cols-2 gap-2 text-xs font-mono bg-bgMain p-3 rounded border border-borderCol"></div>
+                    </div>
+
+                    <!-- 3D Diferansiyel Geometri & Topoloji -->
+                    <div class="lg:col-span-7 bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <h3 class="text-sm font-bold text-purple-400 font-mono">3D Diferansiyel Geometri & Manifold Render</h3>
+                            <select id="manifold-select" onchange="renderManifold()" class="bg-bgMain border border-borderCol rounded px-3 py-1.5 text-xs font-mono text-white">
+                                <option value="torus">Torus Manifoldu (S¹ × S¹)</option>
+                                <option value="mobius">Möbius Şeridi (Yönlendirilemez Topoloji)</option>
+                                <option value="saddle">Hiperbolik Paraboloid (Gauss Eğriliği K &lt; 0)</option>
+                                <option value="helicoid">Helikoid Minimal Yüzey (Ortalama Eğrilik H = 0)</option>
+                            </select>
+                        </div>
+                        <div id="manifold-info" class="p-2.5 bg-bgMain rounded border border-borderCol text-xs font-mono text-slate-300"></div>
+                        <div id="manifold-plot" class="w-full h-96"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 6. FİNANS & KANTİTATİF ANALİZ (Quant Engine) -->
+            <!-- ========================================== -->
+            <section id="tab-quant" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
+                        Kantitatif Finans & Türev Fiyatlama Motoru (Black-Scholes-Merton & Monte Carlo SDE)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">İto Kalkülüs tabanlı Geometrik Brown Hareketi ($dS_t = \mu S_t dt + \sigma S_t dW_t$), Opsiyon Yunanlıları (Delta, Gamma, Vega, Theta, Rho) ve Riske Maruz Değer (VaR %95 / %99).</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Parametreler -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3 font-mono text-xs">
+                        <div class="text-emerald-400 font-bold text-sm">Piyasa & Kontrat Parametreleri</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-slate-400">Spot Fiyat ($S_0$)</label>
+                                <input id="q-S" type="number" value="100" class="w-full bg-bgMain border border-borderCol rounded px-2.5 py-1.5 text-white mt-1">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Kullanım ($K$)</label>
+                                <input id="q-K" type="number" value="105" class="w-full bg-bgMain border border-borderCol rounded px-2.5 py-1.5 text-white mt-1">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Vade (Yıl, $T$)</label>
+                                <input id="q-T" type="number" step="0.05" value="1.0" class="w-full bg-bgMain border border-borderCol rounded px-2.5 py-1.5 text-white mt-1">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Risksız Faiz ($r$)</label>
+                                <input id="q-r" type="number" step="0.01" value="0.05" class="w-full bg-bgMain border border-borderCol rounded px-2.5 py-1.5 text-white mt-1">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Volatilite ($\sigma$)</label>
+                                <input id="q-v" type="number" step="0.01" value="0.22" class="w-full bg-bgMain border border-borderCol rounded px-2.5 py-1.5 text-white mt-1">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">MC Yol Sayısı</label>
+                                <input id="q-paths" type="number" value="250" class="w-full bg-bgMain border border-borderCol rounded px-2.5 py-1.5 text-white mt-1">
+                            </div>
+                        </div>
+                        <button onclick="runQuantEngine()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-semibold transition">
+                            Black-Scholes & Stokastik Simülasyon Çalıştır
+                        </button>
+
+                        <!-- Fiyat ve Greeks Tablosu -->
+                        <div id="quant-metrics" class="space-y-2 pt-2"></div>
+                    </div>
+
+                    <!-- Stokastik Yollar Grafiği -->
+                    <div class="lg:col-span-2 bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3">
+                        <div class="flex justify-between items-center text-xs font-mono">
+                            <span class="text-slate-300">Geometrik Brown Hareketi (GBM) Stokastik Fiyat Yolları</span>
+                            <span id="quant-var-badge" class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">VaR (95%): Hesaplanıyor...</span>
+                        </div>
+                        <div id="quant-plot" class="w-full h-96"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 7. İSTATİSTİK, OLASILIK & VERİ BİLİMİ -->
+            <!-- ========================================== -->
+            <section id="tab-stats" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
+                        İstatistik, Regresyon ve Olasılık Çıkarım Motoru
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Betimsel istatistikler, Doğrusal/Polinom Regresyon ($R^2$), Pearson Korelasyon, t-İstatistiği ve Normal Dağılım yoğunluk uyumu.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3 font-mono text-xs">
+                        <div>
+                            <label class="text-slate-400 block mb-1">X Veri Seti (Bağımsız Değişken):</label>
+                            <textarea id="stat-x" rows="3" class="w-full bg-bgMain border border-borderCol rounded p-2 text-white">1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12</textarea>
+                        </div>
+                        <div>
+                            <label class="text-slate-400 block mb-1">Y Veri Seti (Gözlenen Çıktı):</label>
+                            <textarea id="stat-y" rows="3" class="w-full bg-bgMain border border-borderCol rounded p-2 text-white">2.4, 4.1, 5.8, 8.5, 9.9, 12.4, 14.1, 15.6, 18.2, 20.5, 21.9, 24.8</textarea>
+                        </div>
+                        <button onclick="runStatistics()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-semibold transition">
+                            İstatistiksel Model & Regresyon Hesapla
+                        </button>
+                        <div id="stat-summary" class="bg-bgMain p-3 rounded border border-borderCol space-y-1.5"></div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-bgPanel p-4 rounded-lg border border-borderCol">
+                        <div class="text-xs font-mono text-slate-400 mb-2">En Küçük Kareler (OLS) Regresyon Doğrusu & Kalıntı Analizi</div>
+                        <div id="stat-plot" class="w-full h-96"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 8. MÜHENDİSLİK, SİNYAL İŞLEME (FFT) & KONTROL -->
+            <!-- ========================================== -->
+            <section id="tab-eng" class="tab-content hidden space-y-5 max-w-6xl mx-auto">
+                <div class="bg-bgPanel p-4 rounded-lg border border-borderCol">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="radio" class="w-5 h-5 text-rose-400"></i>
+                        Sinyal İşleme (Fourier / FFT Spektrumu) & Kontrol Teorisi (Bode Diyagramı)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Gürültülü sinyallerin frekans uzayına ayrıştırılması (Discrete Fourier Transform) ve LTI Transfer Fonksiyonu $H(s) = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}$ frekans yanıtı.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <!-- FFT Sinyal Analizörü -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3">
+                        <h3 class="text-sm font-bold text-rose-400 font-mono">1. Fourier Dönüşümü (Zaman & Frekans Spektrumu)</h3>
+                        <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+                            <div>
+                                <label class="text-slate-400">Frekans 1 (Hz)</label>
+                                <input id="fft-f1" type="number" value="15" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Frekans 2 (Hz)</label>
+                                <input id="fft-f2" type="number" value="42" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Gürültü ($\sigma$)</label>
+                                <input id="fft-noise" type="number" step="0.1" value="0.4" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                        </div>
+                        <button onclick="runFFT()" class="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs rounded font-semibold transition">
+                            Sinyal Üret & Frekans Spektrumunu (DFT) Çıkar
+                        </button>
+                        <div id="fft-plot" class="w-full h-80"></div>
+                    </div>
+
+                    <!-- Kontrol Teorisi Bode Diyagramı -->
+                    <div class="bg-bgPanel p-4 rounded-lg border border-borderCol space-y-3">
+                        <h3 class="text-sm font-bold text-cyan-400 font-mono">2. Kontrol Teorisi: 2. Derece Sistem Bode Diyagramı</h3>
+                        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                            <div>
+                                <label class="text-slate-400">Doğal Frekans $\omega_n$ (rad/s)</label>
+                                <input id="bode-wn" type="number" value="10" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400">Sönüm Oranı $\zeta$ (Zeta)</label>
+                                <input id="bode-zeta" type="number" step="0.05" value="0.2" class="w-full bg-bgMain border border-borderCol rounded px-2 py-1 text-white">
+                            </div>
+                        </div>
+                        <button onclick="runBode()" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs rounded font-semibold transition">
+                            Transfer Fonksiyonu Kazanç (dB) & Faz (°) Çiz
+                        </button>
+                        <div id="bode-plot" class="w-full h-80"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
 
+    <!-- BİLGİ GRAFİĞİ VE EVRENSEL SABİTLER MODALI -->
+    <div id="knowledge-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-bgPanel border border-borderCol rounded-xl max-w-2xl w-full p-5 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-borderCol pb-3">
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
+                    Yerleşik Küratörlü Bilgi Grafiği (CODATA Fiziksel & Matematiksel Sabitler)
+                </h3>
+                <button onclick="closeKnowledgeModal()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono max-h-96 overflow-y-auto">
+                <div class="p-3 bg-bgMain rounded border border-borderCol">
+                    <div class="text-blue-400 font-bold">Işık Hızı (c)</div>
+                    <div class="text-white text-sm">299,792,458 m/s</div>
+                    <div class="text-slate-500">Kesin Değer (SI Tanımı)</div>
+                </div>
+                <div class="p-3 bg-bgMain rounded border border-borderCol">
+                    <div class="text-purple-400 font-bold">Planck Sabiti (h)</div>
+                    <div class="text-white text-sm">6.62607015 × 10⁻³⁴ J·s</div>
+                    <div class="text-slate-500">Kuantum Mekanik Ölçeği</div>
+                </div>
+                <div class="p-3 bg-bgMain rounded border border-borderCol">
+                    <div class="text-emerald-400 font-bold">Kütleçekim Sabiti (G)</div>
+                    <div class="text-white text-sm">6.67430 × 10⁻¹¹ m³·kg⁻¹·s⁻²</div>
+                    <div class="text-slate-500">Genel Görelilik & Astrofizik</div>
+                </div>
+                <div class="p-3 bg-bgMain rounded border border-borderCol">
+                    <div class="text-amber-400 font-bold">Boltzmann Sabiti (k_B)</div>
+                    <div class="text-white text-sm">1.380649 × 10⁻²³ J/K</div>
+                    <div class="text-slate-500">Termodinamik & İstatistiksel Fizik</div>
+                </div>
+                <div class="p-3 bg-bgMain rounded border border-borderCol">
+                    <div class="text-pink-400 font-bold">Altın Oran (φ)</div>
+                    <div class="text-white text-sm">1.6180339887498948482...</div>
+                    <div class="text-slate-500">(1 + √5) / 2 Cebirsel İrrasyonel</div>
+                </div>
+                <div class="p-3 bg-bgMain rounded border border-borderCol">
+                    <div class="text-cyan-400 font-bold">Euler-Mascheroni Sabiti (γ)</div>
+                    <div class="text-white text-sm">0.5772156649015328606...</div>
+                    <div class="text-slate-500">Analitik Sayılar Teorisi</div>
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-400 font-mono pt-2 border-t border-borderCol">
+                İpucu: Notebook hücrelerinde <code class="text-blue-400">speedOfLight</code>, <code class="text-blue-400">planckConstant</code>, <code class="text-blue-400">gravitationConstant</code>, <code class="text-blue-400">pi</code>, <code class="text-blue-400">phi</code> doğrudan çağrılabilir.
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ÇEKİRDEK HESAPLAMA VE GÖRSELLEŞTİRME MOTORU (JAVASCRIPT) -->
+    <!-- ========================================================================= -->
     <script>
-        // XSS Güvenlik Yardımcı Fonksiyonu
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str == null ? '' : String(str);
-            return div.innerHTML;
+        // İkonları Başlat
+        lucide.createIcons();
+
+        // Ortak Plotly Karanlık Tema Ayarları
+        const plotlyDarkLayout = {
+            paper_bgcolor: '#0b101b',
+            plot_bgcolor: '#0b101b',
+            font: { family: 'JetBrains Mono, monospace', color: '#94a3b8', size: 11 },
+            margin: { l: 45, r: 20, t: 30, b: 40 },
+            xaxis: { gridcolor: '#1e293b', zerolinecolor: '#334155' },
+            yaxis: { gridcolor: '#1e293b', zerolinecolor: '#334155' }
+        };
+
+        // Sekme Geçiş Yöneticisi
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('nav-' + tabId).classList.add('active');
+
+            // İlk açılışta ilgili modülün grafiklerini tetikle
+            if (tabId === 'cas') executeCAS('diff');
+            if (tabId === 'linalg') { analyzeMatrix(); generateAbstractAlgebra(); }
+            if (tabId === 'diffeq') { solveLaplacePDE(); solveODE(); }
+            if (tabId === 'geometry') { updateTrig(); renderManifold(); }
+            if (tabId === 'quant') runQuantEngine();
+            if (tabId === 'stats') runStatistics();
+            if (tabId === 'eng') { runFFT(); runBode(); }
         }
 
-        // --- 1. VERİ MODELİ: GRAF DÜĞÜMLERİ VE KENARLARI (Neo4j Simülasyonu) ---
-        const nodes = [
-            { id: 'n1', label: 'fintech-global.example.com', type: 'DOMAIN', color: '#38bdf8', radius: 20, x: 400, y: 240, vx: 0, vy: 0, risk: 42, source: 'WHOIS / Registry', asn: 'AS13335', geo: 'Frankfurt, DE (50.1109° N, 8.6821° E)' },
-            { id: 'n2', label: 'api.fintech-global.example.com', type: 'SUBDOMAIN', color: '#38bdf8', radius: 15, x: 260, y: 150, vx: 0, vy: 0, risk: 30, source: 'Certificate Transparency', asn: 'AS16509', geo: 'Dublin, IE (53.3498° N, 6.2603° W)' },
-            { id: 'n3', label: 'dev-vault.fintech-global.example.com', type: 'SUBDOMAIN', color: '#38bdf8', radius: 16, x: 560, y: 160, vx: 0, vy: 0, risk: 88, source: 'Passive DNS', asn: 'AS14061', geo: 'Amsterdam, NL (52.3676° N, 4.9041° E)' },
-            { id: 'n4', label: '198.51.100.44', type: 'IPv4', color: '#10b981', radius: 15, x: 640, y: 280, vx: 0, vy: 0, risk: 82, source: 'Shodan Passive API', asn: 'AS14061 (DigitalOcean)', geo: 'Amsterdam, NL (52.3676° N, 4.9041° E)' },
-            { id: 'n5', label: '203.0.113.19', type: 'IPv4', color: '#10b981', radius: 14, x: 210, y: 290, vx: 0, vy: 0, risk: 24, source: 'BGP Routeviews', asn: 'AS16509 (AWS)', geo: 'Dublin, IE (53.3498° N, 6.2603° W)' },
-            { id: 'n6', label: 'TLS: *.fintech-global (Let\'s Encrypt)', type: 'CERT', color: '#a855f7', radius: 14, x: 380, y: 100, vx: 0, vy: 0, risk: 55, source: 'CT Log Argon2025', asn: 'N/A', geo: 'Global CDN' },
-            { id: 'n7', label: 'CVE-2023-44487 (HTTP/2 Rapid Reset)', type: 'VULN', color: '#ef4444', radius: 17, x: 720, y: 180, vx: 0, vy: 0, risk: 94, source: 'NVD / Banner Correlation', asn: 'AS14061', geo: 'Amsterdam, NL' },
-            { id: 'n8', label: 'mail-gw.fintech-global.example.com', type: 'SUBDOMAIN', color: '#38bdf8', radius: 14, x: 430, y: 380, vx: 0, vy: 0, risk: 35, source: 'DNS MX Kaydı', asn: 'AS8075', geo: 'Zürih, CH (47.3769° N, 8.5417° E)' }
-        ];
+        // Canlı Telemetri Simülasyonu
+        setInterval(() => {
+            const base = 142.4 + (Math.random() * 4 - 2);
+            document.getElementById('telemetry-mem').textContent = base.toFixed(1) + ' MB';
+        }, 3000);
 
-        const edges = [
-            { source: 'n1', target: 'n2', relation: 'HAS_SUBDOMAIN' },
-            { source: 'n1', target: 'n3', relation: 'HAS_SUBDOMAIN' },
-            { source: 'n1', target: 'n8', relation: 'MX_RECORD' },
-            { source: 'n2', target: 'n5', relation: 'RESOLVES_TO' },
-            { source: 'n3', target: 'n4', relation: 'RESOLVES_TO' },
-            { source: 'n6', target: 'n2', relation: 'ISSUED_FOR' },
-            { source: 'n6', target: 'n3', relation: 'ISSUED_FOR' },
-            { source: 'n4', target: 'n7', relation: 'EXPOSES_PASSIVE_CVE' }
-        ];
+        // =========================================================================
+        // 1. İNTERAKTİF NOTEBOOK MOTORU
+        // =========================================================================
+        let cellCounter = 0;
+        const notebookScope = {}; // Hücreler arası değişken paylaşımı
 
-        let selectedNode = nodes[2]; // Varsayılan: dev-vault
-        let draggingNode = null;
-        let activeConsoleTab = 'audit';
-        let currentView = 'graph';
-
-        // --- 2. KANVAS GRAF MOTORU (WebGL/Canvas Etkileşimli Fizik) ---
-        const canvas = document.getElementById('graphCanvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            const rect = canvas.parentElement.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-            }
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Enter tuşu ile arama desteği
-        document.getElementById('osintSearch').addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                triggerPassiveScan();
-            }
-        });
-
-        function updatePhysics() {
-            if (currentView !== 'graph' || canvas.width === 0 || canvas.height === 0) return;
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            // İtme kuvveti (Düğümler birbirini iter)
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    const dx = nodes[j].x - nodes[i].x;
-                    const dy = nodes[j].y - nodes[i].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                    if (dist < 220) {
-                        const force = (220 - dist) * 0.015;
-                        const fx = (dx / dist) * force;
-                        const fy = (dy / dist) * force;
-                        nodes[i].vx -= fx;
-                        nodes[i].vy -= fy;
-                        nodes[j].vx += fx;
-                        nodes[j].vy += fy;
-                    }
+        function resultToLatex(val) {
+            if (val === undefined || val === null) return '\\text{null}';
+            if (val.isNode) return val.toTex();
+            if (typeof val === 'number') return math.format(val, { precision: 12 });
+            if (val.isComplex) return math.format(val, { precision: 10 });
+            if (val.isUnit) return '\\text{' + val.toString() + '}';
+            if (val.isMatrix || Array.isArray(val)) {
+                const arr = val.isMatrix ? val.toArray() : val;
+                if (Array.isArray(arr) && arr.length > 0 && Array.isArray(arr[0])) {
+                    const rows = arr.map(r => r.map(x => math.format(x, { precision: 6 })).join(' & ')).join(' \\\\ ');
+                    return `\\begin{bmatrix} ${rows} \\end{bmatrix}`;
+                } else if (Array.isArray(arr)) {
+                    const items = arr.map(x => math.format(x, { precision: 6 })).join(',\\; ');
+                    return `\\begin{bmatrix} ${items} \\end{bmatrix}`;
                 }
             }
-
-            // Yay kuvveti (Bağlı kenarlar birbirini çeker)
-            edges.forEach(e => {
-                const s = nodes.find(n => n.id === e.source);
-                const t = nodes.find(n => n.id === e.target);
-                if (!s || !t) return;
-                const dx = t.x - s.x;
-                const dy = t.y - s.y;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                const targetDist = 145;
-                const force = (dist - targetDist) * 0.02;
-                const fx = (dx / dist) * force;
-                const fy = (dy / dist) * force;
-                s.vx += fx;
-                s.vy += fy;
-                t.vx -= fx;
-                t.vy -= fy;
-            });
-
-            // Merkeze hafif çekim ve hız sönümleme
-            nodes.forEach(n => {
-                if (n === draggingNode) return;
-                n.vx += (centerX - n.x) * 0.0015;
-                n.vy += (centerY - n.y) * 0.0015;
-                n.vx *= 0.85;
-                n.vy *= 0.85;
-                n.x += n.vx;
-                n.y += n.vy;
-
-                // Sınır kontrolü
-                n.x = Math.max(40, Math.min(canvas.width - 40, n.x));
-                n.y = Math.max(60, Math.min(canvas.height - 50, n.y));
-            });
+            return '\\texttt{' + math.format(val, { precision: 12 }).replace(/[{}_^\\]/g, '') + '}';
         }
 
-        function drawGraph() {
-            if (currentView === 'graph') {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function addNotebookCell(initialCode = '') {
+            cellCounter++;
+            const id = cellCounter;
+            const container = document.getElementById('notebook-cells');
+            const cellDiv = document.createElement('div');
+            cellDiv.id = `cell-${id}`;
+            cellDiv.className = 'bg-bgPanel rounded-lg border border-borderCol glow-border transition overflow-hidden';
+            cellDiv.innerHTML = `
+                <div class="flex items-center justify-between px-3 py-1.5 bg-bgCard border-b border-borderCol text-xs font-mono">
+                    <span class="text-blue-400 font-semibold">In [${id}]:</span>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="evaluateCell(${id})" class="px-2 py-0.5 bg-blue-600/30 hover:bg-blue-600 text-blue-200 hover:text-white rounded transition">▶ Çalıştır</button>
+                        <button onclick="document.getElementById('cell-${id}').remove()" class="text-slate-500 hover:text-rose-400 px-1">✕</button>
+                    </div>
+                </div>
+                <div class="p-2 code-editor">
+                    <textarea id="cell-input-${id}" rows="2" placeholder="Matematiksel ifade, matris tanımı veya plot2d(&quot;sin(x)&quot;, -6, 6) yazın..." 
+                        class="w-full bg-transparent text-sm text-emerald-300 focus:outline-none resize-y"
+                        onkeydown="if(event.shiftKey && event.key === 'Enter'){ event.preventDefault(); evaluateCell(${id}); }"></textarea>
+                </div>
+                <div id="cell-out-wrap-${id}" class="hidden border-t border-borderCol bg-bgMain/80 p-3 font-mono text-sm">
+                    <div class="text-[11px] text-purple-400 mb-1">Out [${id}]:</div>
+                    <div id="cell-output-${id}" class="text-white overflow-x-auto"></div>
+                    <div id="cell-plot-${id}" class="hidden w-full h-64 mt-3"></div>
+                </div>
+            `;
+            container.appendChild(cellDiv);
+            const textarea = document.getElementById(`cell-input-${id}`);
+            textarea.value = initialCode;
+            if (initialCode) evaluateCell(id);
+        }
 
-                // Kenarları Çiz
-                edges.forEach(e => {
-                    const s = nodes.find(n => n.id === e.source);
-                    const t = nodes.find(n => n.id === e.target);
-                    if (!s || !t) return;
+        function evaluateCell(id) {
+            const raw = document.getElementById(`cell-input-${id}`).value.trim();
+            if (!raw) return;
+            const outWrap = document.getElementById(`cell-out-wrap-${id}`);
+            const outDiv = document.getElementById(`cell-output-${id}`);
+            const plotDiv = document.getElementById(`cell-plot-${id}`);
+            outWrap.classList.remove('hidden');
+            plotDiv.classList.add('hidden');
 
-                    ctx.beginPath();
-                    ctx.moveTo(s.x, s.y);
-                    ctx.lineTo(t.x, t.y);
-                    ctx.strokeStyle = (selectedNode && (selectedNode.id === s.id || selectedNode.id === t.id))
-                        ? '#38bdf8' : 'rgba(148, 163, 184, 0.28)';
-                    ctx.lineWidth = (selectedNode && (selectedNode.id === s.id || selectedNode.id === t.id)) ? 2 : 1.2;
-                    ctx.stroke();
-
-                    // İlişki Etiketi
-                    const midX = (s.x + t.x) / 2;
-                    const midY = (s.y + t.y) / 2;
-                    ctx.fillStyle = '#64748b';
-                    ctx.font = '10px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(e.relation, midX, midY - 4);
-                });
-
-                // Düğümleri Çiz
-                nodes.forEach(n => {
-                    const isSelected = selectedNode && selectedNode.id === n.id;
-
-                    // Seçili Hale / Glow
-                    if (isSelected || n.type === 'VULN') {
-                        ctx.beginPath();
-                        ctx.arc(n.x, n.y, n.radius + 7, 0, Math.PI * 2);
-                        ctx.fillStyle = isSelected ? 'rgba(56, 189, 248, 0.22)' : 'rgba(239, 68, 68, 0.18)';
-                        ctx.fill();
+            try {
+                // Özel DSL fonksiyonu: plot2d("ifade", min, max)
+                const plotMatch = raw.match(/^plot2d\(\s*["'](.+?)["']\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)$/i);
+                if (plotMatch) {
+                    const exprStr = plotMatch[1];
+                    const xMin = parseFloat(plotMatch[2]);
+                    const xMax = parseFloat(plotMatch[3]);
+                    const compiled = math.compile(exprStr);
+                    const xs = [], ys = [];
+                    const N = 400;
+                    for (let i = 0; i <= N; i++) {
+                        const x = xMin + (xMax - xMin) * (i / N);
+                        xs.push(x);
+                        ys.push(compiled.evaluate({ ...notebookScope, x }));
                     }
+                    outDiv.innerHTML = `<span class="text-cyan-400">Grafik oluşturuldu: f(x) = ${exprStr} [${xMin}, ${xMax}]</span>`;
+                    plotDiv.classList.remove('hidden');
+                    Plotly.newPlot(plotDiv, [{ x: xs, y: ys, mode: 'lines', line: { color: '#3b82f6', width: 2.5 } }], plotlyDarkLayout, { responsive: true });
+                    return;
+                }
 
-                    ctx.beginPath();
-                    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = n.color;
-                    ctx.fill();
-                    ctx.lineWidth = isSelected ? 3 : 1.5;
-                    ctx.strokeStyle = isSelected ? '#ffffff' : '#0f172a';
-                    ctx.stroke();
-
-                    // Düğüm Metni
-                    ctx.fillStyle = '#f8fafc';
-                    ctx.font = isSelected ? 'bold 12px Inter, sans-serif' : '11px Inter, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(n.label, n.x, n.y + n.radius + 15);
+                // Çok satırlı ifadeleri destekle
+                const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+                let lastResult;
+                lines.forEach(line => {
+                    lastResult = math.evaluate(line, notebookScope);
                 });
 
-                updatePhysics();
+                // LaTeX veya Formatlı Çıktı
+                try {
+                    const lhsNode = math.parse(lines[lines.length - 1]);
+                    const rhsTex = resultToLatex(lastResult);
+                    const fullTex = lhsNode.isNode && lastResult && lastResult.isNode
+                        ? rhsTex
+                        : `${lhsNode.toTex()} = ${rhsTex}`;
+                    katex.render(fullTex, outDiv, { displayMode: false, throwOnError: false });
+                } catch {
+                    outDiv.textContent = math.format(lastResult, { precision: 14 });
+                }
+            } catch (err) {
+                outDiv.innerHTML = `<span class="text-rose-400">Hesaplama Hatası: ${err.message}</span>`;
             }
-            requestAnimationFrame(drawGraph);
         }
 
-        // Fare Etkileşimleri
-        canvas.addEventListener('mousedown', e => {
-            const rect = canvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
+        function runAllCells() {
+            document.querySelectorAll('[id^="cell-input-"]').forEach(el => {
+                const id = el.id.replace('cell-input-', '');
+                evaluateCell(id);
+            });
+        }
 
-            for (let i = nodes.length - 1; i >= 0; i--) {
-                const n = nodes[i];
-                const dist = Math.hypot(mx - n.x, my - n.y);
-                if (dist <= n.radius + 6) {
-                    draggingNode = n;
-                    selectEntity(n);
-                    break;
+        // Başlangıç Notebook Hücreleri ve Satır-İçi LaTeX Render
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+            addNotebookCell('A = [4, 2, 1; 2, 5, -1; 1, -1, 3]\neigs(A).values');
+            addNotebookCell('integrate_approx = (1 / sqrt(2 * pi)) * exp(-0.5 * 1.96^2)');
+            addNotebookCell('plot2d("sin(x) * cos(0.3*x)", -12, 12)');
+        });
+
+        // =========================================================================
+        // 2. SEMBOLİK CEBİR MOTORU (CAS - Nerdamer + KaTeX)
+        // =========================================================================
+        function buildSymbolicTaylor(expr, v, center = 0, order = 5) {
+            let current = nerdamer(expr);
+            let terms = [];
+            let fact = 1;
+            for (let k = 0; k <= order; k++) {
+                if (k > 0) {
+                    current = nerdamer.diff(current, v);
+                    fact *= k;
+                }
+                const atCenter = current.sub(v, center);
+                const valStr = atCenter.toString();
+                if (valStr !== '0') {
+                    const shift = center === 0 ? v : `(${v}-(${center}))`;
+                    const basis = k === 0 ? '1' : (k === 1 ? shift : `${shift}^${k}`);
+                    terms.push(`((${valStr})/${fact})*(${basis})`);
                 }
             }
-        });
-
-        canvas.addEventListener('mousemove', e => {
-            if (!draggingNode) return;
-            const rect = canvas.getBoundingClientRect();
-            draggingNode.x = e.clientX - rect.left;
-            draggingNode.y = e.clientY - rect.top;
-            draggingNode.vx = 0;
-            draggingNode.vy = 0;
-        });
-
-        window.addEventListener('mouseup', () => {
-            draggingNode = null;
-        });
-
-        function resetGraphPhysics() {
-            resizeCanvas();
-            nodes.forEach((n, idx) => {
-                const angle = (idx / nodes.length) * Math.PI * 2;
-                n.x = canvas.width / 2 + Math.cos(angle) * 160;
-                n.y = canvas.height / 2 + Math.sin(angle) * 140;
-                n.vx = 0;
-                n.vy = 0;
-            });
-            addAuditLog('UI_GRAPH_RESET', 'Analist graf topolojisini yeniden merkezledi.');
+            return nerdamer(terms.length ? `expand(${terms.join('+')})` : '0');
         }
 
-        // --- 3. SAĞ PANEL: VARLIK ÇÖZÜMLEME & STIX 2.1 ÜRETİCİ ---
-        function selectEntityById(id) {
-            const found = nodes.find(n => n.id === id);
-            if (found) selectEntity(found);
+        function loadCASPreset(expr, variable, op) {
+            document.getElementById('cas-expr').value = expr;
+            document.getElementById('cas-var').value = variable;
+            executeCAS(op);
         }
 
-        function selectEntity(node) {
-            selectedNode = node;
-            const scoreEl = document.getElementById('selectedRiskScore');
-            scoreEl.textContent = node.risk;
-            scoreEl.style.color = node.risk >= 75 ? '#ef4444' : (node.risk >= 45 ? '#f59e0b' : '#10b981');
+        function executeCAS(operation) {
+            const t0 = performance.now();
+            const expr = document.getElementById('cas-expr').value.trim();
+            const v = document.getElementById('cas-var').value.trim() || 'x';
+            const rawParam = parseFloat(document.getElementById('cas-param').value);
+            const param = isNaN(rawParam) ? 1 : rawParam;
 
-            const riskBox = document.querySelector('.risk-score-box');
-            if (riskBox) {
-                const borderCol = node.risk >= 75 ? 'rgba(239, 68, 68, 0.4)' : (node.risk >= 45 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.4)');
-                const gradCol = node.risk >= 75 ? 'rgba(239, 68, 68, 0.1)' : (node.risk >= 45 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)');
-                riskBox.style.borderColor = borderCol;
-                riskBox.style.background = `linear-gradient(135deg, ${gradCol}, rgba(15, 23, 42, 0.9))`;
+            const inEl = document.getElementById('cas-latex-input');
+            const outEl = document.getElementById('cas-latex-output');
+            const rawEl = document.getElementById('cas-raw-output');
+
+            try {
+                let resObj, prefixTex = '';
+                const inTex = nerdamer(expr).toTeX();
+
+                switch (operation) {
+                    case 'diff': {
+                        const ord = Math.max(1, Math.min(8, Math.round(param)));
+                        resObj = nerdamer(`diff(${expr}, ${v}, ${ord})`);
+                        prefixTex = `\\frac{d^{${ord > 1 ? ord : ''}}}{d${v}^{${ord > 1 ? ord : ''}}} \\left( ${inTex} \\right) = `;
+                        break;
+                    }
+                    case 'integrate':
+                        resObj = nerdamer(`integrate(${expr}, ${v})`);
+                        prefixTex = `\\int \\left( ${inTex} \\right) d${v} = `;
+                        break;
+                    case 'factor':
+                        resObj = nerdamer(`factor(${expr})`);
+                        prefixTex = `\\text{Çarpanlar}\\left( ${inTex} \\right) = `;
+                        break;
+                    case 'expand':
+                        resObj = nerdamer(`expand(${expr})`);
+                        prefixTex = `\\text{Açılım}\\left( ${inTex} \\right) = `;
+                        break;
+                    case 'solve':
+                        resObj = nerdamer.solve(expr, v);
+                        prefixTex = `${inTex} = 0 \\implies ${v} \\in `;
+                        break;
+                    case 'taylor': {
+                        const center = document.getElementById('cas-param').value.trim() === '1' ? 0 : (isNaN(rawParam) ? 0 : rawParam);
+                        resObj = buildSymbolicTaylor(expr, v, center, 5);
+                        prefixTex = `T_5\\left( ${inTex};\\, ${v}=${center} \\right) = `;
+                        break;
+                    }
+                    case 'laplace':
+                        resObj = nerdamer(`laplace(${expr}, ${v}, s)`);
+                        prefixTex = `\\mathcal{L}\\left\\{ ${inTex} \\right\\}(s) = `;
+                        break;
+                    case 'ilaplace':
+                        resObj = nerdamer(`ilt(${expr}, ${v}, t)`);
+                        prefixTex = `\\mathcal{L}^{-1}\\left\\{ ${inTex} \\right\\}(t) = `;
+                        break;
+                }
+
+                const outTex = resObj.toTeX() + (operation === 'integrate' ? ' + C' : '');
+                katex.render(`f(${v}) = ${inTex}`, inEl, { throwOnError: false });
+                katex.render(prefixTex + outTex, outEl, { displayMode: true, throwOnError: false });
+                rawEl.textContent = resObj.toString();
+
+                const dt = (performance.now() - t0).toFixed(2);
+                document.getElementById('cas-time').textContent = `${dt} ms (AST Exact)`;
+
+                // Girdi ve Çıktı Fonksiyonlarını Grafikle (Tek değişkenli ise)
+                plotCASFunctions(expr, resObj.toString(), v, operation);
+            } catch (e) {
+                outEl.innerHTML = `<span class="text-sm text-rose-400 font-mono">Sembolik Çözümleme Uyarısı: ${e.message}</span>`;
+            }
+        }
+
+        function plotCASFunctions(inStr, outStr, v, op) {
+            const xs = [], yIn = [], yOut = [];
+            const outVar = op === 'laplace' ? 's' : (op === 'ilaplace' ? 't' : v);
+            for (let x = -4; x <= 4; x += 0.08) {
+                if (Math.abs(x) < 0.05) continue; // Tekilliklerden kaçın
+                xs.push(x);
+                try {
+                    const val1 = parseFloat(nerdamer(inStr, { [v]: x }).evaluate().text());
+                    yIn.push(isFinite(val1) && Math.abs(val1) < 100 ? val1 : null);
+                } catch { yIn.push(null); }
+
+                if (op !== 'solve') {
+                    try {
+                        const val2 = parseFloat(nerdamer(outStr, { [outVar]: x }).evaluate().text());
+                        yOut.push(isFinite(val2) && Math.abs(val2) < 100 ? val2 : null);
+                    } catch { yOut.push(null); }
+                }
+            }
+            const traces = [
+                { x: xs, y: yIn, name: `Girdi f(${v})`, mode: 'lines', line: { color: '#60a5fa', width: 2 } }
+            ];
+            if (yOut.length) {
+                traces.push({ x: xs, y: yOut, name: `Sonuç g(${outVar})`, mode: 'lines', line: { color: '#c084fc', width: 2, dash: 'dot' } });
+            }
+            Plotly.newPlot('cas-plot', traces, plotlyDarkLayout, { responsive: true });
+        }
+
+        // =========================================================================
+        // 3. LİNEER CEBİR & SOYUT CEBİR MOTORU
+        // =========================================================================
+        function qrEigenvaluesFallback(M) {
+            // Genel (simetrik olmayan dahil) kare matrisler için QR İterasyonu
+            let A = math.clone(M);
+            for (let k = 0; k < 120; k++) {
+                const { Q, R } = math.qr(A);
+                A = math.multiply(R, Q);
+            }
+            const arr = A.toArray();
+            const n = arr.length;
+            const eigs = [];
+            let i = 0;
+            while (i < n) {
+                if (i < n - 1 && Math.abs(arr[i + 1][i]) > 1e-6) {
+                    // 2x2 Schur bloğu (karmaşık eşlenik özdeğer çifti)
+                    const a = arr[i][i], b = arr[i][i + 1], c = arr[i + 1][i], d = arr[i + 1][i + 1];
+                    const tr = a + d;
+                    const det = a * d - b * c;
+                    const disc = tr * tr - 4 * det;
+                    if (disc >= 0) {
+                        eigs.push((tr + Math.sqrt(disc)) / 2, (tr - Math.sqrt(disc)) / 2);
+                    } else {
+                        const re = tr / 2, im = Math.sqrt(-disc) / 2;
+                        eigs.push(math.complex(re, im), math.complex(re, -im));
+                    }
+                    i += 2;
+                } else {
+                    eigs.push(arr[i][i]);
+                    i += 1;
+                }
+            }
+            return eigs;
+        }
+
+        function setSampleMatrix(type) {
+            if (type === 'sym') {
+                document.getElementById('matrix-input').value = "4, -1, 1\n-1, 3, -2\n1, -2, 3";
+            } else {
+                document.getElementById('matrix-input').value = "1, 0.5, 0.3333, 0.25\n0.5, 0.3333, 0.25, 0.2\n0.3333, 0.25, 0.2, 0.1667\n0.25, 0.2, 0.1667, 0.1428";
+            }
+            analyzeMatrix();
+        }
+
+        function analyzeMatrix() {
+            const raw = document.getElementById('matrix-input').value.trim();
+            const resBox = document.getElementById('matrix-results');
+            try {
+                const rows = raw.split(/[\n;]+/).map(r => r.trim().split(/[\s,]+/).filter(Boolean).map(Number));
+                const M = math.matrix(rows);
+                const size = M.size();
+                if (size.length !== 2 || size[0] !== size[1]) throw new Error("Tam spektral analiz için kare matris (NxN) giriniz.");
+
+                const det = math.det(M);
+                const trace = math.trace(M);
+                const normF = math.norm(M, 'fro');
+                let eigValues;
+                try {
+                    eigValues = math.eigs(M).values;
+                } catch {
+                    eigValues = qrEigenvaluesFallback(M);
+                }
+                const lupObj = math.lup(M);
+                let invStr = "Tekil Matris (det ≈ 0, Terslenemez)";
+                if (Math.abs(det) > 1e-10) {
+                    invStr = JSON.stringify(math.round(math.inv(M), 4).toArray());
+                }
+
+                resBox.innerHTML = `
+                    <div class="grid grid-cols-3 gap-2 pb-2 border-b border-borderCol">
+                        <div><span class="text-slate-400">Boyut:</span> <span class="text-white">${size[0]}×${size[1]}</span></div>
+                        <div><span class="text-slate-400">Determinant:</span> <span class="text-cyan-400">${det.toFixed(5)}</span></div>
+                        <div><span class="text-slate-400">İz (Trace):</span> <span class="text-emerald-400">${trace.toFixed(4)}</span></div>
+                    </div>
+                    <div><span class="text-slate-400">Frobenius Normu ||A||_F:</span> <span class="text-white">${normF.toFixed(5)}</span></div>
+                    <div><span class="text-purple-400 font-bold">Özdeğerler (Eigenvalues λ):</span><br>
+                        <span class="text-white">${math.format(eigValues, { precision: 5 })}</span>
+                    </div>
+                    <div><span class="text-cyan-400 font-bold">Ters Matris (A⁻¹):</span><br>
+                        <span class="text-slate-300 break-all">${invStr}</span>
+                    </div>
+                    <div><span class="text-amber-400 font-bold">LU Ayrıştırması Üst Üçgen (U):</span><br>
+                        <span class="text-slate-300 break-all">${JSON.stringify(math.round(lupObj.U, 3).toArray())}</span>
+                    </div>
+                `;
+            } catch (err) {
+                resBox.innerHTML = `<span class="text-rose-400">Matris Hatası: ${err.message}</span>`;
+            }
+        }
+
+        function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+        function isPrime(n) {
+            if (n < 2) return false;
+            for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+            return true;
+        }
+
+        function generateAbstractAlgebra() {
+            const n = Math.min(13, Math.max(2, parseInt(document.getElementById('group-n').value) || 7));
+            const op = document.getElementById('group-op').value;
+            const infoEl = document.getElementById('abstract-algebra-info');
+            const tableEl = document.getElementById('cayley-table-container');
+
+            const primeField = isPrime(n);
+            let totient = 0;
+            for (let i = 1; i < n; i++) if (gcd(i, n) === 1) totient++;
+
+            let elements = [];
+            if (op === 'add') {
+                for (let i = 0; i < n; i++) elements.push(i);
+            } else {
+                for (let i = 1; i < n; i++) if (gcd(i, n) === 1) elements.push(i);
             }
 
-            document.getElementById('selectedRiskLabel').textContent =
-                node.risk >= 75 ? 'Kritik Açık Yüzey (Pasif Tespit)' :
-                (node.risk >= 45 ? 'Orta Seviye Maruziyet' : 'Düşük Riskli Dijital Varlık');
-
-            document.getElementById('entityInspector').innerHTML = `
-                <div class="detail-row"><span class="detail-label">Varlık Değeri:</span><span class="detail-val">${escapeHtml(node.label)}</span></div>
-                <div class="detail-row"><span class="detail-label">Sınıf (NER):</span><span class="detail-val">${escapeHtml(node.type)}</span></div>
-                <div class="detail-row"><span class="detail-label">Veri Kaynağı:</span><span class="detail-val">${escapeHtml(node.source)}</span></div>
-                <div class="detail-row"><span class="detail-label">BGP / ASN:</span><span class="detail-val">${escapeHtml(node.asn)}</span></div>
-                <div class="detail-row"><span class="detail-label">GeoIP Konum:</span><span class="detail-val">${escapeHtml(node.geo)}</span></div>
+            infoEl.innerHTML = `
+                <div><span class="text-slate-400">Cebirsel Yapı:</span> <span class="text-white font-bold">${primeField ? `Sonlu Galois Cismi GF(${n}) — Tam Cisim` : `Değişmeli Halka ℤ_${n} (Sıfır Bölenli)`}</span></div>
+                <div><span class="text-slate-400">Grup Mertebesi |G|:</span> <span class="text-purple-400">${elements.length}</span> (Euler φ(${n}) = ${totient})</div>
+                <div><span class="text-slate-400">Eleman Kümesi:</span> <span class="text-emerald-400">{ ${elements.join(', ')} }</span></div>
             `;
 
-            const stixTypeMap = {
-                VULN: 'vulnerability',
-                IPv4: 'ipv4-addr',
-                DOMAIN: 'domain-name',
-                SUBDOMAIN: 'domain-name',
-                CERT: 'x509-certificate'
-            };
-            const stixType = stixTypeMap[node.type] || 'infrastructure';
+            let html = `<table class="w-full text-center font-mono text-xs border-collapse"><thead><tr><th class="p-1.5 bg-purple-600/30 border border-borderCol text-purple-300">${op === 'add' ? '⊕' : '⊗'}</th>`;
+            elements.forEach(e => html += `<th class="p-1.5 bg-bgCard border border-borderCol text-slate-300">${e}</th>`);
+            html += `</tr></thead><tbody>`;
 
-            const stixObj = {
-                type: "bundle",
-                id: `bundle--${cryptoRandomUuid()}`,
-                spec_version: "2.1",
-                objects: [
-                    {
-                        type: stixType,
-                        id: `${stixType}--${cryptoRandomUuid()}`,
-                        created: new Date().toISOString(),
-                        name: node.label,
-                        confidence: 92,
-                        labels: ["passive-osint", "easm-monitored", node.source.toLowerCase().replace(/[^a-z0-9]+/g, '-')],
-                        x_risk_score: node.risk,
-                        x_asn_route: node.asn
+            elements.forEach(r => {
+                html += `<tr><th class="p-1.5 bg-bgCard border border-borderCol text-slate-300">${r}</th>`;
+                elements.forEach(c => {
+                    const val = op === 'add' ? (r + c) % n : (r * c) % n;
+                    const isIdentity = (op === 'add' && val === 0) || (op === 'mul' && val === 1);
+                    html += `<td class="p-1.5 border border-borderCol ${isIdentity ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-slate-200'}">${val}</td>`;
+                });
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
+            tableEl.innerHTML = html;
+        }
+
+        // =========================================================================
+        // 4. DİFERANSİYEL DENKLEMLER: 2D LAPLACE PDE & RK4 ODE
+        // =========================================================================
+        function solveLaplacePDE() {
+            const vTop = parseFloat(document.getElementById('pde-top').value) || 0;
+            const vBot = parseFloat(document.getElementById('pde-bot').value) || 0;
+            const vLeft = parseFloat(document.getElementById('pde-left').value) || 0;
+            const vRight = parseFloat(document.getElementById('pde-right').value) || 0;
+
+            const N = 38;
+            const u = Array.from({ length: N }, () => Array(N).fill(0));
+
+            // Dirichlet Sınır Koşulları
+            for (let i = 0; i < N; i++) {
+                u[0][i] = vBot;
+                u[N - 1][i] = vTop;
+                u[i][0] = vLeft;
+                u[i][N - 1] = vRight;
+            }
+
+            // Gauss-Seidel Ardışık Aşırı Gevşeme (SOR) Çözücüsü: ∇²u = 0
+            const omega = 1.75;
+            let iter = 0, maxDiff = 1;
+            while (iter < 800 && maxDiff > 1e-4) {
+                maxDiff = 0;
+                for (let i = 1; i < N - 1; i++) {
+                    for (let j = 1; j < N - 1; j++) {
+                        const old = u[i][j];
+                        const gs = 0.25 * (u[i + 1][j] + u[i - 1][j] + u[i][j + 1] + u[i][j - 1]);
+                        u[i][j] = old + omega * (gs - old);
+                        maxDiff = Math.max(maxDiff, Math.abs(u[i][j] - old));
                     }
-                ]
-            };
-            document.getElementById('stixOutput').textContent = JSON.stringify(stixObj, null, 2);
-            addAuditLog('ENTITY_INSPECT', `Varlık incelendi: ${node.label} (Risk: ${node.risk})`);
+                }
+                iter++;
+            }
+
+            document.getElementById('pde-stats').textContent = `✓ Yakınsama sağlandı: ${iter} iterasyon | Maksimum Kalıntı (Residual): ${maxDiff.toExponential(2)}`;
+
+            Plotly.newPlot('laplace-plot', [{
+                z: u,
+                type: 'surface',
+                colorscale: 'Jet',
+                contours: { z: { show: true, usecolormap: true, project: { z: true } } }
+            }], {
+                ...plotlyDarkLayout,
+                margin: { l: 0, r: 0, t: 10, b: 0 },
+                scene: {
+                    xaxis: { title: 'X', gridcolor: '#334155' },
+                    yaxis: { title: 'Y', gridcolor: '#334155' },
+                    zaxis: { title: 'Φ(x,y)', gridcolor: '#334155' },
+                    bgcolor: '#0b101b'
+                }
+            }, { responsive: true });
         }
 
-        function copyStix() {
-            const text = document.getElementById('stixOutput').textContent;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+        function updateODEPreset() {
+            const type = document.getElementById('ode-preset').value;
+            const desc = document.getElementById('ode-formula-desc');
+            if (type === 'lorenz') {
+                desc.textContent = "dx/dt = σ(y - x), dy/dt = x(ρ - z) - y, dz/dt = xy - βz";
+                document.getElementById('ode-p1').value = 10;
+                document.getElementById('ode-p2').value = 28;
+            } else if (type === 'vanderpol') {
+                desc.textContent = "d²x/dt² - μ(1 - x²)(dx/dt) + ω²x = 0 (Limit Çevrim Faz Uzayı)";
+                document.getElementById('ode-p1').value = 1.8;
+                document.getElementById('ode-p2').value = 1.0;
             } else {
-                fallbackCopy(text);
+                desc.textContent = "d²θ/dt² + b(dθ/dt) + (g/L)sin(θ) = 0 (Doğrusal Olmayan Sarkaç)";
+                document.getElementById('ode-p1').value = 0.25;
+                document.getElementById('ode-p2').value = 9.81;
             }
-            addAuditLog('STIX_EXPORT', `STIX 2.1 istihbarat paketi panoya kopyalandı (${selectedNode.label}).`);
+            solveODE();
         }
 
-        function fallbackCopy(text) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            try { document.execCommand('copy'); } catch (e) {}
-            document.body.removeChild(ta);
-        }
+        function solveODE() {
+            const type = document.getElementById('ode-preset').value;
+            const p1 = parseFloat(document.getElementById('ode-p1').value) || 10;
+            const p2 = parseFloat(document.getElementById('ode-p2').value) || 28;
+            const steps = Math.min(8000, parseInt(document.getElementById('ode-steps').value) || 3000);
+            const dt = 0.01;
 
-        // --- 4. DEĞİŞTİRİLEMEZ DENETİM KAYITLARI (IMMUTABLE AUDIT LOG) & KAFKA STREAM ---
-        const auditLogs = [];
-        const kafkaLogs = [];
-
-        function cryptoRandomHex(len) {
-            let out = '';
-            const chars = '0123456789abcdef';
-            for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-            return out;
-        }
-
-        function cryptoRandomUuid() {
-            if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-            return `${cryptoRandomHex(8)}-${cryptoRandomHex(4)}-4${cryptoRandomHex(3)}-a${cryptoRandomHex(3)}-${cryptoRandomHex(12)}`;
-        }
-
-        function addAuditLog(action, message) {
-            const time = new Date().toLocaleTimeString('tr-TR', { hour12: false });
-            const sig = `sha256:${cryptoRandomHex(20)}...`;
-            auditLogs.unshift({ time, source: action, msg: `[SOC_LEAD] ${message}`, hash: sig });
-            if (auditLogs.length > 40) auditLogs.pop();
-            if (activeConsoleTab === 'audit') renderConsole();
-        }
-
-        function addKafkaStreamLog() {
-            const sources = ['rust-ct-collector', 'go-pdns-worker', 'bgp-route-ingester', 'nlp-stix-enricher'];
-            const msgs = [
-                'Yeni SSL sertifikası ayrıştırıldı -> stix.observed-data kuyruğuna iletildi.',
-                'Redis Bloom Filter kontrolü tamamlandı: Mükerrer kayıt atlandı (0.3ms).',
-                'OpenSearch indeksleme başarılı: Pasif A kaydı güncellendi.',
-                'NER Modeli teknik bültenden 2 yeni CVE referansı ayıkladı.'
-            ];
-            const time = new Date().toLocaleTimeString('tr-TR', { hour12: false });
-            const src = sources[Math.floor(Math.random() * sources.length)];
-            const msg = msgs[Math.floor(Math.random() * msgs.length)];
-            kafkaLogs.unshift({ time, source: src, msg, hash: `offset:${Math.floor(100000 + Math.random() * 900000)}` });
-            if (kafkaLogs.length > 40) kafkaLogs.pop();
-            if (activeConsoleTab === 'kafka') renderConsole();
-        }
-
-        function renderConsole() {
-            const container = document.getElementById('consoleOutput');
-            const list = activeConsoleTab === 'audit' ? auditLogs : kafkaLogs;
-            container.innerHTML = list.map(item => `
-                <div class="log-entry">
-                    <span class="log-time">${escapeHtml(item.time)}</span>
-                    <span class="log-source">[${escapeHtml(item.source)}]</span>
-                    <span class="log-msg">${escapeHtml(item.msg)}</span>
-                    <span class="log-hash">${escapeHtml(item.hash)}</span>
-                </div>
-            `).join('');
-        }
-
-        function switchConsole(tab) {
-            activeConsoleTab = tab;
-            document.getElementById('tabAudit').classList.toggle('active', tab === 'audit');
-            document.getElementById('tabKafka').classList.toggle('active', tab === 'kafka');
-            renderConsole();
-        }
-
-        // --- 5. FONKSİYONEL OSINT EYLEMLERİ (Sorgu, Yeni Düğüm, GIS, SIEM) ---
-        function triggerPassiveScan() {
-            const query = document.getElementById('osintSearch').value.trim();
-            if (!query) return;
-
-            const existing = nodes.find(n => n.label.toLowerCase() === query.toLowerCase());
-            if (existing) {
-                selectEntity(existing);
-                addAuditLog('PASSIVE_QUERY_HIT', `Mevcut grafikteki varlık odaklandı: "${query}"`);
-                return;
+            // Genel RK4 İntegratörü
+            function rk4Step(f, state) {
+                const k1 = f(state);
+                const k2 = f(state.map((s, i) => s + 0.5 * dt * k1[i]));
+                const k3 = f(state.map((s, i) => s + 0.5 * dt * k2[i]));
+                const k4 = f(state.map((s, i) => s + dt * k3[i]));
+                return state.map((s, i) => s + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
             }
 
-            const isCve = /^CVE-\d{4}-\d+/i.test(query) || query.toUpperCase().includes('CVE');
-            const isIp = /^(?:\d{1,3}\.){3}\d{1,3}(?:\/\d{1,2})?$/.test(query);
-
-            const newId = 'n' + (nodes.length + 1);
-            const newNode = {
-                id: newId,
-                label: query,
-                type: isCve ? 'VULN' : (isIp ? 'IPv4' : 'DOMAIN'),
-                color: isCve ? '#ef4444' : (isIp ? '#10b981' : '#38bdf8'),
-                radius: 18,
-                x: (canvas.width || 600) / 2 + (Math.random() * 80 - 40),
-                y: (canvas.height || 400) / 2 + (Math.random() * 80 - 40),
-                vx: 0, vy: 0,
-                risk: isCve ? 90 : Math.floor(30 + Math.random() * 55),
-                source: 'OpenSearch Pasif İndeks',
-                asn: 'AS13335 (Cloudflare)',
-                geo: 'Frankfurt, DE (50.1109° N, 8.6821° E)'
-            };
-            nodes.push(newNode);
-            edges.push({ source: 'n1', target: newId, relation: 'CORRELATED_WITH' });
-            selectEntity(newNode);
-            renderGisCards();
-            addAuditLog('PASSIVE_QUERY', `Yasal açık kaynak sorgusu yürütüldü: "${query}"`);
-        }
-
-        function injectSimulatedNode(kind) {
-            const id = 'n' + (nodes.length + 1);
-            const templates = {
-                DNS: { label: `stage-sso-${nodes.length}.fintech-global.example.com`, type: 'SUBDOMAIN', color: '#38bdf8', risk: 64, source: 'Passive DNS', asn: 'AS16509', geo: 'Londra, UK' },
-                BGP: { label: `192.0.2.${(10 + nodes.length) % 254}/24`, type: 'IPv4', color: '#10b981', risk: 28, source: 'BGP Stream', asn: 'AS3320 (Deutsche Telekom)', geo: 'Münih, DE' },
-                CVE: { label: `CVE-2024-21626 (Container Leak #${nodes.length})`, type: 'VULN', color: '#ef4444', risk: 91, source: 'Pasif Banner Eşleşmesi', asn: 'AS14061', geo: 'Amsterdam, NL' }
-            };
-            const tpl = templates[kind];
-            if (!tpl) return;
-            const newNode = {
-                id,
-                ...tpl,
-                radius: 15,
-                x: (canvas.width || 600) / 2 + (Math.random() * 60 - 30),
-                y: (canvas.height || 400) / 2 + (Math.random() * 60 - 30),
-                vx: 0,
-                vy: 0
-            };
-            nodes.push(newNode);
-            edges.push({ source: selectedNode ? selectedNode.id : 'n1', target: id, relation: kind + '_DISCOVERY' });
-            selectEntity(newNode);
-            renderGisCards();
-            addAuditLog('COLLECTOR_INGEST', `${kind} toplayıcısından yeni varlık grafiğe eklendi: ${newNode.label}`);
-        }
-
-        function switchView(view) {
-            currentView = view;
-            const isGraph = view === 'graph';
-            document.getElementById('graphCanvas').style.display = isGraph ? 'block' : 'none';
-            document.getElementById('graphLegend').style.display = isGraph ? 'flex' : 'none';
-            document.getElementById('gisView').style.display = isGraph ? 'none' : 'block';
-            document.getElementById('btnGraph').classList.toggle('active', isGraph);
-            document.getElementById('btnGis').classList.toggle('active', !isGraph);
-            if (isGraph) {
-                resizeCanvas();
+            if (type === 'lorenz') {
+                let s = [0.1, 0, 0];
+                const xs = [], ys = [], zs = [];
+                const beta = 8 / 3;
+                const f = ([x, y, z]) => [p1 * (y - x), x * (p2 - z) - y, x * y - beta * z];
+                for (let i = 0; i < steps; i++) {
+                    s = rk4Step(f, s);
+                    xs.push(s[0]); ys.push(s[1]); zs.push(s[2]);
+                }
+                Plotly.newPlot('ode-plot', [{
+                    type: 'scatter3d', mode: 'lines', x: xs, y: ys, z: zs,
+                    line: { width: 3, color: zs, colorscale: 'Viridis' }
+                }], {
+                    ...plotlyDarkLayout,
+                    margin: { l: 0, r: 0, t: 10, b: 0 },
+                    scene: { bgcolor: '#0b101b' }
+                }, { responsive: true });
             } else {
-                renderGisCards();
+                let s = [2.0, 0.0];
+                const ts = [], xs = [], vs = [];
+                const f = type === 'vanderpol'
+                    ? ([x, v]) => [v, p1 * (1 - x * x) * v - p2 * p2 * x]
+                    : ([th, w]) => [w, -p1 * w - p2 * Math.sin(th)];
+
+                for (let i = 0; i < steps; i++) {
+                    s = rk4Step(f, s);
+                    ts.push(i * dt); xs.push(s[0]); vs.push(s[1]);
+                }
+                Plotly.newPlot('ode-plot', [
+                    { x: ts, y: xs, name: 'Konum x(t)', mode: 'lines', line: { color: '#38bdf8' } },
+                    { x: xs, y: vs, name: 'Faz Portresi (x vs v)', mode: 'lines', line: { color: '#f472b6' } }
+                ], plotlyDarkLayout, { responsive: true });
             }
-            addAuditLog('VIEW_SWITCH', `Görünüm değiştirildi: ${view.toUpperCase()}`);
         }
 
-        function renderGisCards() {
-            const container = document.getElementById('gisGridContainer');
-            container.innerHTML = nodes.map(n => `
-                <div class="gis-card" style="cursor:pointer;" onclick="selectEntityById('${escapeHtml(n.id)}')">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span class="badge badge-blue">${escapeHtml(n.type)}</span>
-                        <span style="font-family:var(--font-mono); font-size:0.75rem; color:${n.risk > 70 ? '#ef4444' : '#10b981'};">Risk: ${escapeHtml(n.risk)}</span>
+        // =========================================================================
+        // 5. TRİGONOMETRİ & 3D DİFERANSİYEL GEOMETRİ (MANİFOLDLAR)
+        // =========================================================================
+        function updateTrig() {
+            const deg = parseFloat(document.getElementById('trig-slider').value);
+            const rad = (deg * Math.PI) / 180;
+            document.getElementById('trig-deg-val').textContent = `${deg}° (${(deg / 180).toFixed(3)}π rad)`;
+
+            const s = Math.sin(rad), c = Math.cos(rad), t = Math.tan(rad);
+            document.getElementById('trig-values').innerHTML = `
+                <div><span class="text-slate-400">sin(θ):</span> <span class="text-pink-400">${s.toFixed(5)}</span></div>
+                <div><span class="text-slate-400">cos(θ):</span> <span class="text-cyan-400">${c.toFixed(5)}</span></div>
+                <div><span class="text-slate-400">tan(θ):</span> <span class="text-amber-400">${Math.abs(c) < 1e-6 ? '±∞' : t.toFixed(5)}</span></div>
+                <div><span class="text-slate-400">sin²+cos²:</span> <span class="text-emerald-400">${(s*s + c*c).toFixed(4)}</span></div>
+                <div class="col-span-2 text-slate-400">Euler: <span class="text-purple-300">e^(iθ) = ${c.toFixed(3)} ${s >= 0 ? '+' : ''}${s.toFixed(3)}i</span></div>
+            `;
+
+            // Birim Çember Canvas Çizimi
+            const cv = document.getElementById('unit-circle-canvas');
+            const ctx = cv.getContext('2d');
+            const cx = 120, cy = 120, R = 90;
+            ctx.clearRect(0, 0, 240, 240);
+
+            // Eksenler
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(10, cy); ctx.lineTo(230, cy); ctx.moveTo(cx, 10); ctx.lineTo(cx, 230); ctx.stroke();
+
+            // Çember
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+
+            const px = cx + R * c;
+            const py = cy - R * s;
+
+            // Cos ve Sin izdüşümleri
+            ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, cy); ctx.stroke();
+
+            ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, py); ctx.stroke();
+
+            // Yarıçap vektörü
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function renderManifold() {
+            const type = document.getElementById('manifold-select').value;
+            const info = document.getElementById('manifold-info');
+            const Nu = 50, Nv = 35;
+            const x = [], y = [], z = [];
+
+            if (type === 'torus') {
+                info.textContent = "Parametrik Torus: x=(R+r·cos v)cos u, y=(R+r·cos v)sin u, z=r·sin v | Euler Karakteristiği χ = 0";
+                const R = 3, r = 1.1;
+                for (let i = 0; i <= Nu; i++) {
+                    const u = (2 * Math.PI * i) / Nu;
+                    const rx = [], ry = [], rz = [];
+                    for (let j = 0; j <= Nv; j++) {
+                        const v = (2 * Math.PI * j) / Nv;
+                        rx.push((R + r * Math.cos(v)) * Math.cos(u));
+                        ry.push((R + r * Math.cos(v)) * Math.sin(u));
+                        rz.push(r * Math.sin(v));
+                    }
+                    x.push(rx); y.push(ry); z.push(rz);
+                }
+            } else if (type === 'mobius') {
+                info.textContent = "Möbius Şeridi: Tek yüzlü ve yönlendirilemez (non-orientable) kompakt 2-manifold | χ = 0";
+                for (let i = 0; i <= Nu; i++) {
+                    const u = (2 * Math.PI * i) / Nu;
+                    const rx = [], ry = [], rz = [];
+                    for (let j = 0; j <= Nv; j++) {
+                        const v = -1 + (2 * j) / Nv;
+                        rx.push((1 + (v / 2) * Math.cos(u / 2)) * Math.cos(u));
+                        ry.push((1 + (v / 2) * Math.cos(u / 2)) * Math.sin(u));
+                        rz.push((v / 2) * Math.sin(u / 2));
+                    }
+                    x.push(rx); y.push(ry); z.push(rz);
+                }
+            } else if (type === 'saddle') {
+                info.textContent = "Hiperbolik Paraboloid: z = x² - y² | Her noktada negatif Gauss eğriliği (K = -4 / (1 + 4x² + 4y²)² < 0)";
+                for (let i = 0; i <= Nu; i++) {
+                    const u = -2 + (4 * i) / Nu;
+                    const rx = [], ry = [], rz = [];
+                    for (let j = 0; j <= Nv; j++) {
+                        const v = -2 + (4 * j) / Nv;
+                        rx.push(u); ry.push(v); rz.push(u * u - v * v);
+                    }
+                    x.push(rx); y.push(ry); z.push(rz);
+                }
+            } else {
+                info.textContent = "Helikoid Minimal Yüzey: x = v·cos(u), y = v·sin(u), z = c·u | Ortalama Eğrilik H = 0 (Sabun zarı fiziği)";
+                for (let i = 0; i <= Nu; i++) {
+                    const u = -Math.PI * 1.5 + (3 * Math.PI * i) / Nu;
+                    const rx = [], ry = [], rz = [];
+                    for (let j = 0; j <= Nv; j++) {
+                        const v = -2 + (4 * j) / Nv;
+                        rx.push(v * Math.cos(u)); ry.push(v * Math.sin(u)); rz.push(0.6 * u);
+                    }
+                    x.push(rx); y.push(ry); z.push(rz);
+                }
+            }
+
+            Plotly.newPlot('manifold-plot', [{
+                type: 'surface', x, y, z, colorscale: 'Plasma', showscale: false
+            }], {
+                ...plotlyDarkLayout,
+                margin: { l: 0, r: 0, t: 5, b: 0 },
+                scene: { bgcolor: '#0b101b' }
+            }, { responsive: true });
+        }
+
+        // =========================================================================
+        // 6. FİNANS & KANTİTATİF ANALİZ (Black-Scholes + Monte Carlo)
+        // =========================================================================
+        function normCDF(x) {
+            const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+            const sign = x < 0 ? -1 : 1;
+            x = Math.abs(x) / Math.sqrt(2);
+            const t = 1.0 / (1.0 + p * x);
+            const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            return 0.5 * (1.0 + sign * y);
+        }
+
+        function normPDF(x) {
+            return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+        }
+
+        function randnBM() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random();
+            while (v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        function runQuantEngine() {
+            const S = Math.max(0.01, parseFloat(document.getElementById('q-S').value) || 100);
+            const K = Math.max(0.01, parseFloat(document.getElementById('q-K').value) || 105);
+            const T = Math.max(0.001, parseFloat(document.getElementById('q-T').value) || 1);
+            const r = parseFloat(document.getElementById('q-r').value) || 0;
+            const v = Math.max(0.001, parseFloat(document.getElementById('q-v').value) || 0.2);
+            const paths = Math.min(400, Math.max(10, parseInt(document.getElementById('q-paths').value) || 200));
+
+            const d1 = (Math.log(S / K) + (r + 0.5 * v * v) * T) / (v * Math.sqrt(T));
+            const d2 = d1 - v * Math.sqrt(T);
+
+            const callPrice = S * normCDF(d1) - K * Math.exp(-r * T) * normCDF(d2);
+            const putPrice = K * Math.exp(-r * T) * normCDF(-d2) - S * normCDF(-d1);
+
+            // Greeks
+            const deltaC = normCDF(d1);
+            const gamma = normPDF(d1) / (S * v * Math.sqrt(T));
+            const vega = S * normPDF(d1) * Math.sqrt(T) * 0.01;
+            const thetaC = (-(S * normPDF(d1) * v) / (2 * Math.sqrt(T)) - r * K * Math.exp(-r * T) * normCDF(d2)) / 365;
+
+            document.getElementById('quant-metrics').innerHTML = `
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded">
+                        <div class="text-[10px] text-emerald-300">CALL OPSİYON FİYATI</div>
+                        <div class="text-lg font-bold text-emerald-400">$${callPrice.toFixed(4)}</div>
                     </div>
-                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:6px; word-break:break-all;">${escapeHtml(n.label)}</div>
-                    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">Konum: ${escapeHtml(n.geo)}</div>
-                    <div style="font-size:0.75rem; font-family:var(--font-mono); color:var(--accent-purple);">Ağ: ${escapeHtml(n.asn)}</div>
+                    <div class="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded">
+                        <div class="text-[10px] text-rose-300">PUT OPSİYON FİYATI</div>
+                        <div class="text-lg font-bold text-rose-400">$${putPrice.toFixed(4)}</div>
+                    </div>
                 </div>
-            `).join('');
+                <div class="bg-bgMain p-2.5 rounded border border-borderCol grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div><span class="text-slate-400">Delta (Δ):</span> <span class="text-white">${deltaC.toFixed(4)}</span></div>
+                    <div><span class="text-slate-400">Gamma (Γ):</span> <span class="text-white">${gamma.toFixed(4)}</span></div>
+                    <div><span class="text-slate-400">Vega (ν %1):</span> <span class="text-white">${vega.toFixed(4)}</span></div>
+                    <div><span class="text-slate-400">Theta (Θ/gün):</span> <span class="text-white">${thetaC.toFixed(4)}</span></div>
+                </div>
+            `;
+
+            // Monte Carlo GBM Simülasyonu
+            const steps = 90;
+            const dt = T / steps;
+            const ts = Array.from({ length: steps + 1 }, (_, i) => (i * dt).toFixed(2));
+            const traces = [];
+            const terminalReturns = [];
+
+            for (let p = 0; p < paths; p++) {
+                let price = S;
+                const pathArr = [S];
+                for (let t = 1; t <= steps; t++) {
+                    price = price * Math.exp((r - 0.5 * v * v) * dt + v * Math.sqrt(dt) * randnBM());
+                    pathArr.push(price);
+                }
+                terminalReturns.push(price - S);
+                if (p < 70) { // Render performansı için ilk 70 yolu çiz
+                    traces.push({
+                        x: ts, y: pathArr, mode: 'lines', showlegend: false,
+                        line: { width: 1, color: price >= K ? 'rgba(16, 185, 129, 0.32)' : 'rgba(239, 68, 68, 0.25)' }
+                    });
+                }
+            }
+
+            // VaR %95 Hesabı
+            terminalReturns.sort((a, b) => a - b);
+            const var95 = -terminalReturns[Math.floor(0.05 * terminalReturns.length)];
+            document.getElementById('quant-var-badge').textContent = `MC VaR (95%): $${var95.toFixed(2)}`;
+
+            // Kullanım Fiyatı (Strike) Çizgisi
+            traces.push({
+                x: [ts[0], ts[ts.length - 1]], y: [K, K], mode: 'lines', name: `Strike K=${K}`,
+                line: { color: '#f59e0b', width: 2, dash: 'dash' }
+            });
+
+            Plotly.newPlot('quant-plot', traces, plotlyDarkLayout, { responsive: true });
         }
 
-        function exportToSIEM() {
-            addAuditLog('API_SOAR_PUSH', `GraphQL Gateway üzerinden ${nodes.length} varlık kurumsal SIEM/SOAR platformuna aktarıldı.`);
-            alert(`STIX/TAXII Paketi Hazırlandı!\nToplam ${nodes.length} düğüm ve ${edges.length} ilişki mTLS imzalı olarak SIEM/SOAR API uç noktasına iletildi.`);
+        // =========================================================================
+        // 7. İSTATİSTİK & VERİ BİLİMİ MOTORU
+        // =========================================================================
+        function runStatistics() {
+            const summaryEl = document.getElementById('stat-summary');
+            try {
+                const xArr = document.getElementById('stat-x').value.split(/[\s,]+/).filter(Boolean).map(Number).filter(Number.isFinite);
+                const yArr = document.getElementById('stat-y').value.split(/[\s,]+/).filter(Boolean).map(Number).filter(Number.isFinite);
+                const n = Math.min(xArr.length, yArr.length);
+                if (n < 2) throw new Error("En az 2 geçerli (X, Y) veri çifti giriniz.");
+
+                const xs = xArr.slice(0, n);
+                const ys = yArr.slice(0, n);
+                const pairs = xs.map((x, i) => [x, ys[i]]);
+
+                const meanY = ss.mean(ys);
+                const stdY = ss.sampleStandardDeviation(ys);
+                const medianY = ss.median(ys);
+                const linReg = ss.linearRegression(pairs);
+                const linFunc = ss.linearRegressionLine(linReg);
+                const r2 = ss.rSquared(pairs, linFunc);
+                const corr = ss.sampleCorrelation(xs, ys);
+
+                summaryEl.innerHTML = `
+                    <div><span class="text-slate-400">Örneklem (N):</span> <span class="text-white">${n}</span></div>
+                    <div><span class="text-slate-400">Ortalama (μ_y):</span> <span class="text-indigo-400">${meanY.toFixed(4)}</span></div>
+                    <div><span class="text-slate-400">Std. Sapma (s_y):</span> <span class="text-white">${stdY.toFixed(4)}</span></div>
+                    <div><span class="text-slate-400">Medyan:</span> <span class="text-white">${medianY.toFixed(4)}</span></div>
+                    <div><span class="text-slate-400">Pearson Korelasyon (r):</span> <span class="text-emerald-400">${corr.toFixed(5)}</span></div>
+                    <div><span class="text-slate-400">Belirlilik Katsayısı (R²):</span> <span class="text-amber-400 font-bold">${r2.toFixed(5)}</span></div>
+                    <div class="pt-1 border-t border-borderCol text-cyan-300">ŷ = ${linReg.m.toFixed(4)}x + (${linReg.b.toFixed(4)})</div>
+                `;
+
+                const sortedX = [...xs].sort((a, b) => a - b);
+                const regY = sortedX.map(x => linFunc(x));
+                Plotly.newPlot('stat-plot', [
+                    { x: xs, y: ys, mode: 'markers', name: 'Gözlem Verisi', marker: { size: 9, color: '#818cf8' } },
+                    { x: sortedX, y: regY, mode: 'lines', name: `OLS Modeli (R²=${r2.toFixed(3)})`, line: { color: '#10b981', width: 2.5 } }
+                ], plotlyDarkLayout, { responsive: true });
+            } catch (err) {
+                summaryEl.innerHTML = `<span class="text-rose-400">İstatistik Hatası: ${err.message}</span>`;
+            }
         }
 
-        function filterGraph() {
-            const certNode = nodes.find(n => n.type === 'CERT');
-            if (certNode) selectEntity(certNode);
-            addAuditLog('CT_STREAM_SYNC', 'SSL/TLS Sertifika Şeffaflık (CT) log akışı senkronize edildi.');
+        // =========================================================================
+        // 8. MÜHENDİSLİK: FFT SPEKTRUM & BODE KONTROL DİYAGRAMI
+        // =========================================================================
+        function runFFT() {
+            const f1 = parseFloat(document.getElementById('fft-f1').value) || 15;
+            const f2 = parseFloat(document.getElementById('fft-f2').value) || 40;
+            const noise = parseFloat(document.getElementById('fft-noise').value) || 0.3;
+
+            const Fs = 256; // Örnekleme frekansı (Hz)
+            const N = 256;
+            const signal = [], ts = [];
+
+            for (let n = 0; n < N; n++) {
+                const t = n / Fs;
+                ts.push(t);
+                signal.push(Math.sin(2 * Math.PI * f1 * t) + 0.7 * Math.sin(2 * Math.PI * f2 * t) + noise * randnBM());
+            }
+
+            // Ayrık Fourier Dönüşümü (DFT Tek Taraflı Genlik Spektrumu)
+            const freqs = [], mags = [];
+            for (let k = 0; k <= N / 2; k++) {
+                let re = 0, im = 0;
+                for (let n = 0; n < N; n++) {
+                    const angle = (-2 * Math.PI * k * n) / N;
+                    re += signal[n] * Math.cos(angle);
+                    im += signal[n] * Math.sin(angle);
+                }
+                freqs.push((k * Fs) / N);
+                mags.push((2 / N) * Math.sqrt(re * re + im * im));
+            }
+
+            Plotly.newPlot('fft-plot', [
+                { x: freqs, y: mags, type: 'bar', name: '|X(f)| Genlik Spektrumu', marker: { color: '#f43f5e' } }
+            ], {
+                ...plotlyDarkLayout,
+                xaxis: { ...plotlyDarkLayout.xaxis, title: 'Frekans (Hz)' },
+                yaxis: { ...plotlyDarkLayout.yaxis, title: 'Genlik |X(f)|' }
+            }, { responsive: true });
         }
 
-        // Başlangıç Yüklemesi
-        addAuditLog('SYSTEM_BOOT', 'Zero-Trust mTLS oturumu doğrulandı. RBAC Rolü: SOC_LEAD.');
-        addAuditLog('COMPLIANCE_CHECK', 'KVKK/GDPR Etik Denetim Katmanı aktif: Yalnızca halka açık pasif kaynaklar.');
-        selectEntity(selectedNode);
-        drawGraph();
-        setInterval(addKafkaStreamLog, 2200);
+        function runBode() {
+            const wn = Math.max(0.01, parseFloat(document.getElementById('bode-wn').value) || 10);
+            const zeta = Math.max(0.01, parseFloat(document.getElementById('bode-zeta').value) || 0.2);
+
+            const wArr = [], magDB = [], phaseDeg = [];
+            for (let exp = -1; exp <= 3; exp += 0.03) {
+                const w = Math.pow(10, exp);
+                wArr.push(w);
+                // H(jw) = wn^2 / ((wn^2 - w^2) + j*(2*zeta*wn*w))
+                const realPart = wn * wn - w * w;
+                const imagPart = 2 * zeta * wn * w;
+                const mag = (wn * wn) / Math.sqrt(realPart * realPart + imagPart * imagPart);
+                const phase = -Math.atan2(imagPart, realPart) * (180 / Math.PI);
+
+                magDB.push(20 * Math.log10(mag));
+                phaseDeg.push(phase);
+            }
+
+            Plotly.newPlot('bode-plot', [
+                { x: wArr, y: magDB, name: 'Kazanç (dB)', mode: 'lines', line: { color: '#22d3ee', width: 2.5 } },
+                { x: wArr, y: phaseDeg, name: 'Faz (°)', yaxis: 'y2', mode: 'lines', line: { color: '#fbbf24', width: 2, dash: 'dot' } }
+            ], {
+                ...plotlyDarkLayout,
+                margin: { l: 45, r: 45, t: 30, b: 40 },
+                xaxis: { ...plotlyDarkLayout.xaxis, type: 'log', title: 'Frekans ω (rad/s)' },
+                yaxis: { ...plotlyDarkLayout.yaxis, title: 'Kazanç (dB)' },
+                yaxis2: { title: 'Faz (°)', overlaying: 'y', side: 'right', gridcolor: 'transparent', font: { color: '#fbbf24' } }
+            }, { responsive: true });
+        }
+
+        // Modal ve Dışa Aktarım Yardımcıları
+        function openKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.remove('hidden');
+            document.getElementById('knowledge-modal').classList.add('flex');
+        }
+        function closeKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.add('hidden');
+            document.getElementById('knowledge-modal').classList.remove('flex');
+        }
+        function exportSession() {
+            const cells = [];
+            document.querySelectorAll('[id^="cell-input-"]').forEach(el => cells.push(el.value));
+            const payload = {
+                platform: "OMNI-MATH ENTERPRISE v9.4",
+                timestamp: new Date().toISOString(),
+                notebookCells: cells,
+                scopeVariables: notebookScope
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = `omni-math-session-${Date.now()}.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
     </script>
 </body>
 </html>
