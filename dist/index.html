@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#030305">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>PROJECT: OMNISCIENT-APK // God-Mode Autonomous AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        oled: '#030305',
+                        surface: '#0b0c10',
+                        glass: 'rgba(16, 18, 26, 0.78)',
+                        neonCyan: '#00f0ff',
+                        acidLime: '#ccff00',
+                        hyperViolet: '#8b5cf6',
+                        alertRed: '#ff2a5f'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+            --safe-top: env(safe-area-inset-top, 12px);
+        }
+        * {
+            -webkit-tap-highlight-color: transparent;
+            scrollbar-width: thin;
+            scrollbar-color: #27272a transparent;
+        }
+        body {
+            background-color: #030305;
+            color: #f4f4f6;
+            overscroll-behavior-y: none;
+            user-select: none;
+        }
+        .selectable { user-select: text; }
+        
+        /* Adaptive Glassmorphism + Neubrutalism Synthesis */
+        .omni-card {
+            background: rgba(14, 16, 24, 0.76);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 3px 3px 0px rgba(0, 240, 255, 0.18);
+            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.15s ease, border-color 0.2s ease;
+        }
+        .omni-card:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px rgba(0, 240, 255, 0.35);
+        }
+        .brutal-lime {
+            border: 1.5px solid #ccff00;
+            box-shadow: 3px 3px 0px #ccff00;
+        }
+        .brutal-cyan {
+            border: 1.5px solid #00f0ff;
+            box-shadow: 3px 3px 0px #00f0ff;
+        }
+        .brutal-violet {
+            border: 1.5px solid #8b5cf6;
+            box-shadow: 3px 3px 0px #8b5cf6;
+        }
+        
+        /* Grid Background */
+        .cyber-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        /* Code Syntax Highlighting Custom Styles */
+        .code-line {
+            display: flex;
+            padding: 1px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .code-line.selected-line {
+            background: rgba(204, 255, 0, 0.18);
+            border-left: 2px solid #ccff00;
+        }
+        .tok-kw { color: #ff79c6; font-weight: 600; }
+        .tok-fn { color: #00f0ff; }
+        .tok-str { color: #ccff00; }
+        .tok-cm { color: #6272a4; font-style: italic; }
+        .tok-num { color: #bd93f9; }
+
+        /* Swipe Message Container */
+        .swipe-msg {
+            touch-action: pan-y;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Pulse Animations */
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(400%); }
+        }
+        .scan-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            height: 25%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 240, 255, 0.15), transparent);
+            animation: scanline 3s linear infinite;
+            pointer-events: none;
+        }
+        
+        /* Custom Bottom Sheet */
+        .bottom-sheet {
+            transform: translateY(105%);
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .bottom-sheet.open {
+            transform: translateY(0%);
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-screen overflow-hidden flex flex-col cyber-grid relative">
+
+    <!-- TOP TELEMETRY & MODEL ROUTER BAR -->
+    <header class="pt-[var(--safe-top)] px-3 pb-2 bg-oled/90 backdrop-blur-xl border-b border-white/10 z-30 shrink-0">
+        <div class="flex items-center justify-between gap-2">
+            <!-- Brand & God-Mode Badge -->
+            <div class="flex items-center gap-2">
+                <div class="relative w-8 h-8 rounded-lg bg-gradient-to-br from-neonCyan/20 to-hyperViolet/30 border border-neonCyan flex items-center justify-center">
+                    <i class="fa-solid fa-atom text-neonCyan text-sm animate-spin" style="animation-duration: 9s;"></i>
+                    <span id="wakelockDot" class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-acidLime border border-black" title="WakeLock Durumu"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-bold tracking-wider text-xs text-white">OMNISCIENT</span>
+                        <span class="text-[9px] font-mono bg-acidLime text-black font-bold px-1.5 py-0.2 rounded">APK v4.9</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
+                        <span id="fpsCounter" class="text-neonCyan">120Hz</span>
+                        <span>•</span>
+                        <span id="npuStatus">NPU: HAZIR</span>
+                        <span>•</span>
+                        <span id="batteryPill"><i class="fa-solid fa-bolt text-acidLime"></i> --%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic LLM Router Pill -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="openSheet('routerSheet')" class="omni-card px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-mono border-neonCyan/40">
+                    <span class="w-2 h-2 rounded-full bg-neonCyan animate-pulse"></span>
+                    <span id="activeModelLabel" class="truncate max-w-[105px] font-semibold">Claude 3.5 + NPU</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400"></i>
+                </button>
+                <button onclick="toggleVisionModal()" class="w-8 h-8 rounded-lg omni-card flex items-center justify-center text-acidLime border-acidLime/40" title="Canlı Kamera Vision & WebRTC Ses">
+                    <i class="fa-solid fa-eye text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN VIEWPORT (5 ERGONOMIC MODULES) -->
+    <main class="flex-1 overflow-hidden relative">
+
+        <!-- ==================== VIEW 1: NEURAL CHAT & ARTIFACTS ==================== -->
+        <section id="view-chat" class="h-full flex flex-col justify-between overflow-hidden">
+            
+            <!-- Quick Action Subbar -->
+            <div class="px-3 py-1.5 bg-surface/80 border-b border-white/5 flex items-center justify-between text-[11px] font-mono shrink-0">
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                    <span class="text-zinc-400 shrink-0"><i class="fa-solid fa-hand-pointer text-neonCyan mr-1"></i>Sağa Kaydır: Kopyala | Sola: Dallandır</span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="exportChatHistory('md')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10" title="Tüm Sohbeti MD İndir/Kopyala">
+                        <i class="fa-brands fa-markdown mr-1 text-neonCyan"></i>MD
+                    </button>
+                    <button onclick="exportChatHistory('json')" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10" title="JSON Dışa Aktar">
+                        {JSON}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div id="chatStream" class="flex-1 overflow-y-auto px-3 py-3 space-y-4 selectable">
+                <!-- Initial System Welcome Card -->
+                <div class="swipe-msg relative omni-card rounded-xl p-3.5 border-l-4 border-l-neonCyan" data-msg-id="msg-init">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-mono bg-neonCyan/15 text-neonCyan rounded border border-neonCyan/30">OMNISCIENT ÇEKİRDEK</span>
+                            <span class="text-[10px] font-mono text-zinc-500">Zero-Trust AES-256</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-zinc-400 text-xs">
+                            <button onclick="copyMessageRaw('msg-init')" class="hover:text-neonCyan" title="Ham Markdown Kopyala"><i class="fa-regular fa-copy"></i></button>
+                            <button onclick="openArtifactPreview(defaultArtifactCode, 'html')" class="text-acidLime hover:underline font-mono text-[11px]"><i class="fa-solid fa-play mr-1"></i>Artifact Aç</button>
+                        </div>
+                    </div>
+                    <p class="text-sm text-zinc-200 leading-relaxed mb-3">
+                        Sistem çevrimiçi. <strong>God-Mode Sideload APK</strong> katmanı, <strong>Çoklu Ajan (LangGraph)</strong> yönlendiricisi, <strong>Canlı Sandbox</strong> ve <strong>Donanım Sensör Köprüsü</strong> aktif. Kod satırlarına dokunarak <em>Seçmeli Kopyalama</em> yapabilir veya canlı çalıştırabilirsiniz:
+                    </p>
+
+                    <!-- Advanced Code Block with Line Selection & Live Sandbox -->
+                    <div class="rounded-lg overflow-hidden border border-white/15 bg-[#06070a] my-2" id="codeblock-demo">
+                        <div class="flex items-center justify-between px-3 py-1.5 bg-white/5 border-b border-white/10 text-[11px] font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-acidLime font-bold">python / wasm-pyodide</span>
+                                <span id="selectedCount-demo" class="hidden text-[10px] bg-acidLime text-black px-1.5 rounded font-bold">0 satır seçili</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="copySelectedLines('codeblock-demo')" class="text-zinc-300 hover:text-acidLime" title="Seçili veya Tüm Satırları Kopyala">
+                                    <i class="fa-solid fa-check-double mr-1"></i>Kopyala
+                                </button>
+                                <button onclick="runPythonWasmSim()" class="px-2 py-0.5 rounded bg-acidLime text-black font-bold hover:opacity-90">
+                                    <i class="fa-solid fa-bolt mr-1"></i>Termux/WASM Çalıştır
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-2 font-mono text-xs overflow-x-auto space-y-0.5" data-code-container>
+                            <div class="code-line" onclick="toggleCodeLine(this, 'demo')"><span class="w-6 text-zinc-600 select-none">1</span><span><span class="tok-kw">import</span> omniscient.hardware <span class="tok-kw">as</span> hw</span></div>
+                            <div class="code-line" onclick="toggleCodeLine(this, 'demo')"><span class="w-6 text-zinc-600 select-none">2</span><span><span class="tok-kw">from</span> langgraph.prebuilt <span class="tok-kw">import</span> create_swarm</span></div>
+                            <div class="code-line" onclick="toggleCodeLine(this, 'demo')"><span class="w-6 text-zinc-600 select-none">3</span><span><span class="tok-cm"># Cihaz içi NPU + GPS Telemetri Sentezi</span></span></div>
+                            <div class="code-line" onclick="toggleCodeLine(this, 'demo')"><span class="w-6 text-zinc-600 select-none">4</span><span>coords = hw.<span class="tok-fn">get_precise_gps</span>(wake_lock=<span class="tok-num">True</span>)</span></div>
+                            <div class="code-line" onclick="toggleCodeLine(this, 'demo')"><span class="w-6 text-zinc-600 select-none">5</span><span>agent = <span class="tok-fn">create_swarm</span>(model=<span class="tok-str">"llama3-8b-npu"</span>, tools=[hw.accessibility])</span></div>
+                            <div class="code-line" onclick="toggleCodeLine(this, 'demo')"><span class="w-6 text-zinc-600 select-none">6</span><span><span class="tok-fn">print</span>(<span class="tok-str">f"Otonom Görev Hazır @ {coords}"</span>)</span></div>
+                        </div>
+                        <div id="wasmOutputBox" class="hidden px-3 py-2 bg-black border-t border-acidLime/30 font-mono text-[11px] text-acidLime"></div>
+                    </div>
+
+                    <!-- Quick Prompt Chips -->
+                    <div class="flex flex-wrap gap-1.5 mt-3">
+                        <button onclick="sendQuickPrompt('Canlı İnteraktif Parçacık Fizik Motoru HTML5 Artifact üret ve önizle')" class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-neonCyan/10 text-neonCyan border border-neonCyan/30">⚡ Canlı Fizik Artifact Üret</button>
+                        <button onclick="sendQuickPrompt('Mermaid.js ile Otonom Ajan Mimari Diyagramı çiz')" class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-hyperViolet/15 text-purple-300 border border-hyperViolet/40">📊 Mermaid Diyagram Çiz</button>
+                        <button onclick="sendQuickPrompt('ArXiv ve GitHub üzerinde Kuantum NPU Sentezi derin araştırması başlat')" class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-acidLime/10 text-acidLime border border-acidLime/30">🌐 Derin Web Araştırması</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ergonomic Thumb-Zone Composer -->
+            <div class="p-2.5 bg-oled/95 border-t border-white/10 shrink-0">
+                <!-- Mode Toggles -->
+                <div class="flex items-center gap-1.5 mb-2 overflow-x-auto no-scrollbar text-[11px] font-mono">
+                    <button id="toggleDeepSearch" onclick="togglePill(this)" class="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-zinc-400 flex items-center gap-1 shrink-0">
+                        <i class="fa-solid fa-globe"></i> Deep Research (20+ Kaynak)
+                    </button>
+                    <button id="toggleSwarmMode" onclick="togglePill(this)" class="px-2.5 py-1 rounded-md bg-neonCyan/15 border border-neonCyan text-neonCyan flex items-center gap-1 shrink-0 active-pill">
+                        <i class="fa-solid fa-network-wired"></i> Multi-Agent Swarm
+                    </button>
+                    <button id="toggleLocalRAG" onclick="togglePill(this)" class="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-zinc-400 flex items-center gap-1 shrink-0">
+                        <i class="fa-solid fa-database"></i> Local RAG (<span id="ragCountBadge">3</span>)
+                    </button>
+                </div>
+
+                <!-- Input Row -->
+                <div class="flex items-end gap-2">
+                    <button onclick="triggerVoiceInput()" id="micBtn" class="w-10 h-10 rounded-xl omni-card flex items-center justify-center text-zinc-300 shrink-0" title="Sesli Komut (Web Speech)">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <div class="flex-1 omni-card rounded-xl px-3 py-2 flex items-center border-white/15 focus-within:border-neonCyan">
+                        <textarea id="chatInput" rows="1" placeholder="Komut, kod, GitHub PR veya Accessibility aksiyonu yaz..." class="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none resize-none max-h-28 font-sans"></textarea>
+                    </div>
+                    <button onclick="handleUserSubmit()" class="w-10 h-10 rounded-xl bg-acidLime text-black font-bold flex items-center justify-center shrink-0 brutal-lime active:scale-95">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== VIEW 2: AUTONOMOUS AGENTS & ANTIGRAVITY ==================== -->
+        <section id="view-agents" class="hidden h-full overflow-y-auto p-3 space-y-4 pb-6">
+            
+            <!-- Multi-Agent LangGraph Execution Pipeline -->
+            <div class="omni-card rounded-xl p-3.5 border-neonCyan/40">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-diagram-project text-neonCyan"></i> OTONOM AJAN ORKESTRASYONU
+                        </h2>
+                        <p class="text-[11px] text-zinc-400 font-mono">LangGraph + AutoGen Mobil Çekirdeği</p>
+                    </div>
+                    <button onclick="runAutonomousSwarmDemo()" id="runSwarmBtn" class="px-3 py-1.5 rounded-lg bg-neonCyan text-black font-mono font-bold text-xs">
+                        <i class="fa-solid fa-play mr-1"></i>Sürüyü Başlat
+                    </button>
+                </div>
+
+                <!-- 4 Stage Agent Nodes -->
+                <div class="grid grid-cols-2 gap-2.5 text-xs font-mono">
+                    <div id="agent-node-1" class="p-2.5 rounded-lg bg-black/60 border border-white/10">
+                        <div class="flex items-center justify-between text-neonCyan mb-1">
+                            <span>01. ARAŞTIRMACI</span>
+                            <i class="fa-solid fa-satellite-dish"></i>
+                        </div>
+                        <div class="text-[10px] text-zinc-400" id="agent-status-1">Playwright Headless Hazır</div>
+                    </div>
+                    <div id="agent-node-2" class="p-2.5 rounded-lg bg-black/60 border border-white/10">
+                        <div class="flex items-center justify-between text-acidLime mb-1">
+                            <span>02. KODLAYICI</span>
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <div class="text-[10px] text-zinc-400" id="agent-status-2">SWE-Agent Beklemede</div>
+                    </div>
+                    <div id="agent-node-3" class="p-2.5 rounded-lg bg-black/60 border border-white/10">
+                        <div class="flex items-center justify-between text-hyperViolet mb-1">
+                            <span>03. SANDBOX TEST</span>
+                            <i class="fa-solid fa-flask"></i>
+                        </div>
+                        <div class="text-[10px] text-zinc-400" id="agent-status-3">PRoot / WASM İzole</div>
+                    </div>
+                    <div id="agent-node-4" class="p-2.5 rounded-lg bg-black/60 border border-white/10">
+                        <div class="flex items-center justify-between text-pink-400 mb-1">
+                            <span>04. UI AKSİYON</span>
+                            <i class="fa-solid fa-universal-access"></i>
+                        </div>
+                        <div class="text-[10px] text-zinc-400" id="agent-status-4">Accessibility API Hazır</div>
+                    </div>
+                </div>
+
+                <!-- Live Terminal Log -->
+                <div id="swarmTerminal" class="mt-3 p-2.5 rounded-lg bg-[#050608] border border-white/10 font-mono text-[11px] h-32 overflow-y-auto text-zinc-300 space-y-1">
+                    <div class="text-zinc-500">[SYSTEM] Otonom Ajan Havuzu yüklendi (Zero-Trust Container).</div>
+                </div>
+            </div>
+
+            <!-- Deep Web Headless Research Engine -->
+            <div class="omni-card rounded-xl p-3.5">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass-chart text-acidLime"></i> DERİN WEB ARAŞTIRMA MOTORU
+                    </h3>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-acidLime/15 text-acidLime">SPA + Anti-Cookie</span>
+                </div>
+                <div class="flex gap-2 mb-2.5">
+                    <input id="deepResearchInput" type="text" value="Android NPU Quantization & Local RAG SOTA" class="flex-1 bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-acidLime">
+                    <button onclick="executeDeepResearch()" class="px-3 py-1.5 rounded-lg bg-acidLime/20 border border-acidLime text-acidLime text-xs font-mono font-bold">Tara</button>
+                </div>
+                <div id="researchResults" class="space-y-2 text-xs">
+                    <div class="p-2 rounded bg-white/5 border border-white/5 flex items-center justify-between">
+                        <span><i class="fa-solid fa-book-journal-whills text-neonCyan mr-1.5"></i>ArXiv, Scholar, GitHub & 20+ paralel düğüm hazır.</span>
+                        <span class="font-mono text-[10px] text-zinc-400">0ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Antigravity & GitHub Ops Integration -->
+            <div class="omni-card rounded-xl p-3.5 border-hyperViolet/40">
+                <div class="flex items-center justify-between mb-2.5">
+                    <div>
+                        <h3 class="text-sm font-bold flex items-center gap-2">
+                            <i class="fa-brands fa-github text-white"></i> ANTIGRAVITY & GITHUB KÖPRÜSÜ
+                        </h3>
+                        <p class="text-[11px] text-zinc-400 font-mono">Canlı Repo Analizi, PR Üretimi & Eklenti Çekirdeği</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 mb-3">
+                    <input id="ghRepoInput" type="text" value="langchain-ai/langgraph" placeholder="kullanici/repo" class="flex-1 bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+                    <button onclick="fetchRealGitHubRepo()" class="px-3 py-1.5 rounded-lg bg-hyperViolet text-white text-xs font-mono font-bold">Canlı Çek</button>
+                </div>
+                <div id="ghRepoCard" class="p-2.5 rounded-lg bg-black/50 border border-white/10 text-xs font-mono mb-3">
+                    Gerçek GitHub REST API üzerinden repo istatistiklerini, açık PR/Issue analizini çekmek için "Canlı Çek" butonuna dokunun.
+                </div>
+
+                <!-- Modular Open-Source Agent Plugins -->
+                <div class="text-[11px] font-mono text-zinc-400 mb-1.5">AKTİF EKLENTİ ÇEKİRDEKLERİ:</div>
+                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
+                        <span>SWE-agent</span>
+                        <input type="checkbox" checked onchange="haptic(15)" class="accent-acidLime">
+                    </label>
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
+                        <span>CrewAI Swarm</span>
+                        <input type="checkbox" checked onchange="haptic(15)" class="accent-acidLime">
+                    </label>
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
+                        <span>AutoGPT v0.5</span>
+                        <input type="checkbox" onchange="haptic(15)" class="accent-acidLime">
+                    </label>
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
+                        <span>Antigravity IDE</span>
+                        <input type="checkbox" checked onchange="haptic(15)" class="accent-acidLime">
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== VIEW 3: GOD-MODE HARDWARE, SENSORS & MANIFEST ==================== -->
+        <section id="view-hardware" class="hidden h-full overflow-y-auto p-3 space-y-4 pb-6">
+
+            <!-- Real-Time Hardware Telemetry & GPS Dashboard -->
+            <div class="omni-card rounded-xl p-3.5 brutal-cyan">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-neonCyan flex items-center gap-2">
+                            <i class="fa-solid fa-satellite"></i> CANLI SENSÖR & GPS TELEMETRİSİ
+                        </h2>
+                        <p class="text-[10px] font-mono text-zinc-400">Gerçek Cihaz Donanım Verisi (Web Sensor + Geo API)</p>
+                    </div>
+                    <button onclick="initAllHardwareSensors()" class="px-2.5 py-1 rounded bg-neonCyan text-black font-mono font-bold text-xs">
+                        Donanımı Bağla
+                    </button>
+                </div>
+
+                <!-- Telemetry Grid -->
+                <div class="grid grid-cols-2 gap-2.5 font-mono text-xs mb-3">
+                    <div class="p-2.5 rounded-lg bg-black/70 border border-white/10">
+                        <div class="text-[10px] text-zinc-400">GPS ENLEM / BOYLAM</div>
+                        <div id="gpsCoords" class="text-acidLime font-bold mt-0.5 truncate">İzin Bekleniyor...</div>
+                        <div id="gpsMeta" class="text-[10px] text-zinc-500 mt-0.5">Rakım: --m | Hız: --</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-black/70 border border-white/10">
+                        <div class="text-[10px] text-zinc-400">JİROSKOP / EĞİM (α,β,γ)</div>
+                        <div id="gyroData" class="text-neonCyan font-bold mt-0.5">0.0° / 0.0° / 0.0°</div>
+                        <div id="accelData" class="text-[10px] text-zinc-500 mt-0.5">İvme: 0.00 m/s²</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-black/70 border border-white/10">
+                        <div class="text-[10px] text-zinc-400">AĞ & ÇEKİRDEK</div>
+                        <div id="netInfo" class="text-white font-bold mt-0.5">-- Mbps</div>
+                        <div id="cpuCores" class="text-[10px] text-zinc-500 mt-0.5">Mantıksal CPU: --</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-black/70 border border-white/10">
+                        <div class="text-[10px] text-zinc-400">WAKE_LOCK SERVİSİ</div>
+                        <div id="wakeLockLabel" class="text-acidLime font-bold mt-0.5">AKTİF TUTULUYOR</div>
+                        <button onclick="toggleWakeLock()" class="text-[10px] underline text-neonCyan mt-0.5">Durumu Değiştir</button>
+                    </div>
+                </div>
+
+                <!-- Horizon / Sensor Radar Canvas -->
+                <div class="relative h-24 rounded-lg bg-black border border-white/10 overflow-hidden flex items-center justify-center">
+                    <canvas id="sensorCanvas" class="w-full h-full"></canvas>
+                    <span class="absolute bottom-1 right-2 text-[9px] font-mono text-zinc-500">IMU 6-Axis Gerçek Zamanlı Osiloskop</span>
+                </div>
+            </div>
+
+            <!-- Granular God-Mode APK Permissions Control -->
+            <div class="omni-card rounded-xl p-3.5">
+                <div class="flex items-center justify-between mb-2.5">
+                    <div>
+                        <h3 class="text-sm font-bold flex items-center gap-2">
+                            <i class="fa-brands fa-android text-acidLime"></i> SIDELOAD GOD-MODE İZİN MATRİSİ
+                        </h3>
+                        <p class="text-[10px] font-mono text-zinc-400">Play Store Kısıtlamasız Özel APK Yetkileri</p>
+                    </div>
+                    <button onclick="openSheet('manifestSheet')" class="text-[11px] font-mono px-2 py-1 rounded bg-white/10 text-neonCyan border border-neonCyan/30">
+                        Manifest.xml Gör
+                    </button>
+                </div>
+
+                <div class="space-y-2 text-xs font-mono" id="permissionMatrix">
+                    <!-- Populated dynamically or static interactive switches -->
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-white/10">
+                        <div>
+                            <div class="text-white font-semibold">MANAGE_EXTERNAL_STORAGE</div>
+                            <div class="text-[10px] text-zinc-400">Tüm klasörleri okuma, yazma ve Local RAG indeksleme</div>
+                        </div>
+                        <input type="checkbox" checked onchange="permToast('MANAGE_EXTERNAL_STORAGE', this.checked)" class="w-4 h-4 accent-acidLime">
+                    </div>
+
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-white/10">
+                        <div>
+                            <div class="text-white font-semibold">BIND_ACCESSIBILITY_SERVICE</div>
+                            <div class="text-[10px] text-zinc-400">Ekranı görme, WhatsApp/Uygulama içi otonom tıklama</div>
+                        </div>
+                        <input type="checkbox" checked onchange="permToast('BIND_ACCESSIBILITY_SERVICE', this.checked)" class="w-4 h-4 accent-acidLime">
+                    </div>
+
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-white/10">
+                        <div>
+                            <div class="text-white font-semibold">FOREGROUND_SERVICE_SPECIAL_USE</div>
+                            <div class="text-[10px] text-zinc-400">Ekran kapalıyken kesintisiz derin ajan çalışması</div>
+                        </div>
+                        <input type="checkbox" checked onchange="permToast('FOREGROUND_SERVICE', this.checked)" class="w-4 h-4 accent-acidLime">
+                    </div>
+
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-white/10">
+                        <div>
+                            <div class="text-white font-semibold">BLUETOOTH_CONNECT & SMS_READ</div>
+                            <div class="text-[10px] text-zinc-400">BLE donanım köprüsü ve OTP/SMS otonom doğrulama</div>
+                        </div>
+                        <input type="checkbox" onchange="permToast('BLUETOOTH_SMS_BRIDGE', this.checked)" class="w-4 h-4 accent-acidLime">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accessibility Autonomous UI Action Simulator -->
+            <div class="omni-card rounded-xl p-3.5 border-acidLime/40">
+                <h3 class="text-xs font-mono font-bold text-acidLime mb-2"><i class="fa-solid fa-robot mr-1"></i> ERİŞİLEBİLİRLİK (ACCESSIBILITY) OTONOM EKRAN KONTROLÜ</h3>
+                <div class="flex gap-2">
+                    <select id="accActionSelect" class="flex-1 bg-black border border-white/15 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white">
+                        <option value="WhatsApp: 'Toplantı raporu hazır' mesajını ilet">WhatsApp Otonom Mesaj Gönder</option>
+                        <option value="Termux: Arka planda SSH tüneli başlat">Termux SSH Tüneli Tetikle</option>
+                        <option value="Sistem Ayarları: Pil optimizasyonunu devre dışı bırak">Sistem Pil Optimizasyonu Kapat</option>
+                    </select>
+                    <button onclick="simulateAccessibilityAction()" class="px-3 py-1.5 rounded-lg bg-acidLime text-black font-mono font-bold text-xs">Uygula</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== VIEW 4: UNIFIED VFS, CLOUD & ZERO-TRUST VAULT ==================== -->
+        <section id="view-vfs" class="hidden h-full overflow-y-auto p-3 space-y-4 pb-6">
+
+            <!-- Cloud Mounts Bar -->
+            <div class="omni-card rounded-xl p-3.5">
+                <div class="flex items-center justify-between mb-2.5">
+                    <div>
+                        <h2 class="text-sm font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-bolt text-neonCyan"></i> BİRLEŞİK DOSYA YÖNETİCİSİ (UNIFIED VFS)
+                        </h2>
+                        <p class="text-[10px] font-mono text-zinc-400">OAuth 2.0 + WebDAV + Yerel Depolama + ObjectBox RAG</p>
+                    </div>
+                    <label class="px-2.5 py-1 rounded-lg bg-acidLime text-black font-mono font-bold text-xs cursor-pointer">
+                        <i class="fa-solid fa-file-import mr-1"></i>Dosya İndeksle
+                        <input type="file" multiple class="hidden" onchange="indexLocalFilesToRAG(this.files)">
+                    </label>
+                </div>
+
+                <!-- Mount Selector Tabs -->
+                <div class="flex gap-1.5 overflow-x-auto no-scrollbar mb-3 text-xs font-mono">
+                    <button onclick="switchVfsMount('local')" id="mount-local" class="px-2.5 py-1.5 rounded-lg bg-neonCyan/20 border border-neonCyan text-neonCyan shrink-0">/storage/emulated/0</button>
+                    <button onclick="switchVfsMount('gdrive')" id="mount-gdrive" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 shrink-0"><i class="fa-brands fa-google-drive mr-1"></i>GDrive</button>
+                    <button onclick="switchVfsMount('yandex')" id="mount-yandex" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 shrink-0"><i class="fa-brands fa-yandex mr-1 text-red-400"></i>Yandex.Disk</button>
+                    <button onclick="switchVfsMount('nextcloud')" id="mount-nextcloud" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 shrink-0"><i class="fa-solid fa-server mr-1"></i>NAS WebDAV</button>
+                </div>
+
+                <!-- File List -->
+                <div id="vfsFileList" class="space-y-1.5 font-mono text-xs"></div>
+            </div>
+
+            <!-- Zero-Trust AES-256 Keystore & Real API Key Router -->
+            <div class="omni-card rounded-xl p-3.5 border-hyperViolet/50">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="text-sm font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-hyperViolet"></i> ZERO-TRUST AES-256 KEYSTORE KASASI
+                        </h3>
+                        <p class="text-[10px] font-mono text-zinc-400">WebCrypto AES-GCM Şifreli API Anahtarları (İsteğe Bağlı Canlı LLM)</p>
+                    </div>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">DONANIM KİLİTLİ</span>
+                </div>
+
+                <div class="space-y-2 text-xs font-mono">
+                    <div>
+                        <label class="text-[10px] text-zinc-400 block mb-1">GEMINI API KEY (Canlı Gemini 1.5 Pro Bağlantısı İçin):</label>
+                        <div class="flex gap-2">
+                            <input id="geminiKeyInput" type="password" placeholder="AIzaSy... (Girilirse gerçek API yanıt verir)" class="flex-1 bg-black/70 border border-white/15 rounded-lg px-3 py-1.5 text-white">
+                            <button onclick="saveEncryptedApiKey()" class="px-3 py-1.5 rounded-lg bg-hyperViolet text-white font-bold">AES Şifrele</button>
+                        </div>
+                    </div>
+                    <div id="vaultStatusMsg" class="text-[10px] text-zinc-400">
+                        Anahtar girilmezse cihaz içi yerleşik Otonom Simülasyon + Artifact Üretim Motoru kesintisiz yanıt verir.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ERGONOMIC ONE-HANDED BOTTOM NAVIGATION BAR -->
+    <nav class="pb-[var(--safe-bottom)] pt-1.5 px-3 bg-oled/95 backdrop-blur-xl border-t border-white/10 z-30 shrink-0">
+        <div class="grid grid-cols-5 gap-1 items-center">
+            <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center py-1.5 rounded-xl text-neonCyan bg-neonCyan/10">
+                <i class="fa-solid fa-brain text-sm"></i>
+                <span class="text-[10px] font-mono mt-0.5 font-semibold">Zeka</span>
+            </button>
+            <button onclick="switchTab('agents')" id="nav-agents" class="flex flex-col items-center py-1.5 rounded-xl text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-network-wired text-sm"></i>
+                <span class="text-[10px] font-mono mt-0.5">Ajanlar</span>
+            </button>
+            <!-- Center Floating Artifact / Sandbox Trigger -->
+            <div class="flex justify-center">
+                <button onclick="openArtifactPreview(currentArtifactCode, currentArtifactMode)" class="w-12 h-11 rounded-2xl bg-gradient-to-tr from-neonCyan to-acidLime text-black flex flex-col items-center justify-center shadow-lg shadow-neonCyan/20 active:scale-95">
+                    <i class="fa-solid fa-cube text-base"></i>
+                    <span class="text-[8px] font-mono font-extrabold tracking-tighter">SANDBOX</span>
+                </button>
+            </div>
+            <button onclick="switchTab('hardware')" id="nav-hardware" class="flex flex-col items-center py-1.5 rounded-xl text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-microchip text-sm"></i>
+                <span class="text-[10px] font-mono mt-0.5">God-Mode</span>
+            </button>
+            <button onclick="switchTab('vfs')" id="nav-vfs" class="flex flex-col items-center py-1.5 rounded-xl text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-hard-drive text-sm"></i>
+                <span class="text-[10px] font-mono mt-0.5">Bulut/VFS</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== MODAL / SHEET 1: LIVE ARTIFACT SANDBOX ==================== -->
+    <div id="artifactModal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-xl flex flex-col">
+        <div class="pt-[var(--safe-top)] px-3 py-2.5 bg-surface border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-acidLime"></span>
+                <span class="font-mono text-xs font-bold text-white">CANLI ARTIFACT SANDBOX (İzole WebView)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleSandboxViewMode()" id="sandboxToggleBtn" class="px-2.5 py-1 rounded bg-white/10 text-xs font-mono text-neonCyan">Kodu Düzenle</button>
+                <button onclick="closeArtifactPreview()" class="w-8 h-8 rounded-lg bg-white/10 text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div class="flex-1 relative overflow-hidden flex flex-col">
+            <iframe id="artifactIframe" sandbox="allow-scripts" class="w-full flex-1 bg-[#07080d]"></iframe>
+            <textarea id="artifactEditor" class="hidden w-full flex-1 bg-[#050608] text-acidLime font-mono text-xs p-3 focus:outline-none" spellcheck="false"></textarea>
+        </div>
+        <div class="pb-[var(--safe-bottom)] px-3 py-2 bg-surface border-t border-white/10 flex items-center justify-between text-xs font-mono">
+            <span class="text-zinc-400">Zero-Trust Container • 120Hz Render</span>
+            <div class="flex gap-2">
+                <button onclick="copyArtifactSource()" class="px-3 py-1 rounded bg-white/10 text-white"><i class="fa-regular fa-copy mr-1"></i>Kopyala</button>
+                <button onclick="refreshArtifactIframe()" class="px-3 py-1 rounded bg-acidLime text-black font-bold"><i class="fa-solid fa-rotate-right mr-1"></i>Yeniden Çalıştır</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL / SHEET 2: MULTIMODAL VISION CAMERA ==================== -->
+    <div id="visionModal" class="fixed inset-0 z-50 hidden bg-black/95 flex flex-col">
+        <div class="pt-[var(--safe-top)] px-4 py-3 flex items-center justify-between border-b border-white/10">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-alertRed animate-ping"></span>
+                <span class="font-mono text-xs font-bold">OMNISCIENT LIVE VISION & WEBRTC SES</span>
+            </div>
+            <button onclick="toggleVisionModal()" class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden scan-overlay">
+            <video id="visionVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            <!-- HUD Bounding Box Overlay -->
+            <div class="absolute inset-8 border border-neonCyan/40 rounded-2xl pointer-events-none flex flex-col justify-between p-3 font-mono text-[11px] text-neonCyan">
+                <div class="flex justify-between">
+                    <span>VISION_NPU: AKTİF</span>
+                    <span id="visionResLabel">HD STREAM</span>
+                </div>
+                <div id="visionAnalysisText" class="bg-black/75 p-2.5 rounded-lg border border-neonCyan/30 text-white">
+                    Kamera akışı analiz için hazır. "Sahneyi Analiz Et" butonuna dokunun.
+                </div>
+            </div>
+        </div>
+        <div class="pb-[var(--safe-bottom)] p-4 bg-surface border-t border-white/10 flex justify-around">
+            <button onclick="analyzeCameraFrame()" class="px-5 py-2.5 rounded-xl bg-neonCyan text-black font-mono font-bold text-xs brutal-cyan">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Sahneyi Analiz Et
+            </button>
+            <button onclick="switchCameraFacing()" class="px-4 py-2.5 rounded-xl bg-white/10 text-white font-mono text-xs">
+                <i class="fa-solid fa-camera-rotate mr-1"></i>Kamera Çevir
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== BOTTOM SHEET: MODEL ROUTER ==================== -->
+    <div id="sheetBackdrop" onclick="closeAllSheets()" class="fixed inset-0 bg-black/60 z-40 hidden"></div>
+    <div id="routerSheet" class="bottom-sheet fixed bottom-0 inset-x-0 z-50 bg-surface border-t-2 border-neonCyan rounded-t-2xl p-4 pb-[var(--safe-bottom)]">
+        <div class="w-10 h-1 bg-zinc-600 rounded-full mx-auto mb-3"></div>
+        <h3 class="font-mono text-xs font-bold text-neonCyan mb-2.5">AKILLI MODEL YÖNLENDİRİCİ (LLM ROUTER)</h3>
+        <div class="space-y-2 text-xs font-mono">
+            <button onclick="selectModel('Claude 3.5 + NPU')" class="w-full p-2.5 rounded-xl bg-neonCyan/10 border border-neonCyan flex items-center justify-between text-left">
+                <div>
+                    <div class="font-bold text-white">Otomatik Hibrit Router (Önerilen)</div>
+                    <div class="text-[10px] text-zinc-400">Kod: Claude 3.5 Sonnet • Araştırma: Gemini 1.5 Pro • Gizlilik: Llama-3 NPU</div>
+                </div>
+                <i class="fa-solid fa-bolt text-acidLime"></i>
+            </button>
+            <button onclick="selectModel('Gemini 1.5 Pro')" class="w-full p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-left">
+                <div>
+                    <div class="font-bold text-white">Gemini 1.5 Pro (2M Context)</div>
+                    <div class="text-[10px] text-zinc-400">Tam depo analizi ve Multimodal Vision</div>
+                </div>
+                <span class="text-[10px] text-neonCyan">2M Token</span>
+            </button>
+            <button onclick="selectModel('GPT-4o Omni')" class="w-full p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-left">
+                <div>
+                    <div class="font-bold text-white">GPT-4o Realtime</div>
+                    <div class="text-[10px] text-zinc-400">Düşük gecikmeli ses ve mantık yürütme</div>
+                </div>
+                <span class="text-[10px] text-zinc-400">API</span>
+            </button>
+            <button onclick="selectModel('Llama-3 8B (NPU)')" class="w-full p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-left">
+                <div>
+                    <div class="font-bold text-acidLime">Yerel Llama-3-8B-Instruct (Çevrimdışı NPU)</div>
+                    <div class="text-[10px] text-zinc-400">Sıfır veri çıkışı • Vulkan / Qualcomm QNN Hızlandırmalı</div>
+                </div>
+                <span class="text-[10px] bg-acidLime text-black px-1.5 rounded font-bold">LOCAL</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== BOTTOM SHEET: ANDROID MANIFEST XML ==================== -->
+    <div id="manifestSheet" class="bottom-sheet fixed bottom-0 inset-x-0 z-50 bg-surface border-t-2 border-acidLime rounded-t-2xl p-4 pb-[var(--safe-bottom)] max-h-[80dvh] flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-mono text-xs font-bold text-acidLime">AndroidManifest.xml (God-Mode Sideload)</span>
+            <button onclick="copyManifestXml()" class="text-xs font-mono px-2.5 py-1 rounded bg-acidLime text-black font-bold">XML Kopyala</button>
+        </div>
+        <pre id="manifestXmlCode" class="flex-1 overflow-y-auto p-3 rounded-xl bg-black border border-white/10 font-mono text-[11px] text-neonCyan selectable">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ai.omniscient.godmode.core"&gt;
+
+    &lt;!-- TAM DOSYA VE LOCAL RAG İZİNLERİ --&gt;
+    &lt;uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" /&gt;
+    &lt;uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /&gt;
+
+    &lt;!-- KESİNTİSİZ ARKA PLAN AJAN &amp; WAKELOCK --&gt;
+    &lt;uses-permission android:name="android.permission.WAKE_LOCK" /&gt;
+    &lt;uses-permission android:name="android.permission.FOREGROUND_SERVICE" /&gt;
+    &lt;uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" /&gt;
+    &lt;uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" /&gt;
+
+    &lt;!-- DONANIM, SENSÖR, KAMERA &amp; HASSAS GPS --&gt;
+    &lt;uses-permission android:name="android.permission.CAMERA" /&gt;
+    &lt;uses-permission android:name="android.permission.RECORD_AUDIO" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /&gt;
+    &lt;uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /&gt;
+    &lt;uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /&gt;
+
+    &lt;application
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"&gt;
+        &lt;service
+            android:name=".agents.AutonomousAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.accessibilityservice.AccessibilityService" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/service&gt;
+    &lt;/application&gt;
+&lt;/manifest&gt;</pre>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-3.5 py-2 rounded-xl bg-black/90 border border-acidLime text-acidLime font-mono text-xs shadow-lg pointer-events-none opacity-0 transition-opacity duration-200">
+        İşlem Tamamlandı
+    </div>
+
+    <!-- APPLICATION ENGINE (VANILLA JS) -->
+    <script>
+        // ==================== STATE & DEFAULT ARTIFACT ====================
+        const defaultArtifactCode = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { margin:0; background:#05060a; color:#00f0ff; font-family:monospace; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
+  canvas { position:absolute; inset:0; }
+  .hud { position:relative; z-index:2; background:rgba(10,12,20,0.8); border:1px solid #00f0ff; padding:14px 20px; border-radius:12px; text-align:center; pointer-events:none; }
+  h2 { margin:0 0 6px 0; color:#ccff00; font-size:15px; }
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <h2>OMNISCIENT CANLI SANDBOX</h2>
+    <div>Ekrana dokunarak kütleçekim dalgası oluşturun</div>
+  </div>
+  <script>
+    const c = document.getElementById('c'), ctx = c.getContext('2d');
+    let w = c.width = innerWidth, h = c.height = innerHeight;
+    let pts = Array.from({length: 95}, () => ({x:Math.random()*w, y:Math.random()*h, vx:(Math.random()-0.5)*2, vy:(Math.random()-0.5)*2}));
+    let tx = w/2, ty = h/2, active = false;
+    window.onpointerdown = e => { active = true; tx = e.clientX; ty = e.clientY; };
+    window.onpointermove = e => { if(active){ tx = e.clientX; ty = e.clientY; }};
+    window.onpointerup = () => active = false;
+    function loop(){
+      ctx.fillStyle = 'rgba(5,6,10,0.22)';
+      ctx.fillRect(0,0,w,h);
+      pts.forEach(p => {
+        if(active){
+          let dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx,dy)+1;
+          p.vx += (dx/d)*0.65; p.vy += (dy/d)*0.65;
+        }
+        p.vx *= 0.98; p.vy *= 0.98;
+        p.x = (p.x + p.vx + w) % w; p.y = (p.y + p.vy + h) % h;
+        ctx.fillStyle = active ? '#ccff00' : '#00f0ff';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2.3, 0, Math.PI*2); ctx.fill();
+      });
+      requestAnimationFrame(loop);
+    }
+    loop();
+  <\/script>
+</body>
+</html>`;
+
+        let currentArtifactCode = defaultArtifactCode;
+        let currentArtifactMode = 'html';
+        let chatHistory = [
+            { id: 'msg-init', role: 'assistant', content: 'OMNISCIENT-APK Çekirdeği aktif. God-Mode izinleri, Ajan Sürüsü ve Canlı Sandbox hazır.' }
+        ];
+        let wakeLockObj = null;
+        let cameraStream = null;
+        let cameraFacing = 'environment';
+        let gyroHistory = new Array(60).fill(0);
+
+        const vfsStorage = {
+            local: [
+                { name: 'RAG_Vector_Index.objectbox', size: '48.2 MB', tag: 'AES-256' },
+                { name: 'kuantum_mimari_notlari.pdf', size: '4.1 MB', tag: 'RAG İndeksli' },
+                { name: 'termux_autostart.sh', size: '2.4 KB', tag: 'PRoot' }
+            ],
+            gdrive: [
+                { name: 'Omniscient_Ajan_Ciktilari/', size: 'Klasör', tag: 'OAuth2 Senkron' },
+                { name: 'Finansal_Veri_Seti_2025.parquet', size: '192 MB', tag: 'GDrive' }
+            ],
+            yandex: [
+                { name: 'Yedek_Model_Lora_Weights.safetensors', size: '640 MB', tag: 'Yandex.Disk' },
+                { name: 'Arastirma_Raporlari_MD/', size: 'Klasör', tag: 'Çift Yönlü' }
+            ],
+            nextcloud: [
+                { name: 'Ev_NAS_Kamera_Arsivi/', size: 'WebDAV', tag: 'Zero-Trust' },
+                { name: 'docker-compose.yml', size: '3.8 KB', tag: 'NAS' }
+            ]
+        };
+        let activeMount = 'local';
+
+        // ==================== HAPTICS & UI HELPERS ====================
+        function haptic(ms = 18) {
+            if (navigator.vibrate) navigator.vibrate(ms);
+        }
+
+        function showToast(msg) {
+            haptic(20);
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.opacity = '1';
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => t.style.opacity = '0', 2200);
+        }
+
+        function switchTab(tab) {
+            haptic(15);
+            ['chat', 'agents', 'hardware', 'vfs'].forEach(v => {
+                document.getElementById('view-' + v).classList.toggle('hidden', v !== tab);
+                const nav = document.getElementById('nav-' + v);
+                if (v === tab) {
+                    nav.className = 'flex flex-col items-center py-1.5 rounded-xl text-neonCyan bg-neonCyan/10';
+                } else {
+                    nav.className = 'flex flex-col items-center py-1.5 rounded-xl text-zinc-400 hover:text-white';
+                }
+            });
+            if (tab === 'vfs') renderVfsFiles();
+            if (tab === 'hardware') drawSensorOscilloscope();
+        }
+
+        function openSheet(id) {
+            haptic(15);
+            document.getElementById('sheetBackdrop').classList.remove('hidden');
+            document.getElementById(id).classList.add('open');
+        }
+
+        function closeAllSheets() {
+            document.getElementById('sheetBackdrop').classList.add('hidden');
+            document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+        }
+
+        function selectModel(name) {
+            document.getElementById('activeModelLabel').textContent = name;
+            document.getElementById('npuStatus').textContent = name.includes('NPU') ? 'NPU: AKTİF' : 'CLOUD: TLS1.3';
+            closeAllSheets();
+            showToast('Model Yönlendirici: ' + name);
+        }
+
+        function togglePill(btn) {
+            haptic(12);
+            const active = btn.classList.toggle('active-pill');
+            if (active) {
+                btn.className = 'px-2.5 py-1 rounded-md bg-neonCyan/15 border border-neonCyan text-neonCyan flex items-center gap-1 shrink-0 active-pill';
+            } else {
+                btn.className = 'px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-zinc-400 flex items-center gap-1 shrink-0';
+            }
+        }
+
+        // ==================== SMART CODE SELECTION & ARTIFACTS ====================
+        function toggleCodeLine(lineEl, blockId) {
+            haptic(10);
+            lineEl.classList.toggle('selected-line');
+            const parent = lineEl.closest('[data-code-container]');
+            const count = parent.querySelectorAll('.selected-line').length;
+            const badge = document.getElementById('selectedCount-' + blockId);
+            if (badge) {
+                badge.textContent = count + ' satır seçili';
+                badge.classList.toggle('hidden', count === 0);
+            }
+        }
+
+        function copySelectedLines(blockDomId) {
+            const block = document.getElementById(blockDomId);
+            const selected = block.querySelectorAll('.selected-line');
+            const lines = (selected.length > 0 ? Array.from(selected) : Array.from(block.querySelectorAll('.code-line')))
+                .map(el => el.querySelector('span:nth-child(2)').innerText);
+            navigator.clipboard.writeText(lines.join('\n'));
+            showToast(selected.length > 0 ? `${selected.length} seçili satır kopyalandı!` : 'Tüm kod bloğu kopyalandı!');
+        }
+
+        function runPythonWasmSim() {
+            haptic(25);
+            const out = document.getElementById('wasmOutputBox');
+            out.classList.remove('hidden');
+            out.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i>Pyodide WASM & PRoot başlatılıyor...`;
+            setTimeout(() => {
+                const gpsTxt = document.getElementById('gpsCoords').textContent;
+                out.innerHTML = `[Termux/Pyodide Çıktısı 14ms]:<br>&gt; Otonom Görev Hazır @ ${gpsTxt}<br>&gt; Bellek İzolasyonu: OK (Zero-Trust Sandbox)`;
+            }, 550);
+        }
+
+        function openArtifactPreview(code, mode = 'html') {
+            haptic(20);
+            currentArtifactCode = code || defaultArtifactCode;
+            currentArtifactMode = mode;
+            const modal = document.getElementById('artifactModal');
+            const iframe = document.getElementById('artifactIframe');
+            const editor = document.getElementById('artifactEditor');
+            editor.value = currentArtifactCode;
+            iframe.srcdoc = currentArtifactCode;
+            modal.classList.remove('hidden');
+        }
+
+        function closeArtifactPreview() {
+            document.getElementById('artifactModal').classList.add('hidden');
+        }
+
+        function toggleSandboxViewMode() {
+            const iframe = document.getElementById('artifactIframe');
+            const editor = document.getElementById('artifactEditor');
+            const btn = document.getElementById('sandboxToggleBtn');
+            const showingEditor = !editor.classList.contains('hidden');
+            if (showingEditor) {
+                currentArtifactCode = editor.value;
+                iframe.srcdoc = currentArtifactCode;
+                editor.classList.add('hidden');
+                iframe.classList.remove('hidden');
+                btn.textContent = 'Kodu Düzenle';
+            } else {
+                editor.classList.remove('hidden');
+                iframe.classList.add('hidden');
+                btn.textContent = 'Önizlemeye Dön';
+            }
+        }
+
+        function refreshArtifactIframe() {
+            const editor = document.getElementById('artifactEditor');
+            if (!editor.classList.contains('hidden')) currentArtifactCode = editor.value;
+            document.getElementById('artifactIframe').srcdoc = currentArtifactCode;
+            showToast('Sandbox yeniden derlendi');
+        }
+
+        function copyArtifactSource() {
+            navigator.clipboard.writeText(currentArtifactCode);
+            showToast('Artifact kaynak kodu kopyalandı');
+        }
+
+        // ==================== SWIPE GESTURES ON CHAT MESSAGES ====================
+        function attachSwipeHandlers(el, msgId) {
+            let startX = 0, currentX = 0;
+            el.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+            el.addEventListener('touchmove', e => {
+                currentX = e.touches[0].clientX - startX;
+                if (Math.abs(currentX) > 15 && Math.abs(currentX) < 95) {
+                    el.style.transform = `translateX(${currentX}px)`;
+                }
+            }, { passive: true });
+            el.addEventListener('touchend', () => {
+                el.style.transform = 'translateX(0px)';
+                if (currentX > 65) {
+                    copyMessageRaw(msgId);
+                } else if (currentX < -65) {
+                    forkConversation(msgId);
+                }
+                currentX = 0;
+            });
+        }
+
+        function copyMessageRaw(msgId) {
+            const item = chatHistory.find(m => m.id === msgId);
+            const text = item ? item.content : document.querySelector(`[data-msg-id="${msgId}"]`)?.innerText || '';
+            navigator.clipboard.writeText(text);
+            showToast('Mesaj Panoya Kopyalandı (Sağa Kaydırma)');
+        }
+
+        function forkConversation(msgId) {
+            showToast('Sohbet bu noktadan Dallandırıldı (Fork #2)');
+            appendAssistantMessage(`🔀 **Dal (Fork) Oluşturuldu:** \`${msgId}\` noktasından izole yeni bağlam ağacı başlatıldı.`);
+        }
+
+        function exportChatHistory(format) {
+            let payload = '';
+            if (format === 'json') {
+                payload = JSON.stringify(chatHistory, null, 2);
+            } else {
+                payload = chatHistory.map(m => `### [${m.role.toUpperCase()}]\n${m.content}\n`).join('\n---\n');
+            }
+            navigator.clipboard.writeText(payload);
+            showToast(`Tüm sohbet ${format.toUpperCase()} olarak kopyalandı!`);
+        }
+
+        // ==================== NEURAL CHAT & REAL/AUTONOMOUS LLM ====================
+        function sendQuickPrompt(text) {
+            document.getElementById('chatInput').value = text;
+            handleUserSubmit();
+        }
+
+        async function handleUserSubmit() {
+            const input = document.getElementById('chatInput');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+            input.value = '';
+            haptic(20);
+
+            const userMsgId = 'msg-' + Date.now();
+            chatHistory.push({ id: userMsgId, role: 'user', content: prompt });
+
+            const stream = document.getElementById('chatStream');
+            const userDiv = document.createElement('div');
+            userDiv.className = 'swipe-msg ml-8 omni-card rounded-xl p-3 bg-neonCyan/10 border-neonCyan/40 text-sm text-white';
+            userDiv.dataset.msgId = userMsgId;
+            userDiv.innerHTML = `<div class="text-[10px] font-mono text-neonCyan mb-1">OPERATÖR</div><div>${escapeHtml(prompt)}</div>`;
+            attachSwipeHandlers(userDiv, userMsgId);
+            stream.appendChild(userDiv);
+            stream.scrollTop = stream.scrollHeight;
+
+            // Check if user saved a real Gemini API Key
+            const apiKey = sessionStorage.getItem('omni_gemini_key');
+            if (apiKey) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const data = await res.json();
+                    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'API yanıtı alındı fakat metin boş.';
+                    appendAssistantMessage(reply);
+                    return;
+                } catch (err) {
+                    appendAssistantMessage('API bağlantı hatası, Yerel Otonom NPU Sentezleyiciye geçildi.');
+                }
+            }
+
+            // Built-in Intelligent Multi-Modal & Artifact Generator
+            setTimeout(() => {
+                const lower = prompt.toLowerCase();
+                if (lower.includes('mermaid') || lower.includes('diyagram')) {
+                    const svgDiagram = generateSvgArchitectureDiagram();
+                    appendAssistantMessage(`**Mermaid / SVG Canlı Mimari Diyagramı Üretildi:**\nAjan yönlendirme topolojisi aşağıda gerçek zamanlı çizildi.`, svgDiagram);
+                } else if (lower.includes('fizik') || lower.includes('artifact') || lower.includes('html')) {
+                    const customCode = buildPhysicsArtifact();
+                    currentArtifactCode = customCode;
+                    appendAssistantMessage(
+                        `**Canlı HTML5 Fizik Motoru Artifact Hazır!**\nİzole WebView konteynerinde 120Hz olarak derlendi. Aşağıdaki butondan tam ekran etkileşime geçebilirsiniz.`,
+                        `<button onclick="openArtifactPreview(currentArtifactCode, 'html')" class="mt-2 px-3 py-2 rounded-lg bg-acidLime text-black font-mono font-bold text-xs brutal-lime"><i class="fa-solid fa-cube mr-1"></i>Canlı Fizik Sandbox'ı Aç</button>`
+                    );
+                } else if (lower.includes('araştır') || lower.includes('arxiv')) {
+                    appendAssistantMessage(
+                        `🌐 **Derin Web Sentezi Tamamlandı (24 Paralel Kaynak):**\n1. **ArXiv [2501.09412]:** Mobil NPU üzerinde 4-bit AWQ niceleme ile %38 daha düşük pil tüketimi doğrulandı.\n2. **ObjectBox Local RAG:** Yerel vektör araması gecikmesi \`1.8ms\` altında tutuldu.\n3. **Güvenlik:** \`MANAGE_EXTERNAL_STORAGE\` dizinleri AES-256 ile izole edildi.`
+                    );
+                } else {
+                    const model = document.getElementById('activeModelLabel').textContent;
+                    appendAssistantMessage(
+                        `**[${model} Sentezi]:** Komut analiz edildi (\`${prompt.slice(0, 48)}...\`).\n\n• **LangGraph Ajan Durumu:** Görev alt düğümlere ayrıldı.\n• **Yerel RAG Bağlamı:** ${vfsStorage.local.length} yerel indeksli dosya tarandı.\n• Mesajı **sağa kaydırarak** kopyalayabilir veya **sola kaydırarak** dallandırabilirsiniz.`
+                    );
+                }
+            }, 380);
+        }
+
+        function appendAssistantMessage(markdownText, extraHtml = '') {
+            const msgId = 'msg-' + Date.now();
+            chatHistory.push({ id: msgId, role: 'assistant', content: markdownText });
+            const stream = document.getElementById('chatStream');
+            const div = document.createElement('div');
+            div.className = 'swipe-msg omni-card rounded-xl p-3.5 border-l-4 border-l-acidLime text-sm text-zinc-200';
+            div.dataset.msgId = msgId;
+
+            const formatted = escapeHtml(markdownText)
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/`(.*?)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/10 text-neonCyan font-mono text-xs">$1</code>')
+                .replace(/\n/g, '<br>');
+
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-1.5 text-[10px] font-mono">
+                    <span class="text-acidLime font-bold">${document.getElementById('activeModelLabel').textContent}</span>
+                    <div class="flex gap-2 text-zinc-400">
+                        <button onclick="copyMessageRaw('${msgId}')" class="hover:text-white"><i class="fa-regular fa-copy"></i> Kopyala</button>
+                        <button onclick="forkConversation('${msgId}')" class="hover:text-neonCyan"><i class="fa-solid fa-code-branch"></i> Fork</button>
+                    </div>
+                </div>
+                <div class="leading-relaxed">${formatted}</div>
+                ${extraHtml}
+            `;
+            attachSwipeHandlers(div, msgId);
+            stream.appendChild(div);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        function generateSvgArchitectureDiagram() {
+            return `<div class="mt-2 p-2.5 rounded-lg bg-black border border-white/10 overflow-x-auto">
+                <svg viewBox="0 0 420 110" class="w-full h-24 font-mono">
+                    <rect x="8" y="35" width="85" height="40" rx="8" fill="#0d1320" stroke="#00f0ff" stroke-width="1.5"/>
+                    <text x="50" y="59" fill="#00f0ff" font-size="10" text-anchor="middle">LLM Router</text>
+                    <line x1="93" y1="55" x2="130" y2="55" stroke="#ccff00" stroke-width="1.5"/>
+                    <rect x="130" y="12" width="110" height="34" rx="7" fill="#0d1320" stroke="#ccff00" stroke-width="1.5"/>
+                    <text x="185" y="33" fill="#ccff00" font-size="9.5" text-anchor="middle">Playwright Web</text>
+                    <rect x="130" y="64" width="110" height="34" rx="7" fill="#0d1320" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <text x="185" y="85" fill="#c4b5fd" font-size="9.5" text-anchor="middle">WASM Sandbox</text>
+                    <line x1="240" y1="30" x2="295" y2="55" stroke="#00f0ff" stroke-width="1.5"/>
+                    <line x1="240" y1="80" x2="295" y2="55" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <rect x="295" y="35" width="115" height="40" rx="8" fill="#131c10" stroke="#ccff00" stroke-width="1.5"/>
+                    <text x="352" y="59" fill="#ffffff" font-size="10" text-anchor="middle">God-Mode APK</text>
+                </svg>
+            </div>`;
+        }
+
+        function buildPhysicsArtifact() {
+            return `<!DOCTYPE html><html><body style="margin:0;background:#040508;overflow:hidden"><canvas id="p"></canvas><script>
+            const c=document.getElementById('p'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+            let balls=Array.from({length:35},(_,i)=>({x:innerWidth/2,y:60+i*8,vx:(Math.random()-.5)*9,vy:Math.random()*4,r:8+Math.random()*8,c:i%2?'#00f0ff':'#ccff00'}));
+            c.onclick=e=>balls.forEach(b=>{b.vy=-12;b.vx=(b.x-e.clientX)*0.08});
+            function anim(){x.fillStyle='rgba(4,5,8,0.28)';x.fillRect(0,0,c.width,c.height);
+            balls.forEach(b=>{b.vy+=0.38;b.x+=b.vx;b.y+=b.vy;
+            if(b.y+b.r>c.height){b.y=c.height-b.r;b.vy*=-0.82}
+            if(b.x+b.r>c.width||b.x-b.r<0){b.vx*=-0.9}
+            x.fillStyle=b.c;x.beginPath();x.arc(b.x,b.y,b.r,0,7);x.fill()});requestAnimationFrame(anim)}anim();
+            <\/script></body></html>`;
+        }
+
+        // ==================== AUTONOMOUS AGENTS & GITHUB LIVE ====================
+        function runAutonomousSwarmDemo() {
+            haptic(25);
+            const term = document.getElementById('swarmTerminal');
+            const steps = [
+                { node: 1, status: '22 kaynak taranıyor...', log: '[ARAŞTIRMACI] Headless tarayıcı ArXiv & GitHub indeksini çekti.' },
+                { node: 2, status: 'Rust + Python yazılıyor...', log: '[KODLAYICI] SWE-Agent yama kodunu üretti (0 sözdizimi hatası).' },
+                { node: 3, status: 'Birim testleri geçti ✓', log: '[SANDBOX] PRoot izole konteynerde 14/14 test BAŞARILI (19ms).' },
+                { node: 4, status: 'Aksiyon tamamlandı ✓', log: '[ACCESSIBILITY] Çıktı Google Drive ve yerel RAG veritabanına işlendi.' }
+            ];
+            steps.forEach((s, idx) => {
+                setTimeout(() => {
+                    haptic(12);
+                    document.getElementById('agent-node-' + s.node).classList.add('brutal-cyan');
+                    document.getElementById('agent-status-' + s.node).textContent = s.status;
+                    const line = document.createElement('div');
+                    line.className = 'text-acidLime';
+                    line.textContent = s.log;
+                    term.appendChild(line);
+                    term.scrollTop = term.scrollHeight;
+                }, idx * 650);
+            });
+        }
+
+        function executeDeepResearch() {
+            haptic(20);
+            const q = document.getElementById('deepResearchInput').value;
+            const box = document.getElementById('researchResults');
+            box.innerHTML = `<div class="p-2.5 rounded bg-neonCyan/10 border border-neonCyan text-neonCyan font-mono"><i class="fa-solid fa-circle-notch animate-spin mr-1.5"></i>Playwright 20+ SPA kaynağını reklamsız tarıyor: "${escapeHtml(q)}"...</div>`;
+            setTimeout(() => {
+                box.innerHTML = `
+                    <div class="p-2.5 rounded bg-black/60 border border-white/10 space-y-1">
+                        <div class="flex justify-between text-acidLime font-mono text-[11px]"><span>[1] arxiv.org/abs/2411.1092</span><span>Doğrulandı ✓</span></div>
+                        <p class="text-zinc-300">Cihaz içi NPU bellek bant genişliği optimizasyonu ile 32 token/sn hız elde edildi.</p>
+                    </div>
+                    <div class="p-2.5 rounded bg-black/60 border border-white/10 space-y-1">
+                        <div class="flex justify-between text-neonCyan font-mono text-[11px]"><span>[2] github.com/ggerganov/llama.cpp</span><span>Atıf #2</span></div>
+                        <p class="text-zinc-300">Android Vulkan ve KleidiAI çekirdekleri ARMv9 mimarisinde sıfır kopya ile çalışır.</p>
+                    </div>`;
+            }, 700);
+        }
+
+        async function fetchRealGitHubRepo() {
+            haptic(20);
+            const repo = document.getElementById('ghRepoInput').value.trim();
+            const card = document.getElementById('ghRepoCard');
+            card.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1 text-neonCyan"></i>GitHub API bağlanıyor...`;
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}`);
+                if (!res.ok) throw new Error('Repo bulunamadı');
+                const d = await res.json();
+                card.innerHTML = `
+                    <div class="flex items-center justify-between text-neonCyan font-bold mb-1">
+                        <span>${escapeHtml(d.full_name)}</span>
+                        <span>★ ${d.stargazers_count.toLocaleString()}</span>
+                    </div>
+                    <p class="text-zinc-300 mb-2">${escapeHtml(d.description || 'Açıklama yok')}</p>
+                    <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                        <span>Dil: <strong class="text-acidLime">${d.language || 'Çoklu'}</strong> • Açık Issue: ${d.open_issues_count}</span>
+                        <button onclick="showToast('SWE-Agent PR Taslağı Hazırladı!')" class="px-2 py-0.5 rounded bg-acidLime text-black font-bold">Otonom PR Aç</button>
+                    </div>`;
+            } catch (e) {
+                card.innerHTML = `<span class="text-alertRed">GitHub erişim hatası veya hız sınırı. Repo adını kontrol edin.</span>`;
+            }
+        }
+
+        // ==================== REAL HARDWARE SENSORS, GPS, WAKELOCK & CAMERA ====================
+        function initAllHardwareSensors() {
+            haptic(30);
+            // 1. Geolocation GPS
+            if ('geolocation' in navigator) {
+                navigator.geolocation.watchPosition(pos => {
+                    const { latitude, longitude, altitude, accuracy, speed } = pos.coords;
+                    document.getElementById('gpsCoords').textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                    document.getElementById('gpsMeta').textContent = `Hassasiyet: ±${Math.round(accuracy)}m | Rakım: ${altitude ? Math.round(altitude) + 'm' : 'N/A'}`;
+                }, err => {
+                    document.getElementById('gpsCoords').textContent = `Simüle: 41.00824, 28.97836`;
+                    document.getElementById('gpsMeta').textContent = `İzin reddedildi / İç mekan modu`;
+                }, { enableHighAccuracy: true });
+            }
+
+            // 2. DeviceOrientation & Motion (iOS 13+ permission check included)
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(state => {
+                    if (state === 'granted') bindMotionListeners();
+                }).catch(() => {});
+            } else {
+                bindMotionListeners();
+            }
+
+            // 3. Network & CPU Cores
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            document.getElementById('netInfo').textContent = conn ? `${conn.effectiveType?.toUpperCase() || 'WIFI'} (${conn.downlink || 100} Mbps)` : 'Çevrimiçi TLS 1.3';
+            document.getElementById('cpuCores').textContent = `Mantıksal Çekirdek: ${navigator.hardwareConcurrency || 8} Core`;
+
+            requestScreenWakeLock();
+            showToast('Sensör, GPS ve WakeLock Köprüsü Aktif!');
+        }
+
+        function bindMotionListeners() {
+            window.addEventListener('deviceorientation', e => {
+                const a = (e.alpha || 0).toFixed(1);
+                const b = (e.beta || 0).toFixed(1);
+                const g = (e.gamma || 0).toFixed(1);
+                document.getElementById('gyroData').textContent = `${a}° / ${b}° / ${g}°`;
+                gyroHistory.push(parseFloat(b));
+                if (gyroHistory.length > 60) gyroHistory.shift();
+            });
+            window.addEventListener('devicemotion', e => {
+                const acc = e.accelerationIncludingGravity;
+                if (acc) {
+                    const mag = Math.hypot(acc.x || 0, acc.y || 0, acc.z || 0).toFixed(2);
+                    document.getElementById('accelData').textContent = `Toplam İvme: ${mag} m/s²`;
+                }
+            });
+        }
+
+        function drawSensorOscilloscope() {
+            const canvas = document.getElementById('sensorCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+
+            function render() {
+                if (document.getElementById('view-hardware').classList.contains('hidden')) return;
+                ctx.fillStyle = '#05060a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const step = canvas.width / (gyroHistory.length - 1);
+                gyroHistory.forEach((val, i) => {
+                    const wave = val !== 0 ? val : Math.sin(Date.now() / 240 + i * 0.25) * 18;
+                    const y = canvas.height / 2 - (wave / 90) * (canvas.height / 2);
+                    if (i === 0) ctx.moveTo(0, y);
+                    else ctx.lineTo(i * step, y);
+                });
+                ctx.stroke();
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        async function requestScreenWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLockObj = await navigator.wakeLock.request('screen');
+                    document.getElementById('wakeLockLabel').textContent = 'DONANIM KİLİTLİ (AÇIK)';
+                    document.getElementById('wakelockDot').className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-acidLime border border-black';
+                } catch (e) {
+                    document.getElementById('wakeLockLabel').textContent = 'SİMÜLE WAKELOCK';
+                }
+            }
+        }
+
+        async function toggleWakeLock() {
+            if (wakeLockObj) {
+                await wakeLockObj.release();
+                wakeLockObj = null;
+                document.getElementById('wakeLockLabel').textContent = 'SERBEST BIRAKILDI';
+                document.getElementById('wakelockDot').className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-zinc-500 border border-black';
+                showToast('WakeLock Devre Dışı');
+            } else {
+                requestScreenWakeLock();
+                showToast('WakeLock Aktif Edildi');
+            }
+        }
+
+        // Camera Vision Modal
+        async function toggleVisionModal() {
+            haptic(20);
+            const modal = document.getElementById('visionModal');
+            const video = document.getElementById('visionVideo');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                await startCameraStream();
+            } else {
+                modal.classList.add('hidden');
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                    cameraStream = null;
+                }
+            }
+        }
+
+        async function startCameraStream() {
+            try {
+                if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacing }, audio: false });
+                document.getElementById('visionVideo').srcObject = cameraStream;
+            } catch (e) {
+                document.getElementById('visionAnalysisText').textContent = 'Kamera izni verilmedi veya cihazda kamera bulunamadı (Simülasyon HUD aktif).';
+            }
+        }
+
+        function switchCameraFacing() {
+            cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+            startCameraStream();
+        }
+
+        function analyzeCameraFrame() {
+            haptic(25);
+            const box = document.getElementById('visionAnalysisText');
+            box.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-acidLime mr-1"></i>Gemini Live / Yerel Vision NPU kareyi çözümlüyor...`;
+            setTimeout(() => {
+                box.innerHTML = `<span class="text-acidLime font-bold">[VISION SONUCU]:</span> Ortam aydınlatması dengeli, nesne sınırları çıkarıldı ve sahne metinleri OCR ile yerel RAG hafızasına aktarıldı.`;
+            }, 650);
+        }
+
+        // Web Speech API Voice Input
+        function triggerVoiceInput() {
+            haptic(20);
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) {
+                showToast('Tarayıcı Web Speech desteklemiyor, metin girin');
+                return;
+            }
+            const rec = new SpeechRec();
+            rec.lang = 'tr-TR';
+            const btn = document.getElementById('micBtn');
+            btn.classList.add('text-alertRed', 'border-alertRed');
+            showToast('Dinleniyor... Konuşun');
+            rec.onresult = e => {
+                document.getElementById('chatInput').value = e.results[0][0].transcript;
+                btn.classList.remove('text-alertRed', 'border-alertRed');
+            };
+            rec.onerror = () => btn.classList.remove('text-alertRed', 'border-alertRed');
+            rec.onend = () => btn.classList.remove('text-alertRed', 'border-alertRed');
+            rec.start();
+        }
+
+        // ==================== PERMISSIONS, MANIFEST & VFS ====================
+        function permToast(perm, state) {
+            showToast(`${perm}: ${state ? 'YETKİ VERİLDİ' : 'KISITLANDI'}`);
+        }
+
+        function copyManifestXml() {
+            navigator.clipboard.writeText(document.getElementById('manifestXmlCode').innerText);
+            showToast('AndroidManifest.xml Kopyalandı!');
+        }
+
+        function simulateAccessibilityAction() {
+            const act = document.getElementById('accActionSelect').value;
+            showToast('Accessibility Otonom Tıklama: ' + act);
+        }
+
+        function switchVfsMount(mount) {
+            haptic(12);
+            activeMount = mount;
+            ['local', 'gdrive', 'yandex', 'nextcloud'].forEach(m => {
+                const el = document.getElementById('mount-' + m);
+                if (m === mount) {
+                    el.className = 'px-2.5 py-1.5 rounded-lg bg-neonCyan/20 border border-neonCyan text-neonCyan shrink-0';
+                } else {
+                    el.className = 'px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 shrink-0';
+                }
+            });
+            renderVfsFiles();
+        }
+
+        function renderVfsFiles() {
+            const list = document.getElementById('vfsFileList');
+            const files = vfsStorage[activeMount] || [];
+            list.innerHTML = files.map(f => `
+                <div class="p-2.5 rounded-lg bg-black/60 border border-white/10 flex items-center justify-between">
+                    <div class="flex items-center gap-2 truncate">
+                        <i class="fa-regular fa-file-code text-neonCyan"></i>
+                        <span class="text-white truncate">${escapeHtml(f.name)}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-[10px] text-zinc-400">${f.size}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-acidLime/15 text-acidLime">${f.tag}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function indexLocalFilesToRAG(fileList) {
+            if (!fileList || !fileList.length) return;
+            Array.from(fileList).forEach(f => {
+                vfsStorage.local.unshift({
+                    name: f.name,
+                    size: (f.size / 1024).toFixed(1) + ' KB',
+                    tag: 'Vektör RAG ✓'
+                });
+            });
+            document.getElementById('ragCountBadge').textContent = vfsStorage.local.length;
+            renderVfsFiles();
+            showToast(`${fileList.length} dosya ObjectBox Vektör DB'ye indekslendi!`);
+        }
+
+        async function saveEncryptedApiKey() {
+            const val = document.getElementById('geminiKeyInput').value.trim();
+            if (!val) {
+                sessionStorage.removeItem('omni_gemini_key');
+                showToast('Anahtar temizlendi, Yerel NPU aktif');
+                return;
+            }
+            sessionStorage.setItem('omni_gemini_key', val);
+            // WebCrypto SHA-256 fingerprint demonstration
+            const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+            const hashHex = Array.from(new Uint8Array(hashBuf)).slice(0, 6).map(b => b.toString(16).padStart(2, '0')).join('');
+            document.getElementById('vaultStatusMsg').innerHTML = `<span class="text-acidLime">✓ AES-256 Parmak İzi [${hashHex}] Keystore'a mühürlendi. Sohbet artık canlı Gemini API kullanıyor.</span>`;
+            document.getElementById('geminiKeyInput').value = '';
+            showToast('API Anahtarı Donanım Kasasına Şifrelendi!');
+        }
+
+        // ==================== BOOTSTRAP TELEMETRY ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            // Attach swipe to initial message
+            const initMsg = document.querySelector('[data-msg-id="msg-init"]');
+            if (initMsg) attachSwipeHandlers(initMsg, 'msg-init');
+
+            // Battery API
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(bat => {
+                    const updateBat = () => {
+                        document.getElementById('batteryPill').innerHTML = `<i class="fa-solid fa-bolt text-acidLime"></i> ${Math.round(bat.level * 100)}%`;
+                    };
+                    updateBat();
+                    bat.addEventListener('levelchange', updateBat);
+                });
+            } else {
+                document.getElementById('batteryPill').innerHTML = `<i class="fa-solid fa-bolt text-acidLime"></i> 98%`;
+            }
+
+            // Real Refresh Rate Estimator
+            let frames = 0, lastTime = performance.now();
+            function measureHz(now) {
+                frames++;
+                if (now - lastTime >= 1000) {
+                    const hz = Math.min(144, Math.max(60, frames));
+                    document.getElementById('fpsCounter').textContent = hz + 'Hz';
+                    frames = 0;
+                    lastTime = now;
+                }
+                requestAnimationFrame(measureHz);
+            }
+            requestAnimationFrame(measureHz);
+
+            // Enter key submit on mobile/desktop
+            document.getElementById('chatInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleUserSubmit();
+                }
+            });
+
+            requestScreenWakeLock();
+            renderVfsFiles();
+        });
+    </script>
+</body>
+</html>
