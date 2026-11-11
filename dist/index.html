@@ -3,591 +3,1154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kurumsal OSINT ve EASM Platformu - Teknik Mimari</title>
+    <title>SENTINEL-OSINT | Kurumsal EASM & CTI Platformu</title>
     <style>
         :root {
-            --bg-dark: #0b0f19;
-            --bg-card: #111827;
-            --bg-card-hover: #1f2937;
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --accent-blue: #3b82f6;
-            --accent-cyan: #06b6d4;
-            --accent-emerald: #10b981;
+            --bg-dark: #070b14;
+            --bg-panel: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #10b981;
             --accent-amber: #f59e0b;
-            --accent-purple: #8b5cf6;
-            --border-color: #374151;
-            --alert-bg: rgba(245, 158, 11, 0.1);
-            --alert-border: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #a855f7;
+            --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
+
+        input, textarea, .stix-viewer, .detail-val, .log-msg {
+            user-select: text;
         }
 
         body {
             background-color: var(--bg-dark);
-            color: var(--text-primary);
-            line-height: 1.6;
-            padding: 2rem 1rem;
-        }
-
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        /* Header & Disclaimer */
-        header {
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .badge-role {
-            display: inline-block;
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--accent-blue);
-            border: 1px solid var(--accent-blue);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 1rem;
-            letter-spacing: -0.025em;
-        }
-
-        .compliance-banner {
-            background-color: var(--alert-bg);
-            border-left: 4px solid var(--alert-border);
-            padding: 1.25rem;
-            border-radius: 0 0.5rem 0.5rem 0;
-            margin-top: 1.5rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .compliance-icon {
-            font-size: 1.5rem;
-            color: var(--alert-border);
-            flex-shrink: 0;
-            margin-top: -0.2rem;
-        }
-
-        .compliance-text {
-            font-size: 0.95rem;
-            color: #e5e7eb;
-        }
-
-        .compliance-text strong {
-            color: #ffffff;
-        }
-
-        /* Interactive Flow Bar */
-        .flow-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 2.5rem;
-            background: var(--bg-card);
-            padding: 1rem;
-            border-radius: 0.75rem;
-            border: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .flow-step {
-            flex: 1;
-            min-width: 140px;
-            text-align: center;
-            padding: 0.6rem 0.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .flow-step:hover,
-        .flow-step:focus-visible,
-        .flow-step.active {
-            background: rgba(59, 130, 246, 0.15);
-            border-color: var(--accent-blue);
-            color: #ffffff;
-            transform: translateY(-2px);
-            outline: none;
-        }
-
-        /* Architecture Grid */
-        .arch-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 550px), 1fr));
-            gap: 1.5rem;
-        }
-
-        .layer-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            padding: 1.75rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            height: 100vh;
             overflow: hidden;
-        }
-
-        .layer-card:hover {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.15);
-        }
-
-        .layer-card.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .layer-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .layer-number {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.5rem;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
-
-        .layer-title h2 {
-            font-size: 1.25rem;
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        .layer-title span {
-            font-size: 0.85rem;
-            color: var(--accent-cyan);
-            font-family: monospace;
-        }
-
-        .component-list {
-            list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
         }
 
-        .component-list.grid-cols {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-            gap: 1.5rem;
+        /* Üst Bilgi Çubuğu (Header & Zero Trust Bar) */
+        header {
+            height: 56px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
         }
 
-        .component-item {
-            position: relative;
-            padding-left: 1.25rem;
-            border-left: 2px solid var(--border-color);
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+        }
+
+        .brand-badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            width: 450px;
             transition: border-color 0.2s;
         }
 
-        .component-item:hover {
-            border-left-color: var(--accent-emerald);
+        .search-bar:focus-within {
+            border-color: var(--accent-blue);
         }
 
-        .component-title {
-            font-weight: 600;
-            color: #f9fafb;
-            margin-bottom: 0.25rem;
-            display: block;
-        }
-
-        .component-desc {
-            font-size: 0.925rem;
-            color: var(--text-secondary);
-        }
-
-        /* Tech Tags */
-        .tech-tag {
-            display: inline-block;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-emerald);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 0.1rem 0.45rem;
-            border-radius: 0.25rem;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.82rem;
-            font-weight: 600;
-            margin: 0 0.15rem;
-        }
-
-        .standard-tag {
-            display: inline-block;
-            background: rgba(139, 92, 246, 0.15);
-            color: #c4b5fd;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            padding: 0.1rem 0.45rem;
-            border-radius: 0.25rem;
-            font-family: monospace;
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-
-        /* Footer */
-        footer {
-            margin-top: 3rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            color: var(--text-secondary);
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-mono);
             font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            margin-left: 8px;
         }
 
-        .status-indicator {
+        .system-status {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 16px;
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .dot {
             width: 8px;
             height: 8px;
-            background-color: var(--accent-emerald);
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-emerald);
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
         }
 
-        .highlight-card {
-            animation: pulseBorder 1.5s ease-out;
+        /* Ana Çalışma Alanı */
+        .workspace {
+            display: grid;
+            grid-template-columns: 280px 1fr 340px;
+            grid-template-rows: 1fr 220px;
+            height: calc(100vh - 56px);
+            gap: 1px;
+            background-color: var(--border-color);
         }
 
-        @keyframes pulseBorder {
-            0% { border-color: var(--accent-blue); box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
-            100% { border-color: var(--border-color); box-shadow: none; }
+        .panel {
+            background-color: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
+
+        .panel-header {
+            padding: 12px 16px;
+            background-color: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Sol Panel: Veri Toplama & Mimari Katmanlar */
+        .sidebar-left {
+            grid-row: 1 / 3;
+        }
+
+        .module-group {
+            margin-bottom: 20px;
+        }
+
+        .module-title {
+            font-size: 0.75rem;
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .connector-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .connector-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateX(2px);
+        }
+
+        .connector-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .connector-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .badge-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
+        .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+        .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        .badge-purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
+
+        /* Orta Üst: WebGL/Canvas Graf Görselleştirme & GIS Sekmeleri */
+        .center-main {
+            position: relative;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(rgba(51, 65, 85, 0.4) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .canvas-toolbar {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 5;
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(4px);
+        }
+
+        .btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover, .btn.active {
+            background: var(--accent-blue);
+            color: var(--bg-dark);
+            border-color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .graph-legend {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            z-index: 5;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            gap: 14px;
+            font-size: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        #graphCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+
+        #graphCanvas:active {
+            cursor: grabbing;
+        }
+
+        #gisView {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 60px 24px 24px 24px;
+            overflow-y: auto;
+        }
+
+        .gis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .gis-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        /* Sağ Panel: Varlık Çözümleme & Risk Skorlama (Analytics Engine) */
+        .sidebar-right {
+            grid-row: 1 / 3;
+        }
+
+        .risk-score-box {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .score-circle {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-red);
+            font-family: var(--font-mono);
+        }
+
+        .entity-details {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .detail-val {
+            font-family: var(--font-mono);
+            color: var(--text-main);
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .stix-viewer {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--accent-green);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        /* Orta Alt: Kafka Event Stream & Değiştirilemez Denetim Kayıtları (Audit Logs) */
+        .bottom-console {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+            background-color: #05080f;
+        }
+
+        .console-tabs {
+            display: flex;
+            gap: 16px;
+        }
+
+        .console-tab {
+            cursor: pointer;
+            padding-bottom: 2px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .console-tab.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        .log-container {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.6;
+            padding: 10px 16px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.2);
+            padding: 2px 0;
+        }
+
+        .log-time { color: var(--text-muted); min-width: 85px; }
+        .log-source { color: var(--accent-purple); min-width: 110px; }
+        .log-msg { color: var(--text-main); flex: 1; }
+        .log-hash { color: #64748b; font-size: 0.68rem; }
+
+        /* Scrollbar Tasarımı */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
     </style>
 </head>
 <body>
 
-<div class="container">
+    <!-- Üst Bilgi Çubuğu (Zero Trust, RBAC & Arama Motoru) -->
     <header>
-        <div class="badge-role">Baş Sistem Mimarı Dokümantasyonu // Savunma Odaklı Tasarım</div>
-        <h1>Açık Kaynak İstihbaratı (OSINT) ve Dış Saldırı Yüzeyi Yönetimi (EASM) Platformu</h1>
-        
-        <div class="compliance-banner" role="region" aria-label="Mimari Kapsam ve Yasal Sınır Bildirimi">
-            <div class="compliance-icon" aria-hidden="true">&#9888;</div>
-            <div class="compliance-text">
-                <strong>Mimari Kapsam ve Yasal Sınır Bildirimi:</strong> Yetkisiz izleme (spyware) veya saldırı amaçlı sistemler için teknik mimari oluşturulamaz. Aşağıdaki referans mimari; savunma odaklı <strong>Siber Güvenlik Operasyon Merkezleri (SOC)</strong>, <strong>Siber Tehdit İstihbaratı (CTI)</strong> ekipleri ve kurumsal varlık yönetimi süreçleri için yasal sınırlar çerçevesinde, yalnızca halka açık verilerle pasif olarak çalışan uçtan uca savunma platformunu tanımlar.
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+            SENTINEL-OSINT
+            <span class="brand-badge">EASM & CTI v4.2</span>
+        </div>
+
+        <div class="search-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="osintSearch" placeholder="OpenSearch Pasif Sorgu (Örn: acme-corp.internal, ASN, IP, CVE)..." value="fintech-global.example.com">
+            <button type="button" class="btn" onclick="triggerPassiveScan()" style="padding: 3px 8px; font-size: 0.7rem;">Sorgula</button>
+        </div>
+
+        <div class="system-status">
+            <div class="status-item" title="Mikroservisler arası karşılıklı TLS aktif">
+                <span class="dot"></span>
+                <span>Zero-Trust: mTLS</span>
+            </div>
+            <div class="status-item" title="Rol Tabanlı Erişim Kontrolü">
+                <span class="badge badge-blue">RBAC: SOC_LEAD</span>
+            </div>
+            <div class="status-item" title="KVKK / GDPR Etik Uyumluluk Modu">
+                <span class="badge badge-green">YASAL PASİF MOD</span>
             </div>
         </div>
     </header>
 
-    <!-- Mimari Katman Gezgini -->
-    <nav class="flow-bar" aria-label="Mimari Katmanlar">
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-1', this)">1. Veri Toplama</button>
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-2', this)">2. ETL &amp; Akış İşleme</button>
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-3', this)">3. Çoklu Depolama</button>
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-4', this)">4. Analitik Motoru</button>
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-5', this)">5. Görselleştirme &amp; API</button>
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-6', this)">6. Güvenlik &amp; Yönetişim</button>
-        <button type="button" class="flow-step" onclick="scrollToLayer('layer-7', this)">7. Altyapı &amp; DevSecOps</button>
-    </nav>
+    <!-- Ana Çalışma Alanı -->
+    <div class="workspace">
 
-    <!-- Mimari Katmanlar -->
-    <main class="arch-grid">
-
-        <!-- Katman 1 -->
-        <section id="layer-1" class="layer-card">
-            <div class="layer-header">
-                <div class="layer-number">01</div>
-                <div class="layer-title">
-                    <h2>Veri Toplama Katmanı</h2>
-                    <span>Data Ingestion &amp; Connectors</span>
-                </div>
+        <!-- SOL PANEL: 1. Veri Toplama, 2. ETL & 3. Polyglot Persistence Durumu -->
+        <aside class="panel sidebar-left">
+            <div class="panel-header">
+                <span>Altyapı & Toplayıcılar</span>
+                <span class="badge badge-green">AKTİF</span>
             </div>
-            <ul class="component-list">
-                <li class="component-item">
-                    <span class="component-title">Dağıtık Asenkron Toplayıcılar (Distributed Collectors)</span>
-                    <p class="component-desc">
-                        <span class="tech-tag">Go</span> veya <span class="tech-tag">Rust</span> ile geliştirilmiş, yüksek eşzamanlılık (concurrency) ve hız sınırlandırma (rate-limiting) destekleyen mikroservisler; yalnızca halka açık (public) kaynaklardan veri toplar.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Harici Veri ve API Adaptörleri</span>
-                    <p class="component-desc">
-                        WHOIS, pasif DNS (pDNS), SSL/TLS Sertifika Şeffaflık logları (Certificate Transparency), BGP/ASN tabloları ve <span class="tech-tag">Shodan</span> / <span class="tech-tag">Censys</span> gibi kurumsal altyapı arama motorları ile entegre bağlayıcılar.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Olay Akışı ve Tamponlama (Event Streaming)</span>
-                    <p class="component-desc">
-                        Yüksek hacimli ham verinin kayıpsız ve geri basınç (backpressure) kontrollü şekilde işleme katmanına aktarılması için <span class="tech-tag">Apache Kafka</span> kümesi.
-                    </p>
-                </li>
-            </ul>
+            <div class="panel-content">
+                
+                <div class="module-group">
+                    <div class="module-title">
+                        <span>1. ASENKRON TOPLAYICILAR (Go/Rust)</span>
+                        <span>EPS: 14.2K</span>
+                    </div>
+                    <div class="connector-card" onclick="filterGraph('all')">
+                        <div class="connector-info">
+                            <strong>CT Log Streamer</strong>
+                            <span class="connector-sub">SSL/TLS Şeffaflık Kayıtları</span>
+                        </div>
+                        <span class="badge badge-green">ONLINE</span>
+                    </div>
+                    <div class="connector-card" onclick="injectSimulatedNode('DNS')">
+                        <div class="connector-info">
+                            <strong>Passive DNS & WHOIS</strong>
+                            <span class="connector-sub">A, AAAA, MX, TXT, SOA</span>
+                        </div>
+                        <span class="badge badge-green">ONLINE</span>
+                    </div>
+                    <div class="connector-card" onclick="injectSimulatedNode('BGP')">
+                        <div class="connector-info">
+                            <strong>BGP & ASN Routeviews</strong>
+                            <span class="connector-sub">Altyapı & IP Blok Haritası</span>
+                        </div>
+                        <span class="badge badge-green">ONLINE</span>
+                    </div>
+                    <div class="connector-card" onclick="injectSimulatedNode('CVE')">
+                        <div class="connector-info">
+                            <strong>Shodan / Censys API</strong>
+                            <span class="connector-sub">Açık Port & Banner Analizi</span>
+                        </div>
+                        <span class="badge badge-amber">SYNCING</span>
+                    </div>
+                </div>
+
+                <div class="module-group">
+                    <div class="module-title">
+                        <span>2. İŞLEME & ZENGİNLEŞTİRME (ETL)</span>
+                    </div>
+                    <div class="connector-card">
+                        <div class="connector-info">
+                            <strong>Apache Kafka Kümesi</strong>
+                            <span class="connector-sub">Topic: raw-osint-ingest</span>
+                        </div>
+                        <span class="badge badge-blue">LAG: 2ms</span>
+                    </div>
+                    <div class="connector-card">
+                        <div class="connector-info">
+                            <strong>NLP / NER Varlık Çıkarımı</strong>
+                            <span class="connector-sub">STIX 2.1 Normalizasyonu</span>
+                        </div>
+                        <span class="badge badge-purple">AI AKTİF</span>
+                    </div>
+                    <div class="connector-card">
+                        <div class="connector-info">
+                            <strong>Redis Tekilleştirme</strong>
+                            <span class="connector-sub">SHA-256 Bloom Filter</span>
+                        </div>
+                        <span class="badge badge-green">%99.4 HIT</span>
+                    </div>
+                </div>
+
+                <div class="module-group">
+                    <div class="module-title">
+                        <span>3. POLYGLOT PERSISTENCE</span>
+                    </div>
+                    <div class="connector-card">
+                        <div class="connector-info">
+                            <strong>Neo4j Graf DB</strong>
+                            <span class="connector-sub">Varlık İlişki Haritası</span>
+                        </div>
+                        <span class="badge badge-green">4.8M Düğüm</span>
+                    </div>
+                    <div class="connector-card">
+                        <div class="connector-info">
+                            <strong>OpenSearch & Timescale</strong>
+                            <span class="connector-sub">Tam Metin & Zaman Serisi</span>
+                        </div>
+                        <span class="badge badge-green">12ms Sorgu</span>
+                    </div>
+                    <div class="connector-card">
+                        <div class="connector-info">
+                            <strong>MinIO S3 Veri Gölü</strong>
+                            <span class="connector-sub">Ham OSINT Arşivi</span>
+                        </div>
+                        <span class="badge badge-blue">84.6 TB</span>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- ORTA ÜST PANEL: 5. Sunum & WebGL/Canvas Graf Arayüzü + GIS -->
+        <main class="panel center-main">
+            <div class="canvas-toolbar">
+                <button type="button" class="btn active" id="btnGraph" onclick="switchView('graph')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    İlişki Grafiği (Link Analysis)
+                </button>
+                <button type="button" class="btn" id="btnGis" onclick="switchView('gis')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    Coğrafi İstihbarat (GIS)
+                </button>
+                <button type="button" class="btn" onclick="resetGraphPhysics()">Merkezle</button>
+                <button type="button" class="btn" onclick="exportToSIEM()" title="GraphQL / REST API üzerinden SOAR'a aktar">SIEM/SOAR Aktar</button>
+            </div>
+
+            <!-- Etkileşimli Graf Kanvası -->
+            <canvas id="graphCanvas"></canvas>
+
+            <div class="graph-legend" id="graphLegend">
+                <div class="legend-item"><span class="legend-dot" style="background: #38bdf8;"></span> Kök Alan Adı / Alt Alan Adı</div>
+                <div class="legend-item"><span class="legend-dot" style="background: #10b981;"></span> IPv4 / ASN Bloğu</div>
+                <div class="legend-item"><span class="legend-dot" style="background: #a855f7;"></span> SSL/TLS Sertifikası</div>
+                <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span> Pasif CVE / Açık Yüzey</div>
+            </div>
+
+            <!-- GIS Coğrafi Görünüm -->
+            <div id="gisView">
+                <h3 style="margin-bottom: 16px; font-size: 1rem; color: var(--accent-blue);">Açık Kaynak Altyapı Coğrafi Dağılımı (BGP / GeoIP)</h3>
+                <div class="gis-grid" id="gisGridContainer"></div>
+            </div>
+        </main>
+
+        <!-- SAĞ PANEL: 4. Analitik, Varlık Çözümleme & STIX 2.1 Çıktısı -->
+        <aside class="panel sidebar-right">
+            <div class="panel-header">
+                <span>Varlık & Risk Analizi</span>
+                <span class="badge badge-purple">STIX/TAXII</span>
+            </div>
+            <div class="panel-content">
+                
+                <div class="risk-score-box">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Saldırı Yüzeyi Risk Skoru</div>
+                        <div style="font-size: 0.85rem; margin-top: 4px;" id="selectedRiskLabel">Yüksek Kritiklik (Pasif Tespit)</div>
+                    </div>
+                    <div class="score-circle" id="selectedRiskScore">78</div>
+                </div>
+
+                <div class="module-title">SEÇİLİ DÜĞÜM (ENTITY RESOLUTION)</div>
+                <div class="entity-details" id="entityInspector">
+                    <!-- JS ile doldurulur -->
+                </div>
+
+                <div class="module-title">
+                    <span>STIX 2.1 İSTİHBARAT ÇIKTISI</span>
+                    <span style="cursor:pointer; color:var(--text-main);" onclick="copyStix()">[Kopyala]</span>
+                </div>
+                <div class="stix-viewer" id="stixOutput"></div>
+
+                <div class="module-title" style="margin-top: 16px;">PASİF GÜVENLİK BULGULARI (EASM)</div>
+                <div id="findingsList" style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem;">
+                    <div class="connector-card" style="border-left: 3px solid var(--accent-red);" onclick="selectEntityById('n3')">
+                        <div class="connector-info">
+                            <strong>Unutulmuş Geliştirme Sunucusu</strong>
+                            <span class="connector-sub">dev-vault.fintech-global.example.com</span>
+                        </div>
+                        <span class="badge badge-red">CVE-2023-44487</span>
+                    </div>
+                    <div class="connector-card" style="border-left: 3px solid var(--accent-amber);" onclick="selectEntityById('n6')">
+                        <div class="connector-info">
+                            <strong>Süresi Dolmak Üzere Olan TLS</strong>
+                            <span class="connector-sub">CT Log Kaydı - Kalan: 4 Gün</span>
+                        </div>
+                        <span class="badge badge-amber">ORTA</span>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- ORTA ALT PANEL: Mesaj Kuyruğu Akışı & 6. Değiştirilemez Denetim Kayıtları -->
+        <section class="panel bottom-console">
+            <div class="panel-header">
+                <div class="console-tabs">
+                    <span class="console-tab active" id="tabAudit" onclick="switchConsole('audit')">6. Değiştirilemez Denetim Kayıtları (Immutable Audit Logs)</span>
+                    <span class="console-tab" id="tabKafka" onclick="switchConsole('kafka')">Apache Kafka Canlı Veri Akışı (Ingest Stream)</span>
+                </div>
+                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green);">SHA-256 İMZALI / KVKK UYUMLU</span>
+            </div>
+            <div class="log-container" id="consoleOutput"></div>
         </section>
 
-        <!-- Katman 2 -->
-        <section id="layer-2" class="layer-card">
-            <div class="layer-header">
-                <div class="layer-number">02</div>
-                <div class="layer-title">
-                    <h2>Veri İşleme ve Zenginleştirme Katmanı</h2>
-                    <span>ETL &amp; Stream Processing</span>
-                </div>
-            </div>
-            <ul class="component-list">
-                <li class="component-item">
-                    <span class="component-title">Akış İşleme Motoru</span>
-                    <p class="component-desc">
-                        Kafka üzerinden gelen verilerin gerçek zamanlı ayrıştırılması ve dönüştürülmesi için <span class="tech-tag">Apache Flink</span>.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Standartlaştırma ve Normalizasyon</span>
-                    <p class="component-desc">
-                        Farklı formatlardaki yapılandırılmamış verilerin <span class="standard-tag">STIX 2.1</span> / <span class="standard-tag">TAXII 2.1</span> siber tehdit istihbaratı standartlarına dönüştürülmesi.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Doğal Dil İşleme (NLP) ve Varlık Çıkarımı (NER)</span>
-                    <p class="component-desc">
-                        Açık kaynaklı güvenlik bültenleri ve teknik raporlardan IP, alan adı, hash, CVE kodu ve kurum adlarını ayıklayan dil modelleri.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Tekilleştirme (Deduplication)</span>
-                    <p class="component-desc">
-                        Mükerrer verilerin veri tabanlarını şişirmesini önlemek amacıyla <span class="tech-tag">Redis</span> ve <span class="tech-tag">Bloom Filter</span> tabanlı önbellek/hash kontrol mekanizmaları.
-                    </p>
-                </li>
-            </ul>
-        </section>
+    </div>
 
-        <!-- Katman 3 -->
-        <section id="layer-3" class="layer-card">
-            <div class="layer-header">
-                <div class="layer-number">03</div>
-                <div class="layer-title">
-                    <h2>Depolama ve İlişkilendirme Katmanı</h2>
-                    <span>Polyglot Persistence</span>
-                </div>
-            </div>
-            <ul class="component-list">
-                <li class="component-item">
-                    <span class="component-title">Graf Veritabanı (Graph DB)</span>
-                    <p class="component-desc">
-                        Alan adları, IP blokları, organizasyonlar ve dijital sertifikalar arasındaki çok katmanlı bağlantıları (Link Analysis) modellemek için <span class="tech-tag">Neo4j</span> veya <span class="tech-tag">JanusGraph</span>.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Arama ve İndeksleme Motoru</span>
-                    <p class="component-desc">
-                        Milyarlarca kayıt üzerinde düşük gecikmeli tam metin (full-text) ve bulanık arama (fuzzy search) işlemleri için <span class="tech-tag">OpenSearch</span> / <span class="tech-tag">Elasticsearch</span>.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Zaman Serisi Veritabanı</span>
-                    <p class="component-desc">
-                        Dış saldırı yüzeyindeki değişimlerin (açılan/kapanan portlar, değişen DNS kayıtları) tarihsel takibi için <span class="tech-tag">TimescaleDB</span>.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Veri Gölü (Data Lake)</span>
-                    <p class="component-desc">
-                        Ham yanıtların, ekran görüntülerinin ve sertifika dosyalarının saklanması için S3 uyumlu <span class="tech-tag">MinIO</span> nesne depolama alanı.
-                    </p>
-                </li>
-            </ul>
-        </section>
-
-        <!-- Katman 4 -->
-        <section id="layer-4" class="layer-card">
-            <div class="layer-header">
-                <div class="layer-number">04</div>
-                <div class="layer-title">
-                    <h2>Analitik ve İstihbarat Motoru</h2>
-                    <span>Core Analytics Engine</span>
-                </div>
-            </div>
-            <ul class="component-list">
-                <li class="component-item">
-                    <span class="component-title">Varlık Çözümleme (Entity Resolution)</span>
-                    <p class="component-desc">
-                        Farklı kaynaklardan gelen izlerin aynı kurumsal dijital varlığa ait olup olmadığını olasılıksal algoritmalarla birleştiren korelasyon servisi.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Pasif Zafiyet Eşleştirme ve Risk Skorlama</span>
-                    <p class="component-desc">
-                        Tespit edilen servis versiyonlarını (banner/CPE) <span class="standard-tag">NVD/CVE</span> veritabanlarıyla pasif olarak eşleştiren, <span class="standard-tag">EPSS</span> (Exploit Prediction Scoring System) verileriyle birleştirerek kritiklik skoru üreten kural motoru.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Anomali ve Sapma Tespiti (Drift Detection)</span>
-                    <p class="component-desc">
-                        Kurumun bilinen envanteri dışında aniden ortaya çıkan "Gölge BT" (Shadow IT) varlıklarını tespit edip alarm üreten servis.
-                    </p>
-                </li>
-            </ul>
-        </section>
-
-        <!-- Katman 5 -->
-        <section id="layer-5" class="layer-card">
-            <div class="layer-header">
-                <div class="layer-number">05</div>
-                <div class="layer-title">
-                    <h2>Sunum, Görselleştirme ve Entegrasyon</h2>
-                    <span>UI &amp; Integration Layer</span>
-                </div>
-            </div>
-            <ul class="component-list">
-                <li class="component-item">
-                    <span class="component-title">WebGL Tabanlı Graf Arayüzü</span>
-                    <p class="component-desc">
-                        Büyük ölçekli düğüm (node) ve kenar (edge) yapılarını tarayıcıda yüksek performansla görselleştiren etkileşimli analist arayüzü (<span class="tech-tag">React</span> + <span class="tech-tag">Sigma.js</span> / <span class="tech-tag">Cytoscape.js</span>).
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Coğrafi Bilgi Sistemi (GIS)</span>
-                    <p class="component-desc">
-                        Sunucu ve ağ altyapılarının fiziksel dağılımını harita katmanları üzerinde gösteren görselleştirme modülü.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">API Gateway ve Ekosistem Entegrasyonu</span>
-                    <p class="component-desc">
-                        Üretilen alarmların ve istihbaratın kurumsal SIEM, SOAR ve biletleme (<span class="tech-tag">Jira</span> / <span class="tech-tag">ServiceNow</span>) sistemlerine aktarılması için <span class="tech-tag">GraphQL</span> / <span class="tech-tag">REST API</span> geçidi ve Webhook desteği.
-                    </p>
-                </li>
-            </ul>
-        </section>
-
-        <!-- Katman 6 -->
-        <section id="layer-6" class="layer-card">
-            <div class="layer-header">
-                <div class="layer-number">06</div>
-                <div class="layer-title">
-                    <h2>Güvenlik, İzlenebilirlik ve Yönetişim</h2>
-                    <span>Security, Observability &amp; Governance</span>
-                </div>
-            </div>
-            <ul class="component-list">
-                <li class="component-item">
-                    <span class="component-title">Sıfır Güven (Zero Trust) Ağı</span>
-                    <p class="component-desc">
-                        Mikroservisler arası şifreli <span class="standard-tag">mTLS</span> iletişimi (<span class="tech-tag">Istio</span> veya <span class="tech-tag">Linkerd</span> Service Mesh) ve ağ politikalarıyla (Network Policies) katman izolasyonu.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Kimlik Doğrulama ve Yetkilendirme</span>
-                    <p class="component-desc">
-                        Kurumsal SSO (<span class="standard-tag">OIDC</span> / <span class="standard-tag">SAML 2.0</span>) entegrasyonu ve veri hassasiyetine göre yapılandırılmış Rol/Öznitelik Tabanlı Erişim Kontrolü (<span class="standard-tag">RBAC / ABAC</span>).
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Veri Gizliliği ve Uyumluluk</span>
-                    <p class="component-desc">
-                        <span class="standard-tag">KVKK</span> ve <span class="standard-tag">GDPR</span> regülasyonlarına uyum kapsamında kişisel verilerin otomatik maskelenmesi (PII Redaction) ve tüm kullanıcı sorgularının değiştirilemez (immutable) denetim kayıtlarında (Audit Logs) tutulması.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Gözlemlenebilirlik (Observability)</span>
-                    <p class="component-desc">
-                        <span class="tech-tag">OpenTelemetry</span> ile dağıtık izleme (Distributed Tracing), <span class="tech-tag">Prometheus</span> &amp; <span class="tech-tag">Grafana</span> ile sistem metriklerinin takibi.
-                    </p>
-                </li>
-            </ul>
-        </section>
-
-        <!-- Katman 7 -->
-        <section id="layer-7" class="layer-card full-width">
-            <div class="layer-header">
-                <div class="layer-number">07</div>
-                <div class="layer-title">
-                    <h2>Altyapı ve Orkestrasyon Katmanı</h2>
-                    <span>Infrastructure &amp; DevSecOps</span>
-                </div>
-            </div>
-            <ul class="component-list grid-cols">
-                <li class="component-item">
-                    <span class="component-title">Konteyner Orkestrasyonu ve Otomatik Ölçekleme</span>
-                    <p class="component-desc">
-                        <span class="tech-tag">Kubernetes (K8s)</span> üzerinde çalışan iş yüklerinin, Kafka kuyruk derinliğine göre <span class="tech-tag">KEDA</span> (Kubernetes Event-driven Autoscaling) ile dinamik olarak ölçeklenmesi.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Sırların Yönetimi (Secrets Management)</span>
-                    <p class="component-desc">
-                        Harici API anahtarları, veritabanı kimlik bilgileri ve TLS sertifikalarının <span class="tech-tag">HashiCorp Vault</span> üzerinden dinamik yönetimi ve otomatik rotasyonu.
-                    </p>
-                </li>
-                <li class="component-item">
-                    <span class="component-title">Kod Olarak Altyapı (IaC) ve GitOps</span>
-                    <p class="component-desc">
-                        Altyapının <span class="tech-tag">Terraform</span> ile provizyonlanması ve dağıtım süreçlerinin <span class="tech-tag">ArgoCD</span> üzerinden kesintisiz, versiyon kontrollü ve denetlenebilir şekilde yürütülmesi.
-                    </p>
-                </li>
-            </ul>
-        </section>
-
-    </main>
-
-    <footer>
-        <div class="status-indicator">
-            <span class="dot" aria-hidden="true"></span>
-            <span>Mimari Durumu: Savunma Odaklı Referans Tasarım (SOC / CTI / EASM Uyumlu)</span>
-        </div>
-        <div>
-            Standartlar: STIX 2.1 &bull; TAXII 2.1 &bull; Zero Trust (mTLS) &bull; KVKK/GDPR
-        </div>
-    </footer>
-</div>
-
-<script>
-    function scrollToLayer(layerId, btnElement) {
-        const element = document.getElementById(layerId);
-        if (element) {
-            document.querySelectorAll('.flow-step').forEach(btn => btn.classList.remove('active'));
-            if (btnElement) {
-                btnElement.classList.add('active');
-            }
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.remove('highlight-card');
-            void element.offsetWidth;
-            element.classList.add('highlight-card');
+    <script>
+        // XSS Güvenlik Yardımcı Fonksiyonu
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
         }
-    }
-</script>
 
+        // --- 1. VERİ MODELİ: GRAF DÜĞÜMLERİ VE KENARLARI (Neo4j Simülasyonu) ---
+        const nodes = [
+            { id: 'n1', label: 'fintech-global.example.com', type: 'DOMAIN', color: '#38bdf8', radius: 20, x: 400, y: 240, vx: 0, vy: 0, risk: 42, source: 'WHOIS / Registry', asn: 'AS13335', geo: 'Frankfurt, DE (50.1109° N, 8.6821° E)' },
+            { id: 'n2', label: 'api.fintech-global.example.com', type: 'SUBDOMAIN', color: '#38bdf8', radius: 15, x: 260, y: 150, vx: 0, vy: 0, risk: 30, source: 'Certificate Transparency', asn: 'AS16509', geo: 'Dublin, IE (53.3498° N, 6.2603° W)' },
+            { id: 'n3', label: 'dev-vault.fintech-global.example.com', type: 'SUBDOMAIN', color: '#38bdf8', radius: 16, x: 560, y: 160, vx: 0, vy: 0, risk: 88, source: 'Passive DNS', asn: 'AS14061', geo: 'Amsterdam, NL (52.3676° N, 4.9041° E)' },
+            { id: 'n4', label: '198.51.100.44', type: 'IPv4', color: '#10b981', radius: 15, x: 640, y: 280, vx: 0, vy: 0, risk: 82, source: 'Shodan Passive API', asn: 'AS14061 (DigitalOcean)', geo: 'Amsterdam, NL (52.3676° N, 4.9041° E)' },
+            { id: 'n5', label: '203.0.113.19', type: 'IPv4', color: '#10b981', radius: 14, x: 210, y: 290, vx: 0, vy: 0, risk: 24, source: 'BGP Routeviews', asn: 'AS16509 (AWS)', geo: 'Dublin, IE (53.3498° N, 6.2603° W)' },
+            { id: 'n6', label: 'TLS: *.fintech-global (Let\'s Encrypt)', type: 'CERT', color: '#a855f7', radius: 14, x: 380, y: 100, vx: 0, vy: 0, risk: 55, source: 'CT Log Argon2025', asn: 'N/A', geo: 'Global CDN' },
+            { id: 'n7', label: 'CVE-2023-44487 (HTTP/2 Rapid Reset)', type: 'VULN', color: '#ef4444', radius: 17, x: 720, y: 180, vx: 0, vy: 0, risk: 94, source: 'NVD / Banner Correlation', asn: 'AS14061', geo: 'Amsterdam, NL' },
+            { id: 'n8', label: 'mail-gw.fintech-global.example.com', type: 'SUBDOMAIN', color: '#38bdf8', radius: 14, x: 430, y: 380, vx: 0, vy: 0, risk: 35, source: 'DNS MX Kaydı', asn: 'AS8075', geo: 'Zürih, CH (47.3769° N, 8.5417° E)' }
+        ];
+
+        const edges = [
+            { source: 'n1', target: 'n2', relation: 'HAS_SUBDOMAIN' },
+            { source: 'n1', target: 'n3', relation: 'HAS_SUBDOMAIN' },
+            { source: 'n1', target: 'n8', relation: 'MX_RECORD' },
+            { source: 'n2', target: 'n5', relation: 'RESOLVES_TO' },
+            { source: 'n3', target: 'n4', relation: 'RESOLVES_TO' },
+            { source: 'n6', target: 'n2', relation: 'ISSUED_FOR' },
+            { source: 'n6', target: 'n3', relation: 'ISSUED_FOR' },
+            { source: 'n4', target: 'n7', relation: 'EXPOSES_PASSIVE_CVE' }
+        ];
+
+        let selectedNode = nodes[2]; // Varsayılan: dev-vault
+        let draggingNode = null;
+        let activeConsoleTab = 'audit';
+        let currentView = 'graph';
+
+        // --- 2. KANVAS GRAF MOTORU (WebGL/Canvas Etkileşimli Fizik) ---
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Enter tuşu ile arama desteği
+        document.getElementById('osintSearch').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                triggerPassiveScan();
+            }
+        });
+
+        function updatePhysics() {
+            if (currentView !== 'graph' || canvas.width === 0 || canvas.height === 0) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // İtme kuvveti (Düğümler birbirini iter)
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[j].x - nodes[i].x;
+                    const dy = nodes[j].y - nodes[i].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    if (dist < 220) {
+                        const force = (220 - dist) * 0.015;
+                        const fx = (dx / dist) * force;
+                        const fy = (dy / dist) * force;
+                        nodes[i].vx -= fx;
+                        nodes[i].vy -= fy;
+                        nodes[j].vx += fx;
+                        nodes[j].vy += fy;
+                    }
+                }
+            }
+
+            // Yay kuvveti (Bağlı kenarlar birbirini çeker)
+            edges.forEach(e => {
+                const s = nodes.find(n => n.id === e.source);
+                const t = nodes.find(n => n.id === e.target);
+                if (!s || !t) return;
+                const dx = t.x - s.x;
+                const dy = t.y - s.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const targetDist = 145;
+                const force = (dist - targetDist) * 0.02;
+                const fx = (dx / dist) * force;
+                const fy = (dy / dist) * force;
+                s.vx += fx;
+                s.vy += fy;
+                t.vx -= fx;
+                t.vy -= fy;
+            });
+
+            // Merkeze hafif çekim ve hız sönümleme
+            nodes.forEach(n => {
+                if (n === draggingNode) return;
+                n.vx += (centerX - n.x) * 0.0015;
+                n.vy += (centerY - n.y) * 0.0015;
+                n.vx *= 0.85;
+                n.vy *= 0.85;
+                n.x += n.vx;
+                n.y += n.vy;
+
+                // Sınır kontrolü
+                n.x = Math.max(40, Math.min(canvas.width - 40, n.x));
+                n.y = Math.max(60, Math.min(canvas.height - 50, n.y));
+            });
+        }
+
+        function drawGraph() {
+            if (currentView === 'graph') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Kenarları Çiz
+                edges.forEach(e => {
+                    const s = nodes.find(n => n.id === e.source);
+                    const t = nodes.find(n => n.id === e.target);
+                    if (!s || !t) return;
+
+                    ctx.beginPath();
+                    ctx.moveTo(s.x, s.y);
+                    ctx.lineTo(t.x, t.y);
+                    ctx.strokeStyle = (selectedNode && (selectedNode.id === s.id || selectedNode.id === t.id))
+                        ? '#38bdf8' : 'rgba(148, 163, 184, 0.28)';
+                    ctx.lineWidth = (selectedNode && (selectedNode.id === s.id || selectedNode.id === t.id)) ? 2 : 1.2;
+                    ctx.stroke();
+
+                    // İlişki Etiketi
+                    const midX = (s.x + t.x) / 2;
+                    const midY = (s.y + t.y) / 2;
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(e.relation, midX, midY - 4);
+                });
+
+                // Düğümleri Çiz
+                nodes.forEach(n => {
+                    const isSelected = selectedNode && selectedNode.id === n.id;
+
+                    // Seçili Hale / Glow
+                    if (isSelected || n.type === 'VULN') {
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, n.radius + 7, 0, Math.PI * 2);
+                        ctx.fillStyle = isSelected ? 'rgba(56, 189, 248, 0.22)' : 'rgba(239, 68, 68, 0.18)';
+                        ctx.fill();
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = n.color;
+                    ctx.fill();
+                    ctx.lineWidth = isSelected ? 3 : 1.5;
+                    ctx.strokeStyle = isSelected ? '#ffffff' : '#0f172a';
+                    ctx.stroke();
+
+                    // Düğüm Metni
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = isSelected ? 'bold 12px Inter, sans-serif' : '11px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(n.label, n.x, n.y + n.radius + 15);
+                });
+
+                updatePhysics();
+            }
+            requestAnimationFrame(drawGraph);
+        }
+
+        // Fare Etkileşimleri
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            for (let i = nodes.length - 1; i >= 0; i--) {
+                const n = nodes[i];
+                const dist = Math.hypot(mx - n.x, my - n.y);
+                if (dist <= n.radius + 6) {
+                    draggingNode = n;
+                    selectEntity(n);
+                    break;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if (!draggingNode) return;
+            const rect = canvas.getBoundingClientRect();
+            draggingNode.x = e.clientX - rect.left;
+            draggingNode.y = e.clientY - rect.top;
+            draggingNode.vx = 0;
+            draggingNode.vy = 0;
+        });
+
+        window.addEventListener('mouseup', () => {
+            draggingNode = null;
+        });
+
+        function resetGraphPhysics() {
+            resizeCanvas();
+            nodes.forEach((n, idx) => {
+                const angle = (idx / nodes.length) * Math.PI * 2;
+                n.x = canvas.width / 2 + Math.cos(angle) * 160;
+                n.y = canvas.height / 2 + Math.sin(angle) * 140;
+                n.vx = 0;
+                n.vy = 0;
+            });
+            addAuditLog('UI_GRAPH_RESET', 'Analist graf topolojisini yeniden merkezledi.');
+        }
+
+        // --- 3. SAĞ PANEL: VARLIK ÇÖZÜMLEME & STIX 2.1 ÜRETİCİ ---
+        function selectEntityById(id) {
+            const found = nodes.find(n => n.id === id);
+            if (found) selectEntity(found);
+        }
+
+        function selectEntity(node) {
+            selectedNode = node;
+            const scoreEl = document.getElementById('selectedRiskScore');
+            scoreEl.textContent = node.risk;
+            scoreEl.style.color = node.risk >= 75 ? '#ef4444' : (node.risk >= 45 ? '#f59e0b' : '#10b981');
+
+            const riskBox = document.querySelector('.risk-score-box');
+            if (riskBox) {
+                const borderCol = node.risk >= 75 ? 'rgba(239, 68, 68, 0.4)' : (node.risk >= 45 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.4)');
+                const gradCol = node.risk >= 75 ? 'rgba(239, 68, 68, 0.1)' : (node.risk >= 45 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)');
+                riskBox.style.borderColor = borderCol;
+                riskBox.style.background = `linear-gradient(135deg, ${gradCol}, rgba(15, 23, 42, 0.9))`;
+            }
+
+            document.getElementById('selectedRiskLabel').textContent =
+                node.risk >= 75 ? 'Kritik Açık Yüzey (Pasif Tespit)' :
+                (node.risk >= 45 ? 'Orta Seviye Maruziyet' : 'Düşük Riskli Dijital Varlık');
+
+            document.getElementById('entityInspector').innerHTML = `
+                <div class="detail-row"><span class="detail-label">Varlık Değeri:</span><span class="detail-val">${escapeHtml(node.label)}</span></div>
+                <div class="detail-row"><span class="detail-label">Sınıf (NER):</span><span class="detail-val">${escapeHtml(node.type)}</span></div>
+                <div class="detail-row"><span class="detail-label">Veri Kaynağı:</span><span class="detail-val">${escapeHtml(node.source)}</span></div>
+                <div class="detail-row"><span class="detail-label">BGP / ASN:</span><span class="detail-val">${escapeHtml(node.asn)}</span></div>
+                <div class="detail-row"><span class="detail-label">GeoIP Konum:</span><span class="detail-val">${escapeHtml(node.geo)}</span></div>
+            `;
+
+            const stixTypeMap = {
+                VULN: 'vulnerability',
+                IPv4: 'ipv4-addr',
+                DOMAIN: 'domain-name',
+                SUBDOMAIN: 'domain-name',
+                CERT: 'x509-certificate'
+            };
+            const stixType = stixTypeMap[node.type] || 'infrastructure';
+
+            const stixObj = {
+                type: "bundle",
+                id: `bundle--${cryptoRandomUuid()}`,
+                spec_version: "2.1",
+                objects: [
+                    {
+                        type: stixType,
+                        id: `${stixType}--${cryptoRandomUuid()}`,
+                        created: new Date().toISOString(),
+                        name: node.label,
+                        confidence: 92,
+                        labels: ["passive-osint", "easm-monitored", node.source.toLowerCase().replace(/[^a-z0-9]+/g, '-')],
+                        x_risk_score: node.risk,
+                        x_asn_route: node.asn
+                    }
+                ]
+            };
+            document.getElementById('stixOutput').textContent = JSON.stringify(stixObj, null, 2);
+            addAuditLog('ENTITY_INSPECT', `Varlık incelendi: ${node.label} (Risk: ${node.risk})`);
+        }
+
+        function copyStix() {
+            const text = document.getElementById('stixOutput').textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+            addAuditLog('STIX_EXPORT', `STIX 2.1 istihbarat paketi panoya kopyalandı (${selectedNode.label}).`);
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+
+        // --- 4. DEĞİŞTİRİLEMEZ DENETİM KAYITLARI (IMMUTABLE AUDIT LOG) & KAFKA STREAM ---
+        const auditLogs = [];
+        const kafkaLogs = [];
+
+        function cryptoRandomHex(len) {
+            let out = '';
+            const chars = '0123456789abcdef';
+            for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            return out;
+        }
+
+        function cryptoRandomUuid() {
+            if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+            return `${cryptoRandomHex(8)}-${cryptoRandomHex(4)}-4${cryptoRandomHex(3)}-a${cryptoRandomHex(3)}-${cryptoRandomHex(12)}`;
+        }
+
+        function addAuditLog(action, message) {
+            const time = new Date().toLocaleTimeString('tr-TR', { hour12: false });
+            const sig = `sha256:${cryptoRandomHex(20)}...`;
+            auditLogs.unshift({ time, source: action, msg: `[SOC_LEAD] ${message}`, hash: sig });
+            if (auditLogs.length > 40) auditLogs.pop();
+            if (activeConsoleTab === 'audit') renderConsole();
+        }
+
+        function addKafkaStreamLog() {
+            const sources = ['rust-ct-collector', 'go-pdns-worker', 'bgp-route-ingester', 'nlp-stix-enricher'];
+            const msgs = [
+                'Yeni SSL sertifikası ayrıştırıldı -> stix.observed-data kuyruğuna iletildi.',
+                'Redis Bloom Filter kontrolü tamamlandı: Mükerrer kayıt atlandı (0.3ms).',
+                'OpenSearch indeksleme başarılı: Pasif A kaydı güncellendi.',
+                'NER Modeli teknik bültenden 2 yeni CVE referansı ayıkladı.'
+            ];
+            const time = new Date().toLocaleTimeString('tr-TR', { hour12: false });
+            const src = sources[Math.floor(Math.random() * sources.length)];
+            const msg = msgs[Math.floor(Math.random() * msgs.length)];
+            kafkaLogs.unshift({ time, source: src, msg, hash: `offset:${Math.floor(100000 + Math.random() * 900000)}` });
+            if (kafkaLogs.length > 40) kafkaLogs.pop();
+            if (activeConsoleTab === 'kafka') renderConsole();
+        }
+
+        function renderConsole() {
+            const container = document.getElementById('consoleOutput');
+            const list = activeConsoleTab === 'audit' ? auditLogs : kafkaLogs;
+            container.innerHTML = list.map(item => `
+                <div class="log-entry">
+                    <span class="log-time">${escapeHtml(item.time)}</span>
+                    <span class="log-source">[${escapeHtml(item.source)}]</span>
+                    <span class="log-msg">${escapeHtml(item.msg)}</span>
+                    <span class="log-hash">${escapeHtml(item.hash)}</span>
+                </div>
+            `).join('');
+        }
+
+        function switchConsole(tab) {
+            activeConsoleTab = tab;
+            document.getElementById('tabAudit').classList.toggle('active', tab === 'audit');
+            document.getElementById('tabKafka').classList.toggle('active', tab === 'kafka');
+            renderConsole();
+        }
+
+        // --- 5. FONKSİYONEL OSINT EYLEMLERİ (Sorgu, Yeni Düğüm, GIS, SIEM) ---
+        function triggerPassiveScan() {
+            const query = document.getElementById('osintSearch').value.trim();
+            if (!query) return;
+
+            const existing = nodes.find(n => n.label.toLowerCase() === query.toLowerCase());
+            if (existing) {
+                selectEntity(existing);
+                addAuditLog('PASSIVE_QUERY_HIT', `Mevcut grafikteki varlık odaklandı: "${query}"`);
+                return;
+            }
+
+            const isCve = /^CVE-\d{4}-\d+/i.test(query) || query.toUpperCase().includes('CVE');
+            const isIp = /^(?:\d{1,3}\.){3}\d{1,3}(?:\/\d{1,2})?$/.test(query);
+
+            const newId = 'n' + (nodes.length + 1);
+            const newNode = {
+                id: newId,
+                label: query,
+                type: isCve ? 'VULN' : (isIp ? 'IPv4' : 'DOMAIN'),
+                color: isCve ? '#ef4444' : (isIp ? '#10b981' : '#38bdf8'),
+                radius: 18,
+                x: (canvas.width || 600) / 2 + (Math.random() * 80 - 40),
+                y: (canvas.height || 400) / 2 + (Math.random() * 80 - 40),
+                vx: 0, vy: 0,
+                risk: isCve ? 90 : Math.floor(30 + Math.random() * 55),
+                source: 'OpenSearch Pasif İndeks',
+                asn: 'AS13335 (Cloudflare)',
+                geo: 'Frankfurt, DE (50.1109° N, 8.6821° E)'
+            };
+            nodes.push(newNode);
+            edges.push({ source: 'n1', target: newId, relation: 'CORRELATED_WITH' });
+            selectEntity(newNode);
+            renderGisCards();
+            addAuditLog('PASSIVE_QUERY', `Yasal açık kaynak sorgusu yürütüldü: "${query}"`);
+        }
+
+        function injectSimulatedNode(kind) {
+            const id = 'n' + (nodes.length + 1);
+            const templates = {
+                DNS: { label: `stage-sso-${nodes.length}.fintech-global.example.com`, type: 'SUBDOMAIN', color: '#38bdf8', risk: 64, source: 'Passive DNS', asn: 'AS16509', geo: 'Londra, UK' },
+                BGP: { label: `192.0.2.${(10 + nodes.length) % 254}/24`, type: 'IPv4', color: '#10b981', risk: 28, source: 'BGP Stream', asn: 'AS3320 (Deutsche Telekom)', geo: 'Münih, DE' },
+                CVE: { label: `CVE-2024-21626 (Container Leak #${nodes.length})`, type: 'VULN', color: '#ef4444', risk: 91, source: 'Pasif Banner Eşleşmesi', asn: 'AS14061', geo: 'Amsterdam, NL' }
+            };
+            const tpl = templates[kind];
+            if (!tpl) return;
+            const newNode = {
+                id,
+                ...tpl,
+                radius: 15,
+                x: (canvas.width || 600) / 2 + (Math.random() * 60 - 30),
+                y: (canvas.height || 400) / 2 + (Math.random() * 60 - 30),
+                vx: 0,
+                vy: 0
+            };
+            nodes.push(newNode);
+            edges.push({ source: selectedNode ? selectedNode.id : 'n1', target: id, relation: kind + '_DISCOVERY' });
+            selectEntity(newNode);
+            renderGisCards();
+            addAuditLog('COLLECTOR_INGEST', `${kind} toplayıcısından yeni varlık grafiğe eklendi: ${newNode.label}`);
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const isGraph = view === 'graph';
+            document.getElementById('graphCanvas').style.display = isGraph ? 'block' : 'none';
+            document.getElementById('graphLegend').style.display = isGraph ? 'flex' : 'none';
+            document.getElementById('gisView').style.display = isGraph ? 'none' : 'block';
+            document.getElementById('btnGraph').classList.toggle('active', isGraph);
+            document.getElementById('btnGis').classList.toggle('active', !isGraph);
+            if (isGraph) {
+                resizeCanvas();
+            } else {
+                renderGisCards();
+            }
+            addAuditLog('VIEW_SWITCH', `Görünüm değiştirildi: ${view.toUpperCase()}`);
+        }
+
+        function renderGisCards() {
+            const container = document.getElementById('gisGridContainer');
+            container.innerHTML = nodes.map(n => `
+                <div class="gis-card" style="cursor:pointer;" onclick="selectEntityById('${escapeHtml(n.id)}')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span class="badge badge-blue">${escapeHtml(n.type)}</span>
+                        <span style="font-family:var(--font-mono); font-size:0.75rem; color:${n.risk > 70 ? '#ef4444' : '#10b981'};">Risk: ${escapeHtml(n.risk)}</span>
+                    </div>
+                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:6px; word-break:break-all;">${escapeHtml(n.label)}</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">Konum: ${escapeHtml(n.geo)}</div>
+                    <div style="font-size:0.75rem; font-family:var(--font-mono); color:var(--accent-purple);">Ağ: ${escapeHtml(n.asn)}</div>
+                </div>
+            `).join('');
+        }
+
+        function exportToSIEM() {
+            addAuditLog('API_SOAR_PUSH', `GraphQL Gateway üzerinden ${nodes.length} varlık kurumsal SIEM/SOAR platformuna aktarıldı.`);
+            alert(`STIX/TAXII Paketi Hazırlandı!\nToplam ${nodes.length} düğüm ve ${edges.length} ilişki mTLS imzalı olarak SIEM/SOAR API uç noktasına iletildi.`);
+        }
+
+        function filterGraph() {
+            const certNode = nodes.find(n => n.type === 'CERT');
+            if (certNode) selectEntity(certNode);
+            addAuditLog('CT_STREAM_SYNC', 'SSL/TLS Sertifika Şeffaflık (CT) log akışı senkronize edildi.');
+        }
+
+        // Başlangıç Yüklemesi
+        addAuditLog('SYSTEM_BOOT', 'Zero-Trust mTLS oturumu doğrulandı. RBAC Rolü: SOC_LEAD.');
+        addAuditLog('COMPLIANCE_CHECK', 'KVKK/GDPR Etik Denetim Katmanı aktif: Yalnızca halka açık pasif kaynaklar.');
+        selectEntity(selectedNode);
+        drawGraph();
+        setInterval(addKafkaStreamLog, 2200);
+    </script>
 </body>
 </html>
