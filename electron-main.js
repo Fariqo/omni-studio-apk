@@ -24,7 +24,9 @@ function ensureBridgeRunning() {
     const candidates = [
       path.join(__dirname, '..', 'omni-bridge.ps1'),
       path.join(__dirname, 'omni-bridge.ps1'),
-      path.join(process.cwd(), 'omni-bridge.ps1')
+      path.join(process.cwd(), 'omni-bridge.ps1'),
+      path.join(process.resourcesPath || '', 'omni-bridge.ps1'),
+      path.join(process.resourcesPath || '', 'app', 'omni-bridge.ps1')
     ];
     const script = candidates.find(p => {
       try { return fs.existsSync(p); } catch (_) { return false; }
@@ -42,15 +44,25 @@ function ensureBridgeRunning() {
 function createWindow() {
   ensureBridgeRunning();
 
-  // Ekran ve pencere yakalama izni (getDisplayMedia destegi)
-  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
-      if (sources && sources.length > 0) {
-        callback({ video: sources[0] });
-      } else {
-        callback({});
-      }
-    }).catch(() => callback({}));
+  // Hem varsayılan session hem de kalıcı 'persist:omni_apex_session' için ekran ve donanım izinleri
+  const customSession = session.fromPartition('persist:omni_apex_session');
+  [session.defaultSession, customSession].forEach(s => {
+    if (!s) return;
+    s.setDisplayMediaRequestHandler((request, callback) => {
+      desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+        if (sources && sources.length > 0) {
+          callback({ video: sources[0] });
+        } else {
+          callback({});
+        }
+      }).catch(() => callback({}));
+    });
+    s.setPermissionRequestHandler((webContents, permission, callback) => {
+      callback(true);
+    });
+    s.setPermissionCheckHandler((webContents, permission) => {
+      return true;
+    });
   });
 
   const win = new BrowserWindow({

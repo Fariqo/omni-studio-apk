@@ -1,15 +1,15 @@
 {
   "name": "omni-apex-studio-os",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "OMNI-APEX: AI Studio, RAG Engine & Multi-Platform App Factory",
   "author": "Omni-Apex Studio",
   "license": "MIT",
   "main": "electron-main.js",
   "scripts": {
-    "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');\"",
-    "android:sync": "npx cap sync android",
+    "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');if(fs.existsSync('manifest.json'))fs.copyFileSync('manifest.json','dist/manifest.json');\"",
+    "android:sync": "npm run build:web && npx cap sync android",
     "electron:win": "electron-builder --win nsis portable --publish never",
-    "electron:mac": "electron-builder --mac dmg --publish never",
+    "electron:mac": "electron-builder --mac dmg zip --publish never",
     "electron:linux": "electron-builder --linux AppImage --publish never"
   },
   "build": {
@@ -20,14 +20,32 @@
     },
     "files": [
       "dist/**/*",
-      "electron-main.js"
+      "electron-main.js",
+      "omni-bridge.ps1",
+      "baslat.bat",
+      "package.json"
     ],
     "win": {
       "target": ["nsis", "portable"]
     },
     "mac": {
-      "target": ["dmg"],
-      "identity": null
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "sign": false,
+      "filesystem": "HFS+"
     },
     "linux": {
       "target": ["AppImage"]

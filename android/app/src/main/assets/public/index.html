@@ -193,10 +193,13 @@
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <div class="flex gap-1.5 flex-wrap">
               <input id="chatFileInput" type="file" multiple class="hidden"
-                accept="image/*,video/*,audio/*,.pdf,.txt,.md,.js,.ts,.py,.html,.css,.json,.csv,.xml"
+                accept="image/*,video/*,audio/*,.pdf,.txt,.md,.js,.ts,.jsx,.tsx,.py,.html,.css,.json,.csv,.xml,.ps1,.bat,.cmd,.sh,.yml,.yaml,.env,.gradle,.properties,.java,.kt,.c,.cpp,.h,.rs,.go,.sql,.ini,.cfg,.log,.toml"
                 onchange="handleChatFiles(this.files)" />
               <button onclick="document.getElementById('chatFileInput').click()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-300 px-2.5 py-1 rounded-lg">
-                📎 Dosya / Foto / Video / Ses
+                📎 Dosya / Kod / Foto / Video
+              </button>
+              <button onclick="promptProjectFileToChat()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 text-purple-300 px-2.5 py-1 rounded-lg">
+                📂 Proje Dosyası İncele
               </button>
               <button onclick="capturePhotoToChat()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 text-emerald-300 px-2.5 py-1 rounded-lg">
                 📷 Anlık Fotoğraf
@@ -1034,7 +1037,14 @@
       } catch (_) {}
     }
 
-    function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+    function toggleModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('hidden');
+      if (id === 'settingsModal' && !el.classList.contains('hidden') && typeof syncModalWithNeural === 'function') {
+        syncModalWithNeural();
+      }
+    }
 
     function saveConfig() {
       ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'temp'].forEach(k => {
@@ -1044,6 +1054,10 @@
           localStorage.setItem('omni_' + k, cfg[k]);
         }
       });
+      if (window.OmniNeural && typeof cfg.temp === 'number') {
+        OmniNeural.current.temp = cfg.temp;
+        OmniNeural.syncUI();
+      }
       if (!cfg.openai_url) cfg.openai_url = 'https://api.openai.com/v1';
       if (!cfg.ollama) cfg.ollama = 'http://localhost:11434';
       bridgeFetch('/api/save-settings', {
@@ -1426,17 +1440,17 @@
     }
 
     const NEURAL_PRESETS = {
-      chat:     { id: 'chat',     label: '💬 Hızlı Sohbet',  short: 'Sohbet',    temp: 0.75, topP: 0.90, topK: 40, maxTokens: 1024,  note: '💬 Doğal & Hızlı Diyalog: 1K token sınırı API hızını 3x artırır, gereksiz lafı keser.' },
-      code:     { id: 'code',     label: '💻 Kod & Sistem',   short: 'Kod',       temp: 0.10, topP: 0.80, topK: 15, maxTokens: 32768, note: '🛡️ Sıfır Halüsinasyon Kilidi: Düşük sıcaklık (0.10) + dar keskinlik (Top-K: 15) + 32K kapasite aktif.' },
-      design:   { id: 'design',   label: '🎨 Tasarım UI/UX',  short: 'Tasarım',   temp: 0.90, topP: 0.92, topK: 45, maxTokens: 16384, note: '🎨 Estetik & Tutarlılık: Renk, tipografi ve tek parça zengin HTML/CSS için 16K kapasite.' },
-      ideation: { id: 'ideation', label: '💡 Fikir & Ar-Ge',  short: 'Fikir',     temp: 1.35, topP: 0.95, topK: 64, maxTokens: 8192,  note: '💡 Çapraz Disiplin İnovasyonu: Standart kalıpları kırar, 8K token ile kapsamlı fikirler üretir.' },
-      ultra:    { id: 'ultra',    label: '⚡ Ultra Vizyoner', short: 'Vizyoner',  temp: 1.75, topP: 0.85, topK: 35, maxTokens: 8192,  note: '⚡ Entropi Korumalı Kuantum Mod: Sıcaklık 1.75 iken Havuz (0.85) ve Keskinlik (35) dilbilgisini korur!' }
+      chat:     { id: 'chat',     label: '💬 Derin Sohbet & Analiz',  short: 'Sohbet',    temp: 0.70, topP: 0.90, topK: 40, maxTokens: 16384, note: '💬 Zengin & Derin Diyalog: 16K token kapasitesi ile yüzeysel değil, kapsamlı ve doyurucu yanıtlar üretir.' },
+      code:     { id: 'code',     label: '💻 Kod & Sistem',          short: 'Kod',       temp: 0.10, topP: 0.80, topK: 15, maxTokens: 65536, note: '🛡️ Sıfır Halüsinasyon & Tam Kod: Düşük sıcaklık (0.10) + 64K maksimum kapasite ile eksiksiz üretim.' },
+      design:   { id: 'design',   label: '🎨 Tasarım UI/UX',         short: 'Tasarım',   temp: 0.85, topP: 0.92, topK: 45, maxTokens: 32768, note: '🎨 Estetik & Tutarlılık: Renk, tipografi ve tek parça zengin HTML/CSS için 32K kapasite.' },
+      ideation: { id: 'ideation', label: '💡 Fikir & Ar-Ge',         short: 'Fikir',     temp: 1.25, topP: 0.95, topK: 64, maxTokens: 32768, note: '💡 Çapraz Disiplin İnovasyonu: Standart kalıpları kırar, 32K token ile kapsamlı fikirler üretir.' },
+      ultra:    { id: 'ultra',    label: '⚡ Ultra Vizyoner',        short: 'Vizyoner',  temp: 1.65, topP: 0.85, topK: 35, maxTokens: 32768, note: '⚡ Entropi Korumalı Kuantum Mod: 32K token ve sıkı Top-P/Top-K ile geleceğin mimarisini kurgular.' }
     };
 
     window.OmniNeural = {
       adaptive: true,
       activePreset: 'chat',
-      current: { temp: 0.75, topP: 0.90, topK: 40, maxTokens: 1024 },
+      current: { temp: 0.70, topP: 0.90, topK: 40, maxTokens: 16384 },
 
       initUI() {
         const box = document.getElementById('omniPresetContainer');
@@ -1957,14 +1971,15 @@
     async function handleChatFiles(fileList) {
       for (const file of Array.from(fileList || [])) {
         if (file.size > 20 * 1024 * 1024) { alert(`${file.name} 20MB sınırını aşıyor.`); continue; }
-        const isText = /\.(txt|md|js|ts|py|html|css|json|csv|xml)$/i.test(file.name) || file.type.startsWith('text/');
-        if (isText) {
+        const isMedia = /\.(png|jpe?g|gif|webp|bmp|ico|mp4|webm|mov|mp3|wav|ogg|m4a|pdf)$/i.test(file.name) || file.type.match(/^(image|audio|video|application\/pdf)/i);
+        if (!isMedia) {
+          // Kod, script, markdown, yaml, ps1, json veya düz metin dosyaları doğrudan UTF-8 olarak okunur
           const textContent = await file.text();
           PENDING_ATTACHMENTS.push({ name: file.name, mime: file.type || 'text/plain', textContent });
         } else {
           const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
           const base64 = dataUrl.split(',')[1];
-          PENDING_ATTACHMENTS.push({ name: file.name, mime: file.type || 'application/octet-stream', dataUrl, base64 });
+          PENDING_ATTACHMENTS.push({ name: file.name, mime: file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'), dataUrl, base64 });
         }
       }
       renderPendingAttachments();
@@ -2193,10 +2208,50 @@ Mevcut Durum:
 - Sağlayıcı Anahtarları: Gemini(${cfg.gemini ? 'Var' : 'Yok'}), Claude(${cfg.claude ? 'Var' : 'Yok'}), OpenAI(${cfg.openai ? 'Var' : 'Yok'}), GitHub Token(${cfg.ghtoken ? 'Var' : 'Yok'})
 - ${filesSummary}${customRules}
 
+[MİMARİ DERİNLİK & FRONTIER KALİTE DOKTRİNİ]:
+- Asla kısa, yüzeysel, 1-2 cümlelik veya özet geçiştirici yanıtlar verme! En üst düzey modellerin (Gemini 4 Carbon/Argon/Hydrogen, Claude 3.7) tam kapasitesini kullanarak derinlikli, çok katmanlı, mimari temelli, kök-neden analizli ve endüstri standardı çözümler üret.
+- Kod bloklarında '// TODO', '// buraya kod gelecek', 'kalan kısmı tamamlayın' gibi eksik bırakmalar KESİNLİKLE YASAKTIR. Kodları tam, eksiksiz, üretim kalitesinde (production-ready) üret.
+- Dosyalara erişemediğini ASLA söyleme. Çalışma alanındaki proje dosyaları yerel köprüyle bağlıdır. Dosya içeriği okuman gerektiğinde cevabının en başında [[READ_FILE: goreceli/dosya_yolu]] çağrısı yap (örnek: [[READ_FILE: package.json]] veya [[READ_FILE: index.html]]) ya da ekteki dosya içeriklerini temel alarak konuş.
+
 Kurallar ve Canlı Araçlar:
-1. Dosya ve ayarlara erişemediğini ASLA SÖYLEME. Çalışma alanındaki bir dosyanın içeriğini okuman gerekiyorsa cevabının başına SADECE \`[[READ_FILE: goreceli/dosya_yolu]]\` yaz (örnek: \`[[READ_FILE: index.html]]\` veya \`[[READ_FILE: omni-bridge.ps1]]\` veya \`[[READ_FILE: package.json]]\`). Sistem o dosyayı gerçek diskten okuyup sana anında iletecektir; ardından gerçek kod üzerinden net analiz veya düzenleme ver.
+1. Çalışma alanındaki bir dosyanın içeriğini okuman gerekiyorsa cevabının başına SADECE \`[[READ_FILE: goreceli/dosya_yolu]]\` yaz. Sistem o dosyayı gerçek diskten okuyup sana anında iletecektir.
 2. Kullanıcı çalışma alanındaki bir dosyayı doğrudan güncellemeni/oluşturmanı istediğinde tam güncel dosya içeriğini \`[[WRITE_FILE: goreceli/dosya_yolu]]\n...dosya içeriği...\n[[/WRITE_FILE]]\` bloğuyla ver; kullanıcı tek tıkla otomatik yedeğini (\`_backup\`) alarak diske yazabilecektir.
 3. Tüm kodları, komutları ve şablonları mutlaka uygun dil etiketiyle ayrı kopyalanabilir kod blokları (\`\`\`bash, \`\`\`html, \`\`\`python, \`\`\`yaml, \`\`\`ssh, \`\`\`bat, \`\`\`markdown) halinde üret.`;
+    }
+
+    async function promptProjectFileToChat() {
+      if (!(await checkLocalBridge())) {
+        return alert('📂 Proje dosyalarını doğrudan okumak için yerel köprünün (baslat.bat) çalışması gerekir.');
+      }
+      try {
+        const res = await bridgeFetch('/api/list-files');
+        if (!res.ok) throw new Error('Dosya listesi alınamadı.');
+        const d = await res.json();
+        const files = d.files || [];
+        if (files.length === 0) return alert('Çalışma alanında dosya bulunamadı.');
+        const pick = prompt(`İncelemek istediğiniz proje dosyasının yolunu girin:\n\nÖrnekler:\n- ${files.slice(0, 8).join('\n- ')}\n\n(Tüm proje özetini yüklemek için 'hepsi' yazın)`, files[0]);
+        if (!pick) return;
+        if (pick.trim().toLowerCase() === 'hepsi' || pick.trim().toLowerCase() === 'all') {
+          let bundle = '';
+          const keyFiles = files.filter(f => /\.(json|js|html|ps1|yml|yaml|md|env)$/i.test(f)).slice(0, 10);
+          for (const kf of keyFiles) {
+            const txt = await readWorkspaceRelFile(kf);
+            if (txt) bundle += `\n[PROJE DOSYASI: ${kf}]\n\`\`\`\n${txt.slice(0, 12000)}\n\`\`\`\n`;
+          }
+          PENDING_ATTACHMENTS.push({ name: `proje_ozeti_${keyFiles.length}_dosya.txt`, mime: 'text/plain', textContent: bundle });
+          renderPendingAttachments();
+          logAgent(`📂 ${keyFiles.length} adet temel proje dosyası sohbete eklendi!`);
+        } else {
+          const path = pick.trim();
+          const txt = await readWorkspaceRelFile(path);
+          if (txt === null || txt === undefined) throw new Error(`'${path}' dosyası okunamadı.`);
+          PENDING_ATTACHMENTS.push({ name: path.split('/').pop(), mime: 'text/plain', textContent: txt });
+          renderPendingAttachments();
+          logAgent(`📄 '${path}' dosyası başarıyla sohbete bağlandı!`);
+        }
+      } catch (e) {
+        alert('Dosya okuma hatası: ' + e.message);
+      }
     }
 
     async function sendChatMessage(overridePrompt = null) {
@@ -2589,26 +2644,39 @@ Kurallar ve Canlı Araçlar:
         L.marker([lat, lng]).addTo(leafletMap).bindPopup(label).openPopup();
       };
 
+      const tryIpFallback = async () => {
+        const endpoints = [
+          { url: 'https://ipwho.is/', parse: d => d.success ? { lat: d.latitude, lng: d.longitude, label: `${d.city || ''}, ${d.country || 'IP'}` } : null },
+          { url: 'https://freeipapi.com/api/json', parse: d => ({ lat: d.latitude, lng: d.longitude, label: `${d.cityName || ''}, ${d.countryName || 'IP'}` }) },
+          { url: 'https://ipapi.co/json/', parse: d => d.latitude ? { lat: d.latitude, lng: d.longitude, label: `${d.city || ''} (${d.country_name || 'IP'})` } : null }
+        ];
+        for (const ep of endpoints) {
+          try {
+            const r = await fetch(ep.url, { cache: 'no-store' });
+            if (r.ok) {
+              const d = await r.json();
+              const res = ep.parse(d);
+              if (res && res.lat && res.lng) {
+                renderCoords(res.lat, res.lng, `📍 ${res.label} (IP Tabanlı Konum)`);
+                return true;
+              }
+            }
+          } catch (_) {}
+        }
+        return false;
+      };
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
           renderCoords(pos.coords.latitude, pos.coords.longitude, 'GPS Konumu');
         }, async () => {
-          try {
-            const r = await fetch('https://ipapi.co/json/');
-            if (r.ok) {
-              const d = await r.json();
-              if (d.latitude && d.longitude) {
-                renderCoords(d.latitude, d.longitude, `${d.city || ''} (${d.country_name || 'IP'})`);
-                return;
-              }
-            }
-          } catch (_) {}
-          document.getElementById('perm_geo').innerText = '❌ Konum servisi yanıt vermedi.';
+          const ok = await tryIpFallback();
+          if (!ok) document.getElementById('perm_geo').innerText = '❌ Konum servisi yanıt vermedi.';
         }, { timeout: 4000 });
       } else {
-        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-          if (d.latitude && d.longitude) renderCoords(d.latitude, d.longitude, `${d.city || ''} (${d.country_name || 'IP'})`);
-        }).catch(e => { document.getElementById('perm_geo').innerText = '❌ Konum alınamadı: ' + e.message; });
+        tryIpFallback().then(ok => {
+          if (!ok) document.getElementById('perm_geo').innerText = '❌ Konum alınamadı.';
+        });
       }
     }
     async function requestFileSystemAccess() {
@@ -3313,15 +3381,18 @@ Kurallar ve Canlı Araçlar:
 
     // GEMINI 3.8 LIVE GERÇEK ZAMANLI SES + KAMERA/EKRAN AKIŞI
     let liveSession = null;
+    let liveWs = null;
     let liveMicCtx = null;
     let liveMicStream = null;
     let livePlayCtx = null;
     let liveNextPlayTime = 0;
     let liveVideoStream = null;
     let liveVideoTimer = null;
+    let liveSpeechRec = null;
+    let liveIsVoiceFallback = false;
 
     function toggleGeminiLive() {
-      if (liveSession) stopGeminiLive();
+      if (liveSession || liveWs || liveSpeechRec) stopGeminiLive();
       else startGeminiLive();
     }
 
@@ -3333,7 +3404,7 @@ Kurallar ve Canlı Araçlar:
       const btn = document.getElementById('liveToggleBtn');
       bar.classList.remove('hidden');
       statusEl.innerText = '🎙️ Gemini 3.8 Live Bağlanıyor...';
-      if (transcriptBox) transcriptBox.innerText = '⏳ Canlı bağlantı kuruluyor ve ses donanımı hazırlanıyor...';
+      if (transcriptBox) transcriptBox.innerText = '⏳ Canlı WebSocket bağlantısı kuruluyor ve ses donanımı hazırlanıyor...';
       btn.innerText = '⏹️ Canlıyı Kapat';
       btn.className = 'text-[10px] px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold';
 
@@ -3344,103 +3415,185 @@ Kurallar ve Canlı Araçlar:
         localStorage.setItem('omni_selected_model', 'gemini-3.8-live');
       }
 
+      livePlayCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      liveNextPlayTime = livePlayCtx.currentTime;
+
+      let wsConnected = false;
+      const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(cfg.gemini)}`;
+
       try {
-        const { GoogleGenAI } = await import('https://esm.sh/@google/genai');
-        const ai = new GoogleGenAI({ apiKey: cfg.gemini });
-        livePlayCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-        liveNextPlayTime = livePlayCtx.currentTime;
+        const ws = new WebSocket(wsUrl);
+        liveWs = ws;
 
-        // Adaptif model listesi: Önce gemini-3.8-live, gerekirse alternatif
-        const candidateModels = ['gemini-3.8-live', 'gemini-2.0-flash-realtime-exp', 'gemini-2.0-flash-exp'];
-        let connectedSession = null;
-        let activeLiveModel = 'gemini-3.8-live';
+        const connTimeout = setTimeout(() => {
+          if (!wsConnected && ws.readyState !== WebSocket.OPEN) {
+            console.warn('WebSocket zaman aşımı, Sesli Sohbet Yedek Modu başlatılıyor...');
+            ws.close();
+            startVoiceChatFallback('⚠️ WebSocket zaman aşımı. Adaptif Sesli Konuşma Modu devrede.');
+          }
+        }, 6000);
 
-        for (const candidate of candidateModels) {
-          try {
-            connectedSession = await ai.live.connect({
-              model: candidate,
-              config: {
-                responseModalities: ['AUDIO'],
-                inputAudioTranscription: {},
-                outputAudioTranscription: {},
-                systemInstruction: { parts: [{ text: `${selectedAgent ? selectedAgent.prompt : 'Sen bir yapay zeka asistanısın.'} Kullanıcıyla Türkçe, akıcı, zeki ve son derece net konuş.` }] }
+        ws.onopen = async () => {
+          wsConnected = true;
+          clearTimeout(connTimeout);
+          statusEl.innerText = '🟢 Canlı Gemini 3.8 Live Aktif • 🎙️ Dinleniyor';
+          if (transcriptBox) transcriptBox.innerText = '🎙️ Gemini 3.8 Live aktif! Konuşmaya başlayabilirsiniz (kamera veya ekran paylaşabilirsiniz).';
+
+          // 1. Initial Handshake Setup Message
+          ws.send(JSON.stringify({
+            setup: {
+              model: 'models/gemini-3.8-live',
+              generationConfig: {
+                responseModalities: ['AUDIO']
               },
-              callbacks: {
-                onopen: () => {
-                  statusEl.innerText = `🟢 Canlı Sohbet Aktif (${candidate}) • 🎙️ Dinleniyor`;
-                  if (transcriptBox) transcriptBox.innerText = '🎙️ Mikrofon dinleniyor... İstediğiniz soruyu sorabilir veya kamera/ekran paylaşabilirsiniz.';
-                },
-                onmessage: (response) => {
-                  const content = response.serverContent;
-                  if (content?.interrupted) {
-                    liveNextPlayTime = livePlayCtx ? livePlayCtx.currentTime : 0;
-                    statusEl.innerText = '⚡ Söz Kesildi • Dinleniyor...';
-                  }
-                  if (content?.modelTurn?.parts) {
-                    statusEl.innerText = '🔊 AI Yanıtlıyor...';
-                    for (const part of content.modelTurn.parts) {
-                      if (part.inlineData?.data && livePlayCtx) playPcm24k(part.inlineData.data);
-                    }
-                  }
-                  if (content?.inputTranscription?.text) {
-                    const txt = content.inputTranscription.text;
-                    logAgent(`🎤 [CANLI SES - KULLANICI]: ${txt}`);
-                    if (transcriptBox) transcriptBox.innerText = `🎤 Sen: ${txt}`;
-                  }
-                  if (content?.outputTranscription?.text) {
-                    const txt = content.outputTranscription.text;
-                    statusEl.innerText = `🔊 AI: ${txt.slice(0, 60)}...`;
-                    if (transcriptBox) transcriptBox.innerText = `🔊 Gemini 3.8: ${txt}`;
-                  }
-                },
-                onerror: (err) => {
-                  statusEl.innerText = '⚠️ Canlı Hata: ' + (err.message || err);
-                  if (transcriptBox) transcriptBox.innerText = 'Hata: ' + (err.message || err);
-                },
-                onclose: () => { stopGeminiLive(); }
+              systemInstruction: {
+                parts: [{ text: `${selectedAgent ? selectedAgent.prompt : 'Sen bir yapay zeka asistanısın.'} Kullanıcıyla Türkçe, akıcı, zeki, derinlikli ve son derece net konuş.` }]
               }
-            });
-            activeLiveModel = candidate;
-            break;
-          } catch (connErr) {
-            console.warn(`Live model ${candidate} denenemedi:`, connErr);
+            }
+          }));
+
+          // 2. 16kHz PCM Mikrofon Yakalama
+          try {
+            liveMicStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+            liveMicCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const src = liveMicCtx.createMediaStreamSource(liveMicStream);
+            const proc = liveMicCtx.createScriptProcessor(4096, 1, 1);
+            proc.onaudioprocess = (e) => {
+              if (!liveWs || liveWs.readyState !== WebSocket.OPEN) return;
+              const f32 = e.inputBuffer.getChannelData(0);
+              const i16 = new Int16Array(f32.length);
+              let sumSquares = 0;
+              for (let i = 0; i < f32.length; i++) {
+                const s = Math.max(-1, Math.min(1, f32[i]));
+                sumSquares += s * s;
+                i16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+              }
+              const rms = Math.sqrt(sumSquares / f32.length);
+              if (rms > 0.03) {
+                statusEl.innerText = '🎙️ Konuşma Algılandı • Dinleniyor...';
+              }
+              const bytes = new Uint8Array(i16.buffer);
+              let bin = '';
+              for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+              liveWs.send(JSON.stringify({
+                realtimeInput: {
+                  mediaChunks: [{ mimeType: 'audio/pcm;rate=16000', data: btoa(bin) }]
+                }
+              }));
+            };
+            src.connect(proc);
+            proc.connect(liveMicCtx.destination);
+          } catch (micErr) {
+            statusEl.innerText = '⚠️ Mikrofon Hatası: ' + micErr.message;
+            if (transcriptBox) transcriptBox.innerText = 'Mikrofon izni verilmedi: ' + micErr.message;
+          }
+        };
+
+        ws.onmessage = async (event) => {
+          let msg = null;
+          try {
+            if (typeof event.data === 'string') msg = JSON.parse(event.data);
+            else if (event.data instanceof Blob) msg = JSON.parse(await event.data.text());
+          } catch (_) {}
+          if (!msg) return;
+
+          const content = msg.serverContent;
+          if (content?.interrupted) {
+            liveNextPlayTime = livePlayCtx ? livePlayCtx.currentTime : 0;
+            statusEl.innerText = '⚡ Söz Kesildi • Dinleniyor...';
+          }
+          if (content?.modelTurn?.parts) {
+            statusEl.innerText = '🔊 AI Yanıtlıyor...';
+            for (const part of content.modelTurn.parts) {
+              if (part.inlineData?.data && livePlayCtx) playPcm24k(part.inlineData.data);
+            }
+          }
+          if (content?.outputTranscription?.text) {
+            const txt = content.outputTranscription.text;
+            statusEl.innerText = `🔊 Gemini: ${txt.slice(0, 50)}...`;
+            if (transcriptBox) transcriptBox.innerText = `🔊 Gemini: ${txt}`;
+          }
+        };
+
+        ws.onerror = (err) => {
+          console.warn('Live WebSocket hatası:', err);
+          if (!wsConnected) {
+            startVoiceChatFallback('⚠️ Canlı WebSocket güvenlik kısıtlamasına takıldı. Çift yönlü Sesli Sohbet devrede.');
+          }
+        };
+
+        ws.onclose = () => {
+          if (!liveIsVoiceFallback && wsConnected) stopGeminiLive();
+        };
+
+      } catch (wsEx) {
+        startVoiceChatFallback('⚠️ WebSocket başlatılamadı: ' + wsEx.message);
+      }
+    }
+
+    function startVoiceChatFallback(reasonText = '') {
+      liveIsVoiceFallback = true;
+      const statusEl = document.getElementById('liveStatusLabel');
+      const transcriptBox = document.getElementById('liveTranscriptBox');
+      statusEl.innerText = '🎙️ Çift Yönlü Sesli Sohbet (Web Speech + Gemini 4)';
+      if (transcriptBox) transcriptBox.innerText = reasonText ? `${reasonText}\n🎙️ Dinleniyor, istediğiniz gibi konuşun...` : '🎙️ Sesiniz dinleniyor, konuşabilirsiniz...';
+
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        if (transcriptBox) transcriptBox.innerText = '❌ Tarayıcınız Web Speech API desteklemiyor. Metin sohbetini kullanabilirsiniz.';
+        return;
+      }
+
+      liveSpeechRec = new SpeechRec();
+      liveSpeechRec.lang = 'tr-TR';
+      liveSpeechRec.continuous = false;
+      liveSpeechRec.interimResults = true;
+
+      liveSpeechRec.onresult = async (e) => {
+        const trans = Array.from(e.results).map(r => r[0].transcript).join(' ');
+        if (transcriptBox) transcriptBox.innerText = `🎤 Sen: ${trans}`;
+        if (e.results[0].isFinal) {
+          liveSpeechRec.stop();
+          statusEl.innerText = '⏳ Gemini 4 Düşünüyor...';
+          try {
+            const sys = await buildLiveSystemContext();
+            const reply = await callUniversalAI(sys, [...CHAT_HISTORY.slice(-6), { role: 'user', content: trans }]);
+            CHAT_HISTORY.push({ role: 'user', content: trans });
+            CHAT_HISTORY.push({ role: 'assistant', content: reply });
+            renderChatMessages();
+            saveAllChatSessions();
+            if (transcriptBox) transcriptBox.innerText = `🔊 AI: ${reply.slice(0, 160)}...`;
+            statusEl.innerText = '🔊 Yanıt Seslendiriliyor...';
+
+            window.speechSynthesis.cancel();
+            const utt = new SpeechSynthesisUtterance(reply.replace(/```[\s\S]*?```/g, 'Kod üretildi.').slice(0, 400));
+            utt.lang = 'tr-TR';
+            utt.onend = () => {
+              if (liveIsVoiceFallback) {
+                statusEl.innerText = '🎙️ Dinleniyor...';
+                try { liveSpeechRec.start(); } catch (_) {}
+              }
+            };
+            window.speechSynthesis.speak(utt);
+          } catch (err) {
+            statusEl.innerText = '❌ Hata: ' + err.message;
           }
         }
+      };
 
-        if (!connectedSession) throw new Error('Gemini Live bağlantısı kurulamadı. API anahtarınızı kontrol edin.');
-        liveSession = connectedSession;
+      liveSpeechRec.onerror = (e) => {
+        if (e.error !== 'no-speech' && liveIsVoiceFallback) {
+          console.warn('SpeechRec error:', e.error);
+        }
+      };
 
-        // 16kHz PCM Mikrofon Yakalama
-        liveMicStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
-        liveMicCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-        const src = liveMicCtx.createMediaStreamSource(liveMicStream);
-        const proc = liveMicCtx.createScriptProcessor(4096, 1, 1);
-        proc.onaudioprocess = (e) => {
-          if (!liveSession) return;
-          const f32 = e.inputBuffer.getChannelData(0);
-          const i16 = new Int16Array(f32.length);
-          let sumSquares = 0;
-          for (let i = 0; i < f32.length; i++) {
-            const s = Math.max(-1, Math.min(1, f32[i]));
-            sumSquares += s * s;
-            i16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-          }
-          const rms = Math.sqrt(sumSquares / f32.length);
-          if (rms > 0.03 && statusEl.innerText.includes('Dinleniyor')) {
-            statusEl.innerText = `🎙️ Ses Algılandı (${activeLiveModel})...`;
-          }
-          const bytes = new Uint8Array(i16.buffer);
-          let bin = '';
-          for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-          liveSession.sendRealtimeInput({ audio: { data: btoa(bin), mimeType: 'audio/pcm;rate=16000' } });
-        };
-        src.connect(proc);
-        proc.connect(liveMicCtx.destination);
-      } catch (e) {
-        statusEl.innerText = '❌ Bağlanamadı: ' + e.message;
-        if (transcriptBox) transcriptBox.innerText = 'Bağlantı hatası: ' + e.message;
-        stopGeminiLive();
-      }
+      liveSpeechRec.onend = () => {
+        if (liveIsVoiceFallback && !window.speechSynthesis.speaking) {
+          try { liveSpeechRec.start(); } catch (_) {}
+        }
+      };
+
+      try { liveSpeechRec.start(); } catch (_) {}
     }
 
     function playPcm24k(b64) {
@@ -3461,7 +3614,7 @@ Kurallar ve Canlı Araçlar:
     }
 
     async function toggleLiveVideo(mode) {
-      if (!liveSession) return alert('Önce Canlı Sohbet başlatın.');
+      if (!liveWs && !liveSpeechRec) return alert('Önce Canlı Sohbet başlatın.');
       if (liveVideoTimer) { clearInterval(liveVideoTimer); liveVideoTimer = null; }
       if (liveVideoStream) { liveVideoStream.getTracks().forEach(t => t.stop()); liveVideoStream = null; }
       const vid = document.getElementById('liveVideoPreview');
@@ -3473,23 +3626,31 @@ Kurallar ve Canlı Araçlar:
         vid.classList.remove('hidden');
         const canvas = document.createElement('canvas');
         liveVideoTimer = setInterval(() => {
-          if (!liveSession || vid.videoWidth === 0) return;
+          if ((!liveWs || liveWs.readyState !== WebSocket.OPEN) || vid.videoWidth === 0) return;
           canvas.width = 640;
           canvas.height = Math.round(640 * (vid.videoHeight / vid.videoWidth));
           canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
           const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-          liveSession.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
+          liveWs.send(JSON.stringify({
+            realtimeInput: {
+              mediaChunks: [{ mimeType: 'image/jpeg', data: b64 }]
+            }
+          }));
         }, 1000);
       } catch (e) { alert('Video akışı hatası: ' + e.message); }
     }
 
     function stopGeminiLive() {
+      liveIsVoiceFallback = false;
+      if (liveSpeechRec) { try { liveSpeechRec.stop(); } catch (_) {} liveSpeechRec = null; }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       if (liveVideoTimer) { clearInterval(liveVideoTimer); liveVideoTimer = null; }
       if (liveVideoStream) { liveVideoStream.getTracks().forEach(t => t.stop()); liveVideoStream = null; }
       if (liveMicStream) { liveMicStream.getTracks().forEach(t => t.stop()); liveMicStream = null; }
       if (liveMicCtx) { try { liveMicCtx.close(); } catch (_) {} liveMicCtx = null; }
       if (livePlayCtx) { try { livePlayCtx.close(); } catch (_) {} livePlayCtx = null; }
-      if (liveSession) { try { liveSession.close(); } catch (_) {} liveSession = null; }
+      if (liveWs) { try { liveWs.close(); } catch (_) {} liveWs = null; }
+      liveSession = null;
       document.getElementById('liveVideoPreview').classList.add('hidden');
       document.getElementById('liveSessionBar').classList.add('hidden');
       const transcriptBox = document.getElementById('liveTranscriptBox');
