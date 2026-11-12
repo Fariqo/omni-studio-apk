@@ -1,0 +1,9 @@
+{
+  "name": "OMNI-APEX: AI Studio & Antigravity OS",
+  "short_name": "OMNI-APEX",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#060911",
+  "theme_color": "#060911",
+  "description": "Otonom Çoklu-Ajan AI Stüdyosu, Canlı Emülatör ve Bulut APK Fabrikası"
+}
