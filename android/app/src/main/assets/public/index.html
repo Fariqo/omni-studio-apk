@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#060911" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>OMNI-APEX v2.0: AI Sohbet, RAG & Çoklu-Platform Stüdyosu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root { --bg-main: #060911; --text-main: #e2e8f0; --glass-bg: rgba(15, 23, 42, 0.88); --border-col: rgba(255,255,255,0.08); --accent: #38bdf8; }
+    body.theme-light { --bg-main: #f1f5f9; --text-main: #0f172a; --glass-bg: rgba(255, 255, 255, 0.92); --border-col: rgba(15,23,42,0.12); --accent: #0284c7; }
+    body.theme-crt { --bg-main: #030a04; --text-main: #4ade80; --glass-bg: rgba(5, 20, 8, 0.92); --border-col: rgba(74, 222, 128, 0.25); --accent: #22c55e; font-family: ui-monospace, monospace; }
+    body.theme-oled { --bg-main: #000000; --text-main: #f8fafc; --glass-bg: rgba(10, 10, 14, 0.95); --border-col: rgba(255,255,255,0.12); --accent: #818cf8; }
+    body { background: var(--bg-main); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; transition: background 0.25s, color 0.25s; }
+    .glass { background: var(--glass-bg); backdrop-filter: blur(14px); border: 1px solid var(--border-col); }
+    .tab-active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(56, 189, 248, 0.08); }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #0284c7; border-radius: 4px; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-14">
+
+  <!-- ÜST SİSTEM ÇUBUĞU -->
+  <header class="glass sticky top-0 z-40 px-3 py-2.5 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+      <div class="truncate">
+        <h1 class="font-extrabold text-sm tracking-wider bg-gradient-to-r from-sky-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
+          OMNI-APEX STUDIO OS v2.0
+        </h1>
+        <p class="text-[10px] text-slate-400 truncate" id="activeAgentBadge">Aktif Ajan: Baş Mimar • RAG: <span id="hdrRagCount">0</span> parça</p>
+      </div>
+    </div>
+    <div class="flex gap-1.5 items-center shrink-0">
+      <span id="telemetryBadge" class="hidden lg:inline-block text-[10px] px-2 py-1 rounded bg-slate-900 border border-emerald-700/50 text-emerald-300 font-mono"></span>
+      <span id="envBadge" class="hidden md:inline-block text-[10px] px-2 py-1 rounded bg-slate-900 border border-slate-700 text-sky-300"></span>
+      <select id="themeSelect" onchange="applyTheme(this.value)" title="Tema Seç" class="text-[11px] px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+        <option value="dark">🌌 Cyber</option>
+        <option value="oled">🖤 OLED</option>
+        <option value="crt">📟 CRT</option>
+        <option value="light">☀️ Açık</option>
+      </select>
+      <button onclick="syncToGoogleDrive()" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-700/60 text-emerald-300">
+        ☁️ Drive
+      </button>
+      <button onclick="toggleModal('settingsModal')" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+        ⚙️ Ayarlar
+      </button>
+    </div>
+  </header>
+
+  <!-- ANA SEKMELER -->
+  <nav class="glass flex overflow-x-auto text-[11px] font-semibold border-b border-slate-800 sticky top-[52px] z-30">
+    <button onclick="switchMainView('chat')" id="nav_chat" class="flex-1 min-w-[88px] py-2.5 tab-active">💬 Sohbet & AI</button>
+    <button onclick="switchMainView('studio')" id="nav_studio" class="flex-1 min-w-[96px] py-2.5 text-slate-400">⚡ Stüdyo & Build</button>
+    <button onclick="switchMainView('rag')" id="nav_rag" class="flex-1 min-w-[96px] py-2.5 text-slate-400">🔍 GitHub & RAG</button>
+    <button onclick="switchMainView('agents')" id="nav_agents" class="flex-1 min-w-[84px] py-2.5 text-slate-400">🧠 120+ Ajan</button>
+    <button onclick="switchMainView('terminal')" id="nav_terminal" class="flex-1 min-w-[88px] py-2.5 text-slate-400">💻 Terminal</button>
+    <button onclick="switchMainView('hardware')" id="nav_hardware" class="flex-1 min-w-[88px] py-2.5 text-slate-400">🛡️ Donanım</button>
+    <button onclick="switchMainView('files')" id="nav_files" class="flex-1 min-w-[88px] py-2.5 text-slate-400">📂 Dosya & Git</button>
+  </nav>
+
+  <!-- ORTAK MODEL SEÇİM BAR -->
+  <div class="max-w-5xl mx-auto w-full px-3 pt-3">
+    <div class="glass rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-1 min-w-[220px]">
+        <span class="text-[10px] font-bold text-sky-400 shrink-0">🤖 MODEL:</span>
+        <select id="modelSelect" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"></select>
+        <button onclick="refreshAllModels()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 py-1.5 rounded-lg text-sky-300 shrink-0" title="Gemini, Claude, OpenAI/OpenRouter ve Yerel Ollama modellerini tara">
+          🔄 Çek
+        </button>
+      </div>
+      <div class="flex items-center gap-2 text-[11px]">
+        <button onclick="document.getElementById('omniNeuralPanel').classList.toggle('hidden')" id="neuralSummaryBadge" class="bg-slate-900 hover:bg-slate-800 border border-emerald-600/50 px-2.5 py-1 rounded-lg text-emerald-300 font-semibold">
+          🧬 Adaptif: Kod (0.10 • 32K)
+        </button>
+        <label class="flex items-center gap-1.5 cursor-pointer bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg">
+          <input id="ragEnabledToggle" type="checkbox" checked class="accent-sky-400" />
+          <span class="text-emerald-300 font-semibold">🧠 RAG Aktif</span>
+        </label>
+        <span id="tokenStats" class="text-[10px] text-slate-400 font-mono">Hazır</span>
+      </div>
+    </div>
+
+    <!-- ADAPTİF + MANUEL 5-MODLU NÖRAL PARAMETRE PANELİ -->
+    <div id="omniNeuralPanel" class="hidden glass rounded-xl p-3 mt-2 space-y-2.5 border border-emerald-500/30 text-xs">
+      <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2">
+        <div>
+          <span class="font-bold text-emerald-400">🧬 Adaptif Nöral Parametre & Token Motoru</span>
+          <div id="omniDetectedIntent" class="text-[10px] text-slate-400">Otomatik Niyet Algılayıcı Aktif (Mesaja ve ajana göre anlık adapte olur)</div>
+        </div>
+        <button id="omniAdaptiveToggle" onclick="OmniNeural.toggleAdaptive()" class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-lg text-[11px]">
+          🤖 ADAPTİF: AÇIK
+        </button>
+      </div>
+      <div id="omniPresetContainer" class="grid grid-cols-2 sm:grid-cols-5 gap-1.5"></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1"><span>🔥 Sıcaklık</span><strong id="valTemp" class="text-emerald-400 font-mono">0.10</strong></div>
+          <input type="range" id="rngTemp" min="0" max="2" step="0.05" value="0.10" oninput="OmniNeural.onManualSlide()" class="w-full accent-emerald-400" />
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1"><span>🌊 Havuz (Top-P)</span><strong id="valTopP" class="text-sky-400 font-mono">0.80</strong></div>
+          <input type="range" id="rngTopP" min="0.1" max="1" step="0.01" value="0.80" oninput="OmniNeural.onManualSlide()" class="w-full accent-sky-400" />
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1"><span>🎯 Keskinlik (Top-K)</span><strong id="valTopK" class="text-amber-400 font-mono">15</strong></div>
+          <input type="range" id="rngTopK" min="1" max="100" step="1" value="15" oninput="OmniNeural.onManualSlide()" class="w-full accent-amber-400" />
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1"><span>📦 Max Token</span><strong id="valTokens" class="text-purple-400 font-mono">32K</strong></div>
+          <input type="range" id="rngTokens" min="512" max="32768" step="512" value="32768" oninput="OmniNeural.onManualSlide()" class="w-full accent-purple-400" />
+        </div>
+      </div>
+      <div id="omniEntropyNotice" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-sky-950/50 border border-sky-700/40 text-sky-200">
+        🛡️ Sıfır Halüsinasyon Kilidi: Kod üretiminde keskinlik (Top-K: 15) ve 32K kapasite aktif.
+      </div>
+    </div>
+  </div>
+
+  <main class="flex-1 p-3 max-w-5xl mx-auto w-full space-y-3">
+
+    <!-- 1. GÖRÜNÜM: ANTIGRAVITY / CLAUDE TARZI SOHBET & KOD ÜRETİMİ -->
+    <section id="view_chat" class="space-y-3">
+      <div class="glass rounded-xl flex flex-col overflow-hidden" style="height: 520px;">
+        <div class="px-3 py-2 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center flex-wrap gap-1.5">
+          <span class="text-xs font-bold text-sky-400">💬 Otonom AI Sohbet & Canlı Gemini Live</span>
+          <div class="flex gap-1 flex-wrap">
+            <button onclick="toggleGeminiLive()" id="liveToggleBtn" class="text-[10px] px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold">🎙️ Canlı Sohbet</button>
+            <button onclick="exportChatPdf()" class="text-[10px] px-2 py-1 rounded bg-rose-950/80 border border-rose-700/50 text-rose-200 hover:bg-rose-900">📄 PDF</button>
+            <button onclick="exportChatJson()" class="text-[10px] px-2 py-1 rounded bg-sky-950/80 border border-sky-700/50 text-sky-200 hover:bg-sky-900">📦 JSON</button>
+            <button onclick="exportChatMarkdown()" class="text-[10px] px-2 py-1 rounded bg-emerald-950/80 border border-emerald-700/50 text-emerald-200 hover:bg-emerald-900">📝 MD</button>
+            <button onclick="copyEntireChat()" class="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-200 hover:text-white">📋 Kopyala</button>
+            <button onclick="clearChat()" class="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-300 hover:text-white">🗑️ Temizle</button>
+          </div>
+        </div>
+
+        <!-- Canlı Sohbet Kontrol & Video Akış Şeridi -->
+        <div id="liveSessionBar" class="hidden px-3 py-2 bg-emerald-950/60 border-b border-emerald-700/50 flex items-center justify-between flex-wrap gap-2 text-[11px]">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+            <span id="liveStatusLabel" class="font-bold text-emerald-300">Gemini 3.8 Live Bağlanıyor...</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="toggleLiveVideo('camera')" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-sky-300">📹 Canlı Kamera</button>
+            <button onclick="toggleLiveVideo('screen')" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-amber-300">🖥️ Canlı Ekran</button>
+            <button onclick="stopGeminiLive()" class="px-2.5 py-1 rounded bg-rose-600 text-white font-bold">⏹️ Bitir</button>
+          </div>
+          <video id="liveVideoPreview" autoplay muted playsinline class="hidden w-full max-h-32 rounded-lg bg-black object-contain mt-1"></video>
+        </div>
+
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
+          <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300">
+            <div class="font-bold text-sky-400 mb-1">OMNI-APEX AI Asistanı</div>
+            Merhaba! Buradan hem sohbet edebilir hem de kod ürettirebilirsin. Üretilen her kod bloğunun altında çıkan butonlarla kodu tek tıkla <b>Canlı Emülatöre</b>, <b>GitHub'a</b>, <b>Windows klasörüne</b> veya <b>Android projesine</b> gönderebilirsin. <b>RAG Aktif</b> iken GitHub'dan indekslediğin repolar otomatik bağlam olarak kullanılır.
+          </div>
+        </div>
+
+        <div id="chatDropZone" class="p-2.5 bg-slate-900/90 border-t border-slate-800 space-y-2">
+          <!-- Eklenen Dosya / Fotoğraf / Video / Ses Önizleme Alanı -->
+          <div id="chatAttachmentsBar" class="hidden flex flex-wrap gap-1.5"></div>
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex gap-1.5 flex-wrap">
+              <input id="chatFileInput" type="file" multiple class="hidden"
+                accept="image/*,video/*,audio/*,.pdf,.txt,.md,.js,.ts,.py,.html,.css,.json,.csv,.xml"
+                onchange="handleChatFiles(this.files)" />
+              <button onclick="document.getElementById('chatFileInput').click()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-300 px-2.5 py-1 rounded-lg">
+                📎 Dosya / Foto / Video / Ses
+              </button>
+              <button onclick="capturePhotoToChat()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 text-emerald-300 px-2.5 py-1 rounded-lg">
+                📷 Anlık Fotoğraf
+              </button>
+              <button onclick="captureScreenToChat()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 px-2.5 py-1 rounded-lg">
+                🖥️ Ekran Yakala
+              </button>
+            </div>
+            <span class="text-[10px] text-slate-400">Dosyaları buraya sürükleyip bırakabilirsin</span>
+          </div>
+          <div class="flex gap-2">
+            <textarea id="chatInput" rows="2" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChatMessage();}"
+              placeholder="Sorunu sor, görsel/video/ekran analiz ettir veya üretilecek kodu tarif et... (Enter = Gönder)"
+              class="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-sky-500 resize-none"></textarea>
+            <div class="flex flex-col gap-1 shrink-0">
+              <button onclick="sendChatMessage()" id="chatSendBtn" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 rounded-xl text-xs">
+                Gönder ➤
+              </button>
+              <button onclick="runDialecticalCouncil()" title="Gemini + Claude + Ollama paralel konsey kıyaslaması" class="bg-purple-700 hover:bg-purple-600 text-white font-bold px-3 py-1 rounded-lg text-[10px]">
+                ⚔️ Konsey
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GÖRÜNÜM: STÜDYO, EMÜLATÖR & ÇOKLU PLATFORM FABRİKASI -->
+    <section id="view_studio" class="hidden space-y-3">
+      <!-- Hedef Mod & İstem -->
+      <div class="glass rounded-xl p-3 space-y-2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Kod Hedefi</label>
+            <select id="buildTargetMode" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-amber-300">
+              <option value="dist/index.html">📱 Yeni Uygulama (dist/index.html)</option>
+              <option value="index.html">🧬 KENDİNİ GELİŞTİR (Ana Sistemi Güncelle)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Bulut Derleme Platformu</label>
+            <select id="targetPlatformSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-emerald-300">
+              <option value="all">🌐 Hepsi (APK + Windows EXE/MSI + macOS + iOS)</option>
+              <option value="android">🤖 Sadece Android (.apk)</option>
+              <option value="windows">🪟 Windows (.exe / .msi)</option>
+              <option value="macos">🍎 macOS (.dmg)</option>
+              <option value="ios">📱 iOS (Capacitor Xcode Projesi)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">🧩 Hazır Şablon Yükle</label>
+            <select onchange="loadStarterTemplate(this.value); this.value='';" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-sky-300">
+              <option value="">-- Şablon Seç --</option>
+              <option value="qr">📷 Kamera & QR/Barkod Tarayıcı</option>
+              <option value="gps">📍 GPS Konum & Saha Not Defteri</option>
+              <option value="voice">🎙️ Sesli Not & Anlık Çevirmen</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1">
+          <span class="text-xs font-bold text-sky-400">Otonom Kod İstemi</span>
+          <div class="flex items-center gap-2">
+            <button onclick="undoCodeSnapshot()" id="undoBtn" disabled class="text-[11px] bg-slate-800 border border-slate-700 text-slate-400 disabled:opacity-40 px-2 py-0.5 rounded-md">
+              ↩️ Geri Al (0)
+            </button>
+            <button onclick="startVoicePrompt()" class="text-[11px] bg-rose-600/30 border border-rose-500 text-rose-300 px-2 py-0.5 rounded-md">
+              🎙️ Sesle Yazdır
+            </button>
+          </div>
+        </div>
+
+        <textarea id="promptInput" rows="2"
+          placeholder="Yapılacak uygulamayı veya eklenecek özelliği yazın..."
+          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-sky-500"></textarea>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          <button onclick="runAutonomousGeneration(false)" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            ✨ Sıfırdan Üret
+          </button>
+          <button onclick="runAutonomousGeneration(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            🔧 Kodu Evrimleştir
+          </button>
+          <button onclick="runMultiAgentPipeline()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            🐝 3 Ajanlı Otonom
+          </button>
+          <button onclick="runDivergeConvergePipeline()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-[11px]">
+            🌩️ Fırtına ➔ İnşa
+          </button>
+        </div>
+      </div>
+
+      <!-- Emülatör Hata Uyarı Bandı -->
+      <div id="runtimeErrorBanner" class="hidden glass rounded-xl p-2.5 border border-rose-500/60 bg-rose-950/40 flex items-center justify-between gap-2">
+        <div class="text-[11px] text-rose-200 truncate" id="runtimeErrorText">⚠️ Emülatörde hata algılandı.</div>
+        <button onclick="autoHealRuntimeError()" class="shrink-0 bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg">
+          🩹 Hatayı Otonom Onar
+        </button>
+      </div>
+
+      <!-- Canlı Önizleme ve Kod Düzenleyici -->
+      <div class="glass rounded-xl overflow-hidden flex flex-col" style="height: 390px;">
+        <div class="flex border-b border-slate-800 bg-slate-900/70 text-[11px]">
+          <button onclick="toggleStudioSubTab('preview')" id="sub_preview" class="flex-1 py-2 font-bold text-sky-400 border-b-2 border-sky-400">
+            📱 Canlı Emülatör
+          </button>
+          <button onclick="toggleStudioSubTab('code')" id="sub_code" class="flex-1 py-2 font-bold text-slate-400">
+            💻 AST & Kod (<span id="lineCounter">0</span> satır)
+          </button>
+          <button onclick="toggleStudioSubTab('logs')" id="sub_logs" class="flex-1 py-2 font-bold text-slate-400">
+            📡 Ajan Kayıtları
+          </button>
+        </div>
+
+        <div id="subview_preview" class="flex-1 bg-white">
+          <iframe id="livePreview" class="w-full h-full border-0" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
+        </div>
+        <div id="subview_code" class="flex-1 hidden bg-slate-950 p-2">
+          <textarea id="codeWorkspace" oninput="refreshPreview()" class="w-full h-full bg-transparent text-emerald-400 font-mono text-[11px] focus:outline-none resize-none"></textarea>
+        </div>
+        <div id="subview_logs" class="flex-1 hidden bg-slate-950 p-3 overflow-y-auto font-mono text-[11px] space-y-1 text-slate-300">
+          <div>[SİSTEM] Omni-Apex v2.0 Çekirdeği başlatıldı.</div>
+        </div>
+      </div>
+
+      <!-- Dağıtım & Çoklu-Platform Derleme Tetikleyicisi -->
+      <div class="glass rounded-xl p-3 space-y-2 border border-emerald-500/30">
+        <div class="flex justify-between items-center gap-2">
+          <input id="apkAppName" type="text" value="OmniApexApp" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white w-1/2" placeholder="Uygulama Adı" />
+          <span id="apkTimer" class="text-xs font-mono text-amber-400"></span>
+        </div>
+        <p id="apkStatusMsg" class="text-[11px] text-slate-400">GitHub Actions ile Android APK, Windows EXE/MSI/Store, macOS DMG ve iOS derlemeye hazır.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <button onclick="buildCloudMultiPlatform()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs">
+            🚀 Kodu GitHub'a Gönder & Derle
+          </button>
+          <button onclick="bootstrapOmniStudioOnGitHub()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-lg text-xs">
+            📦 Omni Studio'yu Kur & APK Üret
+          </button>
+          <button onclick="enableGitHubPages()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-xs">
+            🌐 GitHub Pages Yayınla
+          </button>
+          <button onclick="syncToAndroidAssets()" class="bg-sky-700 hover:bg-sky-600 text-white font-bold py-2.5 rounded-lg text-xs">
+            🤖 Android Klasörüne Yaz
+          </button>
+        </div>
+        <a id="apkDownloadLink" href="#" target="_blank" class="hidden bg-amber-500 text-slate-950 font-extrabold px-4 py-2 rounded-lg text-xs justify-center">
+          📥 Çıktıları / Release Sayfasını Aç
+        </a>
+      </div>
+    </section>
+
+    <!-- 3. GÖRÜNÜM: TÜM GITHUB ARAŞTIRMA & RAG İNDEKS MOTORU -->
+    <section id="view_rag" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-emerald-400">🔍 Tüm GitHub Araştırma & RAG Bilgi Çizgesi</h2>
+            <p class="text-[10px] text-slate-400" id="ragStatsText">İndeksli Parça: 0 • Kaynak: 0</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="indexWindowsFolderIntoRag()" class="text-[11px] bg-sky-700 hover:bg-sky-600 px-2.5 py-1 rounded text-white font-semibold">
+              📁 Windows Klasörünü İndeksle
+            </button>
+            <button onclick="clearRagIndex()" class="text-[11px] bg-rose-900/70 hover:bg-rose-800 px-2.5 py-1 rounded text-rose-200 font-semibold">
+              🗑️ RAG Sıfırla
+            </button>
+          </div>
+        </div>
+
+        <!-- GitHub Canlı Arama -->
+        <div class="flex gap-2">
+          <input id="ghSearchInput" onkeydown="if(event.key==='Enter')searchAllGitHub()" type="text"
+            placeholder="Tüm GitHub'da ara (örn: capacitor camera barcode, electron updater, rag vector)..."
+            class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" />
+          <button onclick="searchAllGitHub()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs">
+            Ara
+          </button>
+        </div>
+
+        <div id="ghSearchResults" class="space-y-2 max-h-72 overflow-y-auto"></div>
+
+        <!-- Benim GitHub Repolarım, Yeni Repo & Hata/Eksik Analizi -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <div class="text-[11px] font-bold text-amber-400">📦 GitHub Repolarım & Hata/Eksik Analizörü</div>
+            <div class="flex gap-1.5 flex-wrap">
+              <button onclick="listMyGitHubRepos()" class="text-[11px] bg-indigo-600 hover:bg-indigo-500 px-2.5 py-1 rounded text-white font-semibold">🔄 Repolarımı Getir</button>
+              <button onclick="createNewAppRepoPrompt()" class="text-[11px] bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 rounded text-white font-semibold">➕ Yeni Uygulama Reposu Aç</button>
+            </div>
+          </div>
+          <div id="myReposList" class="space-y-1.5 max-h-56 overflow-y-auto text-xs"></div>
+        </div>
+
+        <!-- RAG Sorgu Testi -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="text-[11px] font-bold text-sky-400">🧪 RAG İndeks Sorgu Testi (BM25 + Kosinüs Benzerliği)</div>
+          <div class="flex gap-2">
+            <input id="ragTestQuery" type="text" placeholder="İndeksli dokümanlarda ara..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white" />
+            <button onclick="testRagSearch()" class="bg-sky-600 px-3 py-1.5 rounded-lg text-xs font-bold text-white">Sorgula</button>
+          </div>
+          <div id="ragTestOutput" class="space-y-1.5 text-[11px] max-h-48 overflow-y-auto"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. GÖRÜNÜM: 120+ UZMAN AJAN MATRİSİ & ÖZEL AJAN -->
+    <section id="view_agents" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-2 border border-sky-500/30">
+        <div class="text-xs font-bold text-emerald-400">➕ Özel Uzman Ajan Oluştur</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input id="customAgentName" type="text" placeholder="Ajan Adı (örn: Rust/Tauri Mimarı)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+          <input id="customAgentCat" type="text" placeholder="Kategori (örn: Masaüstü)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+          <button onclick="addCustomAgent()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg px-3 py-1.5 text-xs">+ Ajanı Ekle</button>
+        </div>
+        <input id="customAgentPrompt" type="text" placeholder="Sistem Talimatı (Prompt): Sen ... konusunda uzmanlaşmış..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+      </div>
+      <div class="glass rounded-xl p-3 space-y-2">
+        <div class="flex justify-between items-center gap-2 flex-wrap">
+          <h2 class="text-xs font-bold text-sky-400">🧠 120+ Uzman Ajan Ordusu</h2>
+          <input id="agentSearch" oninput="renderAgentGrid()" type="text" placeholder="Ajan ara (örn: Android, Güvenlik)..."
+            class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-[11px] text-white w-52" />
+        </div>
+        <div id="agentGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[520px] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- 5. GÖRÜNÜM: YEREL TERMINAL & KOMUT KÖPRÜSÜ (PowerShell / Git / ADB / Gradle / MCP) -->
+    <section id="view_terminal" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3 border border-emerald-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-emerald-400">💻 Yerel Windows Terminal & ADB / Git / Gradle Köprüsü</h2>
+            <p class="text-[10px] text-slate-400" id="bridgeStatusText">Köprü durumu kontrol ediliyor...</p>
+          </div>
+          <button onclick="checkLocalBridge()" class="text-[11px] bg-slate-800 border border-slate-600 px-2.5 py-1 rounded text-sky-300">🔄 Bağlantıyı Test Et</button>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 text-[11px]">
+          <button onclick="runLocalCommand('git status')" class="bg-slate-900 border border-slate-700 hover:border-sky-500 px-2.5 py-1 rounded text-slate-200">git status</button>
+          <button onclick="runLocalCommand('adb devices')" class="bg-slate-900 border border-slate-700 hover:border-emerald-500 px-2.5 py-1 rounded text-emerald-300">📱 adb devices</button>
+          <button onclick="runLocalCommand('cd android; ./gradlew assembleDebug')" class="bg-slate-900 border border-slate-700 hover:border-amber-500 px-2.5 py-1 rounded text-amber-300">🔨 Gradle APK Derle</button>
+          <button onclick="runLocalCommand('adb install -r android/app/build/outputs/apk/debug/app-debug.apk')" class="bg-slate-900 border border-slate-700 hover:border-emerald-500 px-2.5 py-1 rounded text-emerald-300">📲 ADB APK Kur</button>
+          <button onclick="runLocalCommand('ollama list')" class="bg-slate-900 border border-slate-700 hover:border-purple-500 px-2.5 py-1 rounded text-purple-300">🦙 ollama list</button>
+        </div>
+
+        <div class="flex gap-2">
+          <input id="terminalCmdInput" type="text" onkeydown="if(event.key==='Enter')runLocalCommand()"
+            placeholder="PowerShell / Git / Python / ADB / Gradle / MCP komutu yazın..."
+            class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-500" />
+          <button onclick="runLocalCommand()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs">▶️ Çalıştır</button>
+        </div>
+
+        <pre id="terminalOutput" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-slate-300 h-72 overflow-y-auto">[TERMINAL] Yerel köprü bekleniyor... (baslat.bat ile açıldığında tam PowerShell yetkisi aktiftir)</pre>
+      </div>
+    </section>
+
+    <!-- 6. GÖRÜNÜM: DONANIM, SENSÖR VE İZİN YÖNETİCİSİ -->
+    <section id="view_hardware" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3">
+        <h2 class="text-xs font-bold text-emerald-400">🛡️ Tam Donanım & Yönetici İzinleri Kontrol Merkezi</h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="requestCameraAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-sky-400">📷 Kamera & Görsel AI</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_cam">Durum: Bekleniyor</div>
+          </button>
+          <button onclick="requestMicAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-rose-400">🎙️ Mikrofon & Ses Analizi</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_mic">Durum: Bekleniyor</div>
+          </button>
+          <button onclick="requestLocationAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-amber-400">📍 GPS & Canlı Harita</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_geo">Durum: Bekleniyor</div>
+          </button>
+          <button onclick="requestFileSystemAccess()" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-left hover:border-sky-500">
+            <div class="font-bold text-emerald-400">📂 Kalıcı Depolama</div>
+            <div class="text-[10px] text-slate-400 mt-1" id="perm_fs">Durum: Bekleniyor</div>
+          </button>
+        </div>
+        <video id="cameraStream" autoplay playsinline class="w-full h-40 bg-black rounded-lg hidden object-cover"></video>
+        <div id="mapContainer" class="w-full h-48 rounded-lg hidden z-10"></div>
+      </div>
+    </section>
+
+    <!-- 6. GÖRÜNÜM: DOSYA SİSTEMİ & WINDOWS KLASÖRÜ -->
+    <section id="view_files" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-2 border border-sky-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-sky-400">🖥️ Windows / Workspace Klasör Köprüsü</h2>
+            <p class="text-[10px] text-slate-400" id="winFolderStatus">Proje klasörünü (omni-apex-studio) bağlayarak Windows ve Android klasörlerine doğrudan yazabilirsin.</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="connectWindowsFolder()" class="text-[11px] bg-sky-600 hover:bg-sky-500 px-2.5 py-1.5 rounded text-white font-semibold">
+              📁 Klasör Bağla
+            </button>
+            <button onclick="writeCodeToWindowsFolder()" id="winSaveBtn" disabled class="text-[11px] bg-emerald-600 disabled:opacity-40 px-2.5 py-1.5 rounded text-white font-semibold">
+              💾 Klasöre Yaz
+            </button>
+          </div>
+        </div>
+        <div id="winFilesList" class="space-y-1 text-xs max-h-40 overflow-y-auto"></div>
+      </div>
+
+      <div class="glass rounded-xl p-3 space-y-2">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs font-bold text-amber-400">📂 Tarayıcı Hafızası (Yerel Projeler)</h2>
+          <button onclick="saveProjectLocally()" class="text-[11px] bg-blue-600 px-2.5 py-1 rounded text-white font-semibold">
+            + Mevcut Kodu Kaydet
+          </button>
+        </div>
+        <div id="savedProjectsList" class="space-y-1.5 text-xs max-h-80 overflow-y-auto"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AYARLAR MODALI -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+    <div class="glass rounded-2xl p-4 w-full max-w-md space-y-2.5 border border-slate-700 text-xs max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 class="font-bold text-sm text-white">⚙️ Çoklu AI Sağlayıcı, GitHub & Drive</h3>
+        <button onclick="toggleModal('settingsModal')" class="text-slate-400">✕</button>
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">Google AI Studio API Key (Gemini)</label>
+        <input id="cfg_gemini" type="password" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">Anthropic API Key (Claude 3.7 / Sonnet 4 - Opsiyonel)</label>
+        <input id="cfg_claude" type="password" placeholder="sk-ant-..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-slate-400 block mb-1">OpenAI / OpenRouter Key</label>
+          <input id="cfg_openai" type="password" placeholder="sk-... / sk-or-..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">OpenAI Uyumlu Base URL</label>
+          <input id="cfg_openai_url" type="text" placeholder="https://api.openai.com/v1" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">Yerel Ollama URL (Windows GPU / RX 6600)</label>
+        <input id="cfg_ollama" type="text" placeholder="http://localhost:11434" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <hr class="border-slate-800" />
+      <div>
+        <label class="text-slate-400 block mb-1">GitHub Personal Access Token (repo + workflow)</label>
+        <input id="cfg_ghtoken" type="password" placeholder="ghp_..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-slate-400 block mb-1">GitHub Kullanıcı Adı</label>
+          <input id="cfg_ghuser" type="text" placeholder="fariqo" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">GitHub Repo Adı</label>
+          <input id="cfg_ghrepo" type="text" placeholder="omni-studio-apk" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+      </div>
+      <div>
+        <label class="text-slate-400 block mb-1">Google Drive Apps Script Webhook URL</label>
+        <input id="cfg_driveurl" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-slate-400 block mb-1">Yaratıcılık (Temperature): <span id="tempValLabel">0.2</span></label>
+          <input id="cfg_temp" type="range" min="0" max="1.2" step="0.1" value="0.2" oninput="document.getElementById('tempValLabel').innerText=this.value" class="w-full accent-sky-400" />
+        </div>
+        <div class="flex items-end gap-1">
+          <button onclick="exportConfigJson()" class="flex-1 bg-slate-800 border border-slate-600 text-slate-200 py-1.5 rounded text-[11px]">📤 JSON</button>
+          <button onclick="document.getElementById('importCfgInput').click()" class="flex-1 bg-slate-800 border border-slate-600 text-slate-200 py-1.5 rounded text-[11px]">📥 JSON</button>
+          <input id="importCfgInput" type="file" accept=".json" class="hidden" onchange="importConfigJson(this.files[0])" />
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-1.5">
+        <button onclick="exportEnvFile()" class="bg-emerald-900/70 border border-emerald-700 text-emerald-200 py-1.5 rounded text-[11px]">📄 .env İndir</button>
+        <button onclick="document.getElementById('importEnvInput').click()" class="bg-sky-900/70 border border-sky-700 text-sky-200 py-1.5 rounded text-[11px]">📥 .env Yükle</button>
+        <button onclick="saveEnvToBridge()" class="bg-amber-900/70 border border-amber-700 text-amber-200 py-1.5 rounded text-[11px]">💾 Yerel .env Yaz</button>
+        <input id="importEnvInput" type="file" accept=".env,.txt" class="hidden" onchange="importEnvFile(this.files[0])" />
+      </div>
+      <button onclick="saveConfig()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg mt-2">
+        Kaydet & Tüm Modelleri Çek
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 0. ORTAM ALGILAMA & TEMA MOTORU
+    (function detectEnvironment() {
+      const badge = document.getElementById('envBadge');
+      const isWin = navigator.platform.toLowerCase().includes('win');
+      const proto = location.protocol === 'file:' ? '⚠️ file://' : `🟢 ${location.host || 'Web'}`;
+      badge.innerText = `${isWin ? '🪟 Windows' : '📱 Mobil'} • ${proto}`;
+    })();
+
+    function applyTheme(theme) {
+      document.body.classList.remove('theme-light', 'theme-crt', 'theme-oled');
+      if (theme && theme !== 'dark') document.body.classList.add('theme-' + theme);
+      localStorage.setItem('omni_theme', theme || 'dark');
+      const sel = document.getElementById('themeSelect');
+      if (sel) sel.value = theme || 'dark';
+    }
+    applyTheme(localStorage.getItem('omni_theme') || 'dark');
+
+    // 1. 120+ UZMAN AJAN VERİTABANI
+    const AGENT_DOMAINS = [
+      { cat: "Mimari & Sistem", roles: ["Baş Sistem Mimarı", "Mikroservis Tasarımcısı", "AST Kod Analisti", "Dağıtık Sistem Uzmanı", "Event-Driven Mimar", "Clean Architecture Denetçisi", "Belirli Durum Makinesi (FSM) Uzmanı", "WebAssembly Mühendisi", "Yüksek Erişilebilirlik Mimarı", "API Gateway Tasarımcısı"] },
+      { cat: "Android & Mobil", roles: ["Capacitor Native Köprü Uzmanı", "Android Manifest & İzin Mühendisi", "PWA & Offline-First Mimarı", "Mobil UI/UX Ergonomi Uzmanı", "WebGL & Mobil Grafik Uzmanı", "Sensör & GPS Entegratörü", "Kamera & WebRTC Akış Uzmanı", "Batarya & Bellek Optimizatörü", "Bluetooth / WebUSB Donanım Uzmanı", "Mobil Bildirim Servis Mimarı"] },
+      { cat: "Yapay Zeka & Otomasyon", roles: ["Çoklu Ajan Orkestratörü", "RAG & Vektör Arama Mimarı", "Prompt Mühendisliği Uzmanı", "Sesli Asistan & STT/TTS Uzmanı", "Bilgisayarlı Görü (Vision) Analisti", "Otonom Hata Ayıklama Ajanı", "Kod Refactoring Ajanı", "Veri Hattı (Pipeline) Otomasyonu", "Sentetik Veri Üreticisi", "Fonksiyon Çağırma (Tool Use) Uzmanı"] },
+      { cat: "Siber Güvenlik & DevSecOps", roles: ["OWASP Kod Denetçisi", "Kriptografi & Şifreleme Uzmanı", "OAuth2 & JWT Kimlik Mimarı", "Sızma Testi (Pentest) Ajanı", "GitHub Actions CI/CD Uzmanı", "Docker & Konteyner Mimarı", "Güvenli Depolama Uzmanı", "Ağ Protokol Analisti", "Zero-Trust Güvenlik Mimarı", "Log & Telemetri Analisti"] },
+      { cat: "Veritabanı & Veri Bilimi", roles: ["IndexedDB & LocalForage Uzmanı", "SQL & SQLite Optimizatörü", "Gerçek Zamanlı Senkronizasyon Mimarı", "Zaman Serisi Veri Analisti", "Graf Veritabanı Mimarı", "Veri Görselleştirme (Chart/D3) Uzmanı", "Büyük Veri İşleme Ajanı", "Önbellekleme (Caching) Stratejisti", "JSON Schema Doğrulayıcı", "ETL Otomasyon Uzmanı"] },
+      { cat: "Özel Alan & Bilimsel", roles: ["Bilimsel Hesaplama & Fizik Motoru", "Akustik & DSP Ses İşleme Uzmanı", "Kartografya & CBS (GIS) Harita Uzmanı", "Dilbilim & Fonetik Analiz Uzmanı", "Finansal Algoritma Modelleme", "Oyun Motoru & Fizik Simülatörü", "Biyoenformatik Veri Analisti", "IoT & Telemetri Protokol Uzmanı", "Doküman & EPUB/PDF İşleme Uzmanı", "Otonom Test (QA) Mühendisi"] }
+    ];
+
+    const ALL_AGENTS = [];
+    let idCounter = 1;
+    AGENT_DOMAINS.forEach(group => {
+      group.roles.forEach(role => {
+        ALL_AGENTS.push({
+          id: idCounter++,
+          name: `${role} (Pro)`,
+          category: group.cat,
+          prompt: `Sen ${group.cat} alanında uzmanlaşmış "${role}" ajanısın. Kodları en yüksek performans, sıfır hata, tam responsive (Windows + Android + Web) uyumluluk ve modüler mimariyle üretirsin.`
+        });
+        ALL_AGENTS.push({
+          id: idCounter++,
+          name: `${role} (Denetçi / Critic)`,
+          category: group.cat,
+          prompt: `Sen ${group.cat} alanında "${role} Denetçisi" ajanısın. Kodlardaki darboğazları, güvenlik açıklarını ve eksik izinleri bulup en sağlam çözümü uygularsın.`
+        });
+      });
+    });
+
+    const CUSTOM_AGENTS = JSON.parse(localStorage.getItem('omni_custom_agents') || '[]');
+    CUSTOM_AGENTS.forEach(ca => ALL_AGENTS.unshift({ ...ca, id: idCounter++ }));
+
+    function addCustomAgent() {
+      const name = document.getElementById('customAgentName').value.trim();
+      const cat = document.getElementById('customAgentCat').value.trim() || 'Özel Uzman';
+      const prompt = document.getElementById('customAgentPrompt').value.trim();
+      if (!name || !prompt) return alert('Ajan adı ve sistem talimatı girin.');
+      const newAgent = { id: Date.now(), name, category: cat, prompt };
+      CUSTOM_AGENTS.unshift(newAgent);
+      localStorage.setItem('omni_custom_agents', JSON.stringify(CUSTOM_AGENTS));
+      ALL_AGENTS.unshift(newAgent);
+      selectedAgent = newAgent;
+      document.getElementById('customAgentName').value = '';
+      document.getElementById('customAgentPrompt').value = '';
+      updateHeaderStatus();
+      renderAgentGrid();
+      alert(`✅ "${name}" ajanı eklendi ve aktif edildi!`);
+    }
+
+    let selectedAgent = ALL_AGENTS[0];
+
+    function renderAgentGrid() {
+      const q = (document.getElementById('agentSearch').value || '').toLowerCase();
+      const grid = document.getElementById('agentGrid');
+      grid.innerHTML = '';
+      ALL_AGENTS.filter(a => a.name.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)).forEach(agent => {
+        const active = agent.id === selectedAgent.id;
+        const btn = document.createElement('button');
+        btn.className = `p-2.5 rounded-xl border text-left transition ${active ? 'bg-sky-950/90 border-sky-400' : 'bg-slate-900/90 border-slate-800 hover:border-slate-600'}`;
+        btn.innerHTML = `
+          <div class="text-[10px] text-sky-400 font-semibold">#${agent.id} • ${agent.category}</div>
+          <div class="text-xs font-bold text-white mt-0.5">${agent.name}</div>
+        `;
+        btn.onclick = () => {
+          selectedAgent = agent;
+          updateHeaderStatus();
+          renderAgentGrid();
+          switchMainView('chat');
+        };
+        grid.appendChild(btn);
+      });
+    }
+    renderAgentGrid();
+
+    // 2. AYARLAR VE YEREL DEPOLAMA
+    const cfg = {
+      gemini: localStorage.getItem('omni_gemini') || '',
+      claude: localStorage.getItem('omni_claude') || '',
+      openai: localStorage.getItem('omni_openai') || '',
+      openai_url: localStorage.getItem('omni_openai_url') || 'https://api.openai.com/v1',
+      ollama: localStorage.getItem('omni_ollama') || 'http://localhost:11434',
+      ghtoken: localStorage.getItem('omni_ghtoken') || '',
+      ghuser: localStorage.getItem('omni_ghuser') || '',
+      ghrepo: localStorage.getItem('omni_ghrepo') || '',
+      driveurl: localStorage.getItem('omni_driveurl') || '',
+      temp: parseFloat(localStorage.getItem('omni_temp') || '0.2')
+    };
+    function applyCfgToInputs() {
+      ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'temp'].forEach(k => {
+        const el = document.getElementById('cfg_' + k);
+        if (el) el.value = cfg[k];
+      });
+      document.getElementById('tempValLabel').innerText = cfg.temp;
+    }
+    applyCfgToInputs();
+
+    async function syncSettingsWithBridge() {
+      try {
+        const r = await fetch('/api/load-settings');
+        if (!r.ok) return;
+        const saved = await r.json();
+        if (saved && typeof saved === 'object') {
+          let restored = false;
+          Object.keys(saved).forEach(k => {
+            if (k in cfg && (!cfg[k] || cfg[k] === 'https://api.openai.com/v1' || cfg[k] === 'http://localhost:11434') && saved[k]) {
+              cfg[k] = saved[k];
+              localStorage.setItem('omni_' + k, saved[k]);
+              restored = true;
+            }
+          });
+          if (restored) {
+            applyCfgToInputs();
+            refreshAllModels();
+            logAgent('🔐 Mevcut API anahtarları ve ayarlar yerel kasadan otomatik geri yüklendi.');
+          }
+        }
+      } catch (_) {}
+    }
+
+    function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+
+    function saveConfig() {
+      ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'temp'].forEach(k => {
+        const el = document.getElementById('cfg_' + k);
+        if (el) {
+          cfg[k] = k === 'temp' ? parseFloat(el.value) : el.value.trim();
+          localStorage.setItem('omni_' + k, cfg[k]);
+        }
+      });
+      if (!cfg.openai_url) cfg.openai_url = 'https://api.openai.com/v1';
+      if (!cfg.ollama) cfg.ollama = 'http://localhost:11434';
+      fetch('/api/save-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg)
+      }).catch(() => {});
+      toggleModal('settingsModal');
+      logAgent('Ayarlar kaydedildi ve kalıcı olarak yedeklendi.');
+      refreshAllModels();
+    }
+
+    function exportConfigJson() {
+      const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'omni-apex-config.json';
+      a.click();
+    }
+
+    function importConfigJson(file) {
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const obj = JSON.parse(r.result);
+          Object.keys(obj).forEach(k => {
+            if (k in cfg) {
+              cfg[k] = obj[k];
+              localStorage.setItem('omni_' + k, cfg[k]);
+              const el = document.getElementById('cfg_' + k);
+              if (el) el.value = cfg[k];
+            }
+          });
+          alert('✅ Ayarlar içe aktarıldı!');
+          refreshAllModels();
+        } catch (e) { alert('JSON hatası: ' + e.message); }
+      };
+      r.readAsText(file);
+    }
+
+    // 3. ÇOKLU SAĞLAYICI DİNAMİK MODEL KEŞFİ
+    let MODEL_META = JSON.parse(localStorage.getItem('omni_models_meta') || '{}');
+
+    async function refreshAllModels() {
+      const select = document.getElementById('modelSelect');
+      select.innerHTML = '<option>⏳ Tüm sağlayıcılar taranıyor...</option>';
+      const discovered = {};
+
+      // A) Google Gemini
+      if (cfg.gemini) {
+        try {
+          let pageToken = '';
+          let guard = 0;
+          do {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cfg.gemini)}&pageSize=100${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+            (data.models || []).forEach(m => {
+              if (m.supportedGenerationMethods?.includes('generateContent') && m.name.includes('gemini')) {
+                const id = m.name.replace(/^models\//, '');
+                discovered[id] = {
+                  provider: 'gemini',
+                  displayName: `✨ ${m.displayName || id}`,
+                  outputLimit: m.outputTokenLimit || 8192
+                };
+              }
+            });
+            pageToken = data.nextPageToken || '';
+            guard++;
+          } while (pageToken && guard < 5);
+        } catch (e) {
+          logAgent(`⚠️ Gemini model keşfi hatası: ${e.message}`);
+        }
+      }
+
+      // B) Anthropic Claude
+      if (cfg.claude) {
+        const claudeModels = [
+          { id: 'claude-sonnet-4-20250514', name: '🧠 Claude Sonnet 4' },
+          { id: 'claude-3-7-sonnet-20250219', name: '🧠 Claude 3.7 Sonnet' },
+          { id: 'claude-3-5-haiku-20241022', name: '🧠 Claude 3.5 Haiku' }
+        ];
+        claudeModels.forEach(c => {
+          discovered[`claude:${c.id}`] = { provider: 'claude', modelName: c.id, displayName: c.name, outputLimit: 8192 };
+        });
+      }
+
+      // C) OpenAI / OpenRouter / DeepSeek / Groq
+      if (cfg.openai) {
+        try {
+          const base = cfg.openai_url.replace(/\/$/, '');
+          const r = await fetch(`${base}/models`, { headers: { 'Authorization': `Bearer ${cfg.openai}` } });
+          if (r.ok) {
+            const d = await r.json();
+            (d.data || []).slice(0, 60).forEach(m => {
+              discovered[`oai:${m.id}`] = { provider: 'openai', modelName: m.id, displayName: `🌐 ${m.id}`, outputLimit: 16384 };
+            });
+          }
+        } catch (e) {
+          logAgent(`⚠️ OpenAI/OpenRouter listesi alınamadı: ${e.message}`);
+        }
+      }
+
+      // D) Yerel Ollama
+      if (cfg.ollama) {
+        try {
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 1500);
+          const r = await fetch(`${cfg.ollama.replace(/\/$/, '')}/api/tags`, { signal: ctrl.signal });
+          if (r.ok) {
+            const d = await r.json();
+            (d.models || []).forEach(m => {
+              discovered[`ollama:${m.name}`] = { provider: 'ollama', modelName: m.name, displayName: `🖥️ Yerel: ${m.name}`, outputLimit: 32768 };
+            });
+          }
+        } catch (_) {}
+      }
+
+      if (Object.keys(discovered).length > 0) {
+        MODEL_META = discovered;
+        localStorage.setItem('omni_models_meta', JSON.stringify(MODEL_META));
+      }
+      renderModelOptions();
+    }
+
+    function renderModelOptions() {
+      const select = document.getElementById('modelSelect');
+      const entries = Object.entries(MODEL_META);
+      if (entries.length === 0) {
+        select.innerHTML = `
+          <option value="gemini-2.5-flash">✨ Gemini 2.5 Flash (Ayarlardan Key Girin)</option>
+          <option value="gemini-2.5-pro">✨ Gemini 2.5 Pro (Ayarlardan Key Girin)</option>
+        `;
+        return;
+      }
+      const order = { gemini: 1, claude: 2, openai: 3, ollama: 4 };
+      entries.sort(([idA, a], [idB, b]) => (order[a.provider] - order[b.provider]) || idB.localeCompare(idA));
+
+      const prev = localStorage.getItem('omni_selected_model');
+      select.innerHTML = '';
+      entries.forEach(([id, meta]) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = `${meta.displayName} (${Math.round((meta.outputLimit || 8192) / 1024)}K)`;
+        if (id === prev) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.onchange = () => localStorage.setItem('omni_selected_model', select.value);
+    }
+
+    // 4. CLIENT-SIDE RAG MOTORU (BM25 + CHUNKING + GITHUB CANLI ARAŞTIRMA)
+    let RAG_CHUNKS = JSON.parse(localStorage.getItem('omni_rag_chunks') || '[]');
+
+    function updateHeaderStatus() {
+      document.getElementById('activeAgentBadge').innerHTML = `Aktif: #${selectedAgent.id} ${selectedAgent.name} • RAG: <span id="hdrRagCount">${RAG_CHUNKS.length}</span> parça`;
+      const sources = new Set(RAG_CHUNKS.map(c => c.source)).size;
+      const statsEl = document.getElementById('ragStatsText');
+      if (statsEl) statsEl.innerText = `İndeksli Parça: ${RAG_CHUNKS.length} • Benzersiz Kaynak: ${sources}`;
+    }
+
+    function tokenizeText(str) {
+      return (str || '').toLowerCase().replace(/[^a-z0-9çğıöşü_]+/gi, ' ').split(/\s+/).filter(w => w.length > 2);
+    }
+
+    function addDocumentToRag(sourceName, text) {
+      if (!text || text.length < 30) return 0;
+      const chunkSize = 650;
+      const overlap = 120;
+      let added = 0;
+      // Aynı kaynaktan eski parçaları temizle
+      RAG_CHUNKS = RAG_CHUNKS.filter(c => c.source !== sourceName);
+      for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+        const chunk = text.slice(i, i + chunkSize).trim();
+        if (chunk.length < 40) continue;
+        RAG_CHUNKS.push({ source: sourceName, text: chunk, tokens: tokenizeText(chunk) });
+        added++;
+        if (added >= 40) break; // tarayıcı kotasını korumak için dosya başı sınır
+      }
+      localStorage.setItem('omni_rag_chunks', JSON.stringify(RAG_CHUNKS.slice(-400)));
+      updateHeaderStatus();
+      return added;
+    }
+
+    function retrieveRagContext(query, topK = 4) {
+      if (!document.getElementById('ragEnabledToggle').checked || RAG_CHUNKS.length === 0) return [];
+      const qTokens = tokenizeText(query);
+      if (qTokens.length === 0) return [];
+      const scored = RAG_CHUNKS.map(chunk => {
+        let hits = 0;
+        const tokenSet = new Set(chunk.tokens);
+        qTokens.forEach(qt => { if (tokenSet.has(qt)) hits++; });
+        const score = hits / (Math.sqrt(chunk.tokens.length || 1) + 1);
+        return { source: chunk.source, text: chunk.text, score };
+      }).filter(x => x.score > 0);
+      scored.sort((a, b) => b.score - a.score);
+      return scored.slice(0, topK);
+    }
+
+    function clearRagIndex() {
+      RAG_CHUNKS = [];
+      localStorage.removeItem('omni_rag_chunks');
+      updateHeaderStatus();
+      document.getElementById('ragTestOutput').innerHTML = '';
+    }
+
+    async function searchAllGitHub() {
+      const q = document.getElementById('ghSearchInput').value.trim();
+      if (!q) return;
+      const box = document.getElementById('ghSearchResults');
+      box.innerHTML = '<div class="text-xs text-sky-400">⏳ Tüm GitHub taranıyor...</div>';
+      const headers = { 'Accept': 'application/vnd.github+json' };
+      if (cfg.ghtoken) headers['Authorization'] = `Bearer ${cfg.ghtoken}`;
+      try {
+        const r = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&per_page=10`, { headers });
+        const d = await r.json();
+        if (d.message && !d.items) throw new Error(d.message);
+        box.innerHTML = '';
+        (d.items || []).forEach(repo => {
+          const row = document.createElement('div');
+          row.className = 'p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-start gap-2';
+          row.innerHTML = `
+            <div class="min-w-0">
+              <a href="${repo.html_url}" target="_blank" class="font-bold text-sky-400 hover:underline text-xs">${repo.full_name}</a>
+              <span class="text-[10px] text-amber-400 ml-2">⭐ ${repo.stargazers_count}</span>
+              <p class="text-[11px] text-slate-300 mt-0.5 line-clamp-2">${repo.description || 'Açıklama yok'}</p>
+            </div>
+            <button class="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg">
+              📥 İndeksle (RAG)
+            </button>
+          `;
+          row.querySelector('button').onclick = () => indexGitHubRepo(repo.full_name, repo.default_branch || 'main');
+          box.appendChild(row);
+        });
+      } catch (e) {
+        box.innerHTML = `<div class="text-xs text-rose-400">Hata: ${e.message}</div>`;
+      }
+    }
+
+    async function indexGitHubRepo(fullName, branch) {
+      const headers = { 'Accept': 'application/vnd.github.raw' };
+      if (cfg.ghtoken) headers['Authorization'] = `Bearer ${cfg.ghtoken}`;
+      try {
+        let totalAdded = 0;
+        const readmeRes = await fetch(`https://api.github.com/repos/${fullName}/readme`, { headers });
+        if (readmeRes.ok) {
+          const readmeText = await readmeRes.text();
+          totalAdded += addDocumentToRag(`github:${fullName}/README.md`, readmeText);
+        }
+        const treeRes = await fetch(`https://api.github.com/repos/${fullName}/git/trees/${branch}?recursive=1`, {
+          headers: cfg.ghtoken ? { 'Authorization': `Bearer ${cfg.ghtoken}` } : {}
+        });
+        if (treeRes.ok) {
+          const treeData = await treeRes.json();
+          const codeFiles = (treeData.tree || [])
+            .filter(f => f.type === 'blob' && /\.(js|ts|py|html|md|json)$/i.test(f.path) && f.size < 35000)
+            .slice(0, 4);
+          for (const f of codeFiles) {
+            const raw = await fetch(`https://raw.githubusercontent.com/${fullName}/${branch}/${f.path}`);
+            if (raw.ok) totalAdded += addDocumentToRag(`github:${fullName}/${f.path}`, await raw.text());
+          }
+        }
+        logAgent(`🧠 RAG: ${fullName} reposundan ${totalAdded} parça indekslendi.`);
+        alert(`✅ ${fullName} RAG indeksine eklendi (${totalAdded} parça).`);
+      } catch (e) {
+        alert('İndeksleme hatası: ' + e.message);
+      }
+    }
+
+    async function indexWindowsFolderIntoRag() {
+      if (!winDirHandle) {
+        await connectWindowsFolder();
+        if (!winDirHandle) return;
+      }
+      let total = 0;
+      for await (const entry of winDirHandle.values()) {
+        if (entry.kind === 'file' && /\.(html|js|ts|py|md|json|css)$/i.test(entry.name)) {
+          const file = await entry.getFile();
+          if (file.size < 80000) {
+            total += addDocumentToRag(`win:${winDirHandle.name}/${entry.name}`, await file.text());
+          }
+        }
+      }
+      alert(`✅ Windows klasöründen ${total} parça RAG indeksine eklendi!`);
+    }
+
+    function testRagSearch() {
+      const q = document.getElementById('ragTestQuery').value.trim();
+      const hits = retrieveRagContext(q, 5);
+      const out = document.getElementById('ragTestOutput');
+      out.innerHTML = hits.length ? '' : '<div class="text-slate-500">Eşleşen RAG parçası bulunamadı.</div>';
+      hits.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'p-2 rounded bg-slate-900 border border-slate-800';
+        div.innerHTML = `<div class="text-emerald-400 font-bold">${h.source} (Skor: ${h.score.toFixed(3)})</div><div class="text-slate-300 mt-1 font-mono text-[10px]">${escapeHtml(h.text)}</div>`;
+        out.appendChild(div);
+      });
+    }
+
+    // 4.8. ADAPTİF + MANUEL 5-MODLU NÖRAL PARAMETRE MOTORU & DONANIM TELEMETRİSİ
+    async function refreshTelemetry() {
+      const badge = document.getElementById('telemetryBadge');
+      if (!badge) return;
+      try {
+        const res = await fetch('/api/telemetry');
+        if (!res.ok) throw new Error('offline');
+        const payload = await res.json();
+        const t = payload.telemetry || payload;
+        badge.innerText = `💻 CPU ${t.cpu_cores} Çekirdek • RAM %${t.ram_pct} (${t.ram_used_mb}/${t.ram_total_mb}MB) • Disk ${t.disk_free_gb}GB Boş`;
+        badge.className = 'hidden md:inline-block text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-mono';
+      } catch (_) {
+        badge.innerText = '💻 Köprü Telemetrisi: Bekleniyor';
+        badge.className = 'hidden md:inline-block text-[10px] px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-mono';
+      }
+    }
+
+    const NEURAL_PRESETS = {
+      chat:     { id: 'chat',     label: '💬 Hızlı Sohbet',  short: 'Sohbet',    temp: 0.75, topP: 0.90, topK: 40, maxTokens: 1024,  note: '💬 Doğal & Hızlı Diyalog: 1K token sınırı API hızını 3x artırır, gereksiz lafı keser.' },
+      code:     { id: 'code',     label: '💻 Kod & Sistem',   short: 'Kod',       temp: 0.10, topP: 0.80, topK: 15, maxTokens: 32768, note: '🛡️ Sıfır Halüsinasyon Kilidi: Düşük sıcaklık (0.10) + dar keskinlik (Top-K: 15) + 32K kapasite aktif.' },
+      design:   { id: 'design',   label: '🎨 Tasarım UI/UX',  short: 'Tasarım',   temp: 0.90, topP: 0.92, topK: 45, maxTokens: 16384, note: '🎨 Estetik & Tutarlılık: Renk, tipografi ve tek parça zengin HTML/CSS için 16K kapasite.' },
+      ideation: { id: 'ideation', label: '💡 Fikir & Ar-Ge',  short: 'Fikir',     temp: 1.35, topP: 0.95, topK: 64, maxTokens: 8192,  note: '💡 Çapraz Disiplin İnovasyonu: Standart kalıpları kırar, 8K token ile kapsamlı fikirler üretir.' },
+      ultra:    { id: 'ultra',    label: '⚡ Ultra Vizyoner', short: 'Vizyoner',  temp: 1.75, topP: 0.85, topK: 35, maxTokens: 8192,  note: '⚡ Entropi Korumalı Kuantum Mod: Sıcaklık 1.75 iken Havuz (0.85) ve Keskinlik (35) dilbilgisini korur!' }
+    };
+
+    window.OmniNeural = {
+      adaptive: true,
+      activePreset: 'chat',
+      current: { temp: 0.75, topP: 0.90, topK: 40, maxTokens: 1024 },
+
+      initUI() {
+        const box = document.getElementById('omniPresetContainer');
+        if (!box) return;
+        box.innerHTML = '';
+        Object.values(NEURAL_PRESETS).forEach(p => {
+          const btn = document.createElement('button');
+          btn.id = 'presetBtn_' + p.id;
+          btn.onclick = () => this.selectPreset(p.id, false);
+          const tokStr = p.maxTokens >= 1024 ? Math.round(p.maxTokens / 1024) + 'K' : p.maxTokens;
+          btn.innerHTML = `<div class="font-bold">${p.label}</div><div class="text-[9px] opacity-80">T:${p.temp.toFixed(2)} • ${tokStr}</div>`;
+          box.appendChild(btn);
+        });
+        this.syncUI();
+      },
+
+      toggleAdaptive() {
+        this.adaptive = !this.adaptive;
+        this.syncUI();
+      },
+
+      applyEntropyGuard() {
+        let guarded = false;
+        if (this.current.temp >= 1.6) {
+          if (this.current.topP > 0.86) { this.current.topP = 0.85; guarded = true; }
+          if (this.current.topK > 40)   { this.current.topK = 35;   guarded = true; }
+        }
+        return guarded;
+      },
+
+      selectPreset(key, fromAdaptive = false) {
+        const p = NEURAL_PRESETS[key] || NEURAL_PRESETS.chat;
+        this.activePreset = p.id;
+        this.current = { temp: p.temp, topP: p.topP, topK: p.topK, maxTokens: p.maxTokens };
+        this.applyEntropyGuard();
+        this.syncUI(p.note);
+      },
+
+      onManualSlide() {
+        this.adaptive = false;
+        this.current = {
+          temp: parseFloat(document.getElementById('rngTemp').value),
+          topP: parseFloat(document.getElementById('rngTopP').value),
+          topK: parseInt(document.getElementById('rngTopK').value, 10),
+          maxTokens: parseInt(document.getElementById('rngTokens').value, 10)
+        };
+        const guarded = this.applyEntropyGuard();
+        const customNote = guarded
+          ? '🛡️ Otomatik Entropi Koruması Devrede: Sıcaklık ≥ 1.60 olduğu için kelime bozulmasını önlemek adına Top-P (0.85) ve Top-K (35) daraltıldı!'
+          : `🎛️ Manuel Kontrol Aktif (T:${this.current.temp.toFixed(2)}, Top-P:${this.current.topP.toFixed(2)}, Top-K:${this.current.topK}).`;
+        this.syncUI(customNote);
+      },
+
+      detectIntent(text = '', agentId = '') {
+        if (!this.adaptive) return { preset: this.activePreset, reason: 'Manuel Mod' };
+        const q = (text || '').toLowerCase();
+        let target = 'chat';
+        let reason = 'Genel Sohbet Algılandı';
+
+        if (/(\bultra\b|vizyoner|fütürist|kuantum|çığır|radikal|manifesto|yeni paradigma|1\.75|1\.8|2\.0)/i.test(q)) {
+          target = 'ultra';
+          reason = '⚡ Ultra Vizyoner Niyet Algılandı';
+        } else if (/(fikir|öneri|inovatif|beyin fırtınası|strateji|senaryo|konsept|keşfet|fırsat|ar-ge|yaratıcı)/i.test(q)) {
+          target = 'ideation';
+          reason = '💡 Fikir & Ar-Ge Niyeti Algılandı';
+        } else if (/(tasarım|dizayn|arayüz|ui|ux|tema|renk|css|layout|bento|animasyon|logo|görsel|stil|estetik)/i.test(q) || agentId === 'designer') {
+          target = 'design';
+          reason = '🎨 Tasarım & UI/UX Niyeti Algılandı';
+        } else if (/(kod|yaz|script|fonksiyon|bug|hata|düzelt|refactor|api|html|js|python|powershell|gradle|apk|exe|dosya|oku|incele|analiz|sistem|mimari|terminal|git)/i.test(q) || ['coder', 'architect', 'security'].includes(agentId)) {
+          target = 'code';
+          reason = '💻 Kod, Dosya & Sistem Mühendisliği Algılandı';
+        }
+        this.selectPreset(target, true);
+        const detEl = document.getElementById('omniDetectedIntent');
+        if (detEl) detEl.innerText = `${reason} ➔ ${NEURAL_PRESETS[target].label} (T:${this.current.temp.toFixed(2)}, Max:${Math.round(this.current.maxTokens / 1024)}K)`;
+        return { preset: target, reason };
+      },
+
+      getGenerationConfig(modelOutputLimit = 32768) {
+        this.applyEntropyGuard();
+        return {
+          temperature: Number(this.current.temp.toFixed(2)),
+          topP: Number(this.current.topP.toFixed(2)),
+          topK: Math.max(1, Math.round(this.current.topK)),
+          maxOutputTokens: Math.min(modelOutputLimit || 32768, this.current.maxTokens || 8192)
+        };
+      },
+
+      syncUI(customNotice = null) {
+        const adaptiveBtn = document.getElementById('omniAdaptiveToggle');
+        if (adaptiveBtn) {
+          adaptiveBtn.innerText = this.adaptive ? '🤖 ADAPTİF: AÇIK' : '🎛️ MANUEL KİLİT';
+          adaptiveBtn.className = this.adaptive
+            ? 'bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-lg text-[11px]'
+            : 'bg-amber-500 text-slate-950 font-bold px-3 py-1 rounded-lg text-[11px]';
+        }
+
+        Object.values(NEURAL_PRESETS).forEach(p => {
+          const btn = document.getElementById('presetBtn_' + p.id);
+          if (!btn) return;
+          const active = this.activePreset === p.id;
+          btn.className = active
+            ? 'p-2 rounded-lg border text-left transition bg-emerald-500/20 border-emerald-400 text-emerald-200 shadow-lg shadow-emerald-500/10'
+            : 'p-2 rounded-lg border text-left transition bg-slate-900/90 border-slate-800 text-slate-400 hover:border-slate-600';
+        });
+
+        const setEl = (id, val) => { const e = document.getElementById(id); if (e) e.value = val; };
+        const setTxt = (id, val) => { const e = document.getElementById(id); if (e) e.innerText = val; };
+
+        setEl('rngTemp', this.current.temp);
+        setEl('rngTopP', this.current.topP);
+        setEl('rngTopK', this.current.topK);
+        setEl('rngTokens', this.current.maxTokens);
+
+        const tokLabel = this.current.maxTokens >= 1024 ? (this.current.maxTokens / 1024).toFixed(this.current.maxTokens % 1024 === 0 ? 0 : 1) + 'K' : String(this.current.maxTokens);
+        setTxt('valTemp', this.current.temp.toFixed(2));
+        setTxt('valTopP', this.current.topP.toFixed(2));
+        setTxt('valTopK', String(this.current.topK));
+        setTxt('valTokens', tokLabel);
+
+        const p = NEURAL_PRESETS[this.activePreset] || NEURAL_PRESETS.chat;
+        setTxt('neuralSummaryBadge', `🧬 ${this.adaptive ? 'Adaptif' : 'Manuel'}: ${p.short} (${this.current.temp.toFixed(2)} • ${tokLabel})`);
+
+        const noticeEl = document.getElementById('omniEntropyNotice');
+        if (noticeEl) noticeEl.innerText = customNotice || p.note;
+      }
+    };
+
+    // 5. EVRENSEL AI ÇAĞRI MOTORU (Gemini SSE Akışı / Claude / OpenAI / Ollama + RAG + Adaptif Parametre)
+    async function callUniversalAI(systemPrompt, messagesArray, options = {}) {
+      const modelId = document.getElementById('modelSelect').value;
+      const meta = MODEL_META[modelId] || { provider: 'gemini', outputLimit: 32768 };
+
+      const lastUserMsg = [...messagesArray].reverse().find(m => m.role === 'user')?.content || '';
+      if (options.preset) {
+        OmniNeural.selectPreset(options.preset, true);
+      } else if (!options.skipIntentDetect) {
+        OmniNeural.detectIntent(lastUserMsg, selectedAgent?.id || '');
+      }
+      const genCfg = options.genConfig || OmniNeural.getGenerationConfig(meta.outputLimit || 32768);
+
+      const ragHits = retrieveRagContext(lastUserMsg, 4);
+      const ragBlock = ragHits.length
+        ? `\n\n[RAG BİLGİ TABANI BAĞLAMI]:\n${ragHits.map((h, i) => `(${i + 1}) Kaynak: ${h.source}\n${h.text}`).join('\n---\n')}`
+        : '';
+      const fullSystem = systemPrompt + ragBlock;
+
+      if (meta.provider === 'ollama' || modelId.startsWith('ollama:')) {
+        const localName = meta.modelName || modelId.replace(/^ollama:/, '');
+        const res = await fetch(`${cfg.ollama.replace(/\/$/, '')}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: localName,
+            stream: false,
+            messages: [{ role: 'system', content: fullSystem }, ...messagesArray],
+            options: { temperature: genCfg.temperature, top_p: genCfg.topP, top_k: genCfg.topK, num_predict: genCfg.maxOutputTokens }
+          })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        document.getElementById('tokenStats').innerText = `🖥️ ${localName}`;
+        const out = data.message?.content || '';
+        if (options.onStream) options.onStream(out);
+        return out;
+      }
+
+      if (meta.provider === 'claude') {
+        if (!cfg.claude) throw new Error('Anthropic Claude API Key eksik!');
+        const claudeMsgs = messagesArray.map(m => {
+          const blocks = [];
+          (m.attachments || []).forEach(att => {
+            if (att.mime.startsWith('image/') && att.base64) {
+              blocks.push({ type: 'image', source: { type: 'base64', media_type: att.mime, data: att.base64 } });
+            } else if (att.textContent) {
+              blocks.push({ type: 'text', text: `[DOSYA: ${att.name}]\n${att.textContent}` });
+            }
+          });
+          blocks.push({ type: 'text', text: m.content });
+          return { role: m.role, content: blocks };
+        });
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': cfg.claude,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: meta.modelName,
+            max_tokens: Math.min(meta.outputLimit || 16384, genCfg.maxOutputTokens),
+            temperature: Math.min(1.0, genCfg.temperature),
+            top_p: genCfg.topP,
+            top_k: genCfg.topK,
+            system: fullSystem,
+            messages: claudeMsgs
+          })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        document.getElementById('tokenStats').innerText = `🧠 Claude (${data.usage?.output_tokens || 0} tok)`;
+        const out = data.content?.[0]?.text || '';
+        if (options.onStream) options.onStream(out);
+        return out;
+      }
+
+      if (meta.provider === 'openai') {
+        if (!cfg.openai) throw new Error('OpenAI/OpenRouter API Key eksik!');
+        const base = cfg.openai_url.replace(/\/$/, '');
+        const oaiMsgs = messagesArray.map(m => {
+          const hasMedia = (m.attachments || []).some(a => a.mime.startsWith('image/'));
+          if (!hasMedia && !(m.attachments || []).length) return { role: m.role, content: m.content };
+          const contentArr = [{ type: 'text', text: m.content }];
+          (m.attachments || []).forEach(att => {
+            if (att.mime.startsWith('image/') && att.dataUrl) {
+              contentArr.push({ type: 'image_url', image_url: { url: att.dataUrl } });
+            } else if (att.textContent) {
+              contentArr[0].text += `\n\n[DOSYA: ${att.name}]\n${att.textContent}`;
+            }
+          });
+          return { role: m.role, content: hasMedia ? contentArr : contentArr[0].text };
+        });
+        const res = await fetch(`${base}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${cfg.openai}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: meta.modelName,
+            messages: [{ role: 'system', content: fullSystem }, ...oaiMsgs],
+            temperature: genCfg.temperature,
+            top_p: genCfg.topP,
+            max_tokens: genCfg.maxOutputTokens
+          })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        document.getElementById('tokenStats').innerText = `🌐 ${meta.modelName}`;
+        const out = data.choices?.[0]?.message?.content || '';
+        if (options.onStream) options.onStream(out);
+        return out;
+      }
+
+      // Google Gemini (Tam Multimodal + Gerçek Zamanlı SSE Streaming)
+      if (!cfg.gemini) { toggleModal('settingsModal'); throw new Error('Google AI Studio API Anahtarı eksik!'); }
+      const maxOut = Math.min(65536, genCfg.maxOutputTokens || meta.outputLimit || 8192);
+      const contents = messagesArray.map(m => {
+        const parts = [];
+        (m.attachments || []).forEach(att => {
+          if (att.base64) {
+            parts.push({ inlineData: { mimeType: att.mime, data: att.base64 } });
+          } else if (att.textContent) {
+            parts.push({ text: `[EK DOSYA: ${att.name}]\n${att.textContent}` });
+          }
+        });
+        parts.push({ text: m.content || 'Ekteki medyayı/dosyayı analiz et.' });
+        return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+      });
+
+      const payload = {
+        systemInstruction: { parts: [{ text: fullSystem }] },
+        contents,
+        generationConfig: {
+          temperature: genCfg.temperature,
+          topP: genCfg.topP,
+          topK: genCfg.topK,
+          maxOutputTokens: maxOut
+        }
+      };
+
+      if (typeof options.onStream === 'function') {
+        const streamRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:streamGenerateContent?alt=sse&key=${encodeURIComponent(cfg.gemini)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!streamRes.ok) {
+          const errTxt = await streamRes.text();
+          let errMsg = errTxt;
+          try { errMsg = JSON.parse(errTxt).error?.message || errTxt; } catch (_) {}
+          throw new Error(errMsg || `HTTP ${streamRes.status}`);
+        }
+        const reader = streamRes.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let fullText = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (!line.startsWith('data:')) continue;
+            const jsonStr = line.slice(5).trim();
+            if (!jsonStr || jsonStr === '[DONE]') continue;
+            try {
+              const chunk = JSON.parse(jsonStr);
+              if (chunk.error) throw new Error(chunk.error.message);
+              const piece = (chunk.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+              if (piece) {
+                fullText += piece;
+                options.onStream(fullText);
+              }
+              if (chunk.usageMetadata) {
+                const u = chunk.usageMetadata;
+                document.getElementById('tokenStats').innerText = `G:${u.promptTokenCount || 0} / Ç:${u.candidatesTokenCount || 0}`;
+              }
+            } catch (parseErr) {
+              if (parseErr.message && !/JSON/i.test(parseErr.message)) throw parseErr;
+            }
+          }
+        }
+        return fullText;
+      }
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${encodeURIComponent(cfg.gemini)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const usage = data.usageMetadata;
+      if (usage) document.getElementById('tokenStats').innerText = `G:${usage.promptTokenCount} / Ç:${usage.candidatesTokenCount}`;
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
+
+    // 6. SOHBET MOTORU (MULTİMODAL DOSYA/FOTO/VİDEO + KOD BLOĞU AYRIŞTIRMA)
+    let CHAT_HISTORY = JSON.parse(localStorage.getItem('omni_chat_history') || '[]');
+    let PENDING_ATTACHMENTS = [];
+
+    function renderPendingAttachments() {
+      const bar = document.getElementById('chatAttachmentsBar');
+      if (PENDING_ATTACHMENTS.length === 0) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+      bar.classList.remove('hidden');
+      bar.innerHTML = '';
+      PENDING_ATTACHMENTS.forEach((att, idx) => {
+        const chip = document.createElement('div');
+        chip.className = 'flex items-center gap-1.5 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-[11px]';
+        const icon = att.mime.startsWith('image/') && att.dataUrl
+          ? `<img src="${att.dataUrl}" class="w-6 h-6 rounded object-cover" />`
+          : att.mime.startsWith('video/') ? '🎬' : att.mime.startsWith('audio/') ? '🎵' : '📄';
+        chip.innerHTML = `${icon}<span class="max-w-[120px] truncate text-slate-200">${escapeHtml(att.name)}</span><button class="text-rose-400 font-bold ml-1">✕</button>`;
+        chip.querySelector('button').onclick = () => { PENDING_ATTACHMENTS.splice(idx, 1); renderPendingAttachments(); };
+        bar.appendChild(chip);
+      });
+    }
+
+    async function handleChatFiles(fileList) {
+      for (const file of Array.from(fileList || [])) {
+        if (file.size > 20 * 1024 * 1024) { alert(`${file.name} 20MB sınırını aşıyor.`); continue; }
+        const isText = /\.(txt|md|js|ts|py|html|css|json|csv|xml)$/i.test(file.name) || file.type.startsWith('text/');
+        if (isText) {
+          const textContent = await file.text();
+          PENDING_ATTACHMENTS.push({ name: file.name, mime: file.type || 'text/plain', textContent });
+        } else {
+          const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
+          const base64 = dataUrl.split(',')[1];
+          PENDING_ATTACHMENTS.push({ name: file.name, mime: file.type || 'application/octet-stream', dataUrl, base64 });
+        }
+      }
+      renderPendingAttachments();
+    }
+
+    async function capturePhotoToChat() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const vid = document.createElement('video');
+        vid.srcObject = stream;
+        await vid.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = vid.videoWidth || 640;
+        canvas.height = vid.videoHeight || 480;
+        canvas.getContext('2d').drawImage(vid, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        PENDING_ATTACHMENTS.push({ name: `kamera_${Date.now()}.jpg`, mime: 'image/jpeg', dataUrl, base64: dataUrl.split(',')[1] });
+        renderPendingAttachments();
+      } catch (e) { alert('Kamera hatası: ' + e.message); }
+    }
+
+    const dropZone = document.getElementById('chatDropZone');
+    if (dropZone) {
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('ring-2', 'ring-sky-500'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('ring-2', 'ring-sky-500'));
+      dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('ring-2', 'ring-sky-500'); handleChatFiles(e.dataTransfer.files); });
+    }
+
+    function escapeHtml(s) {
+      return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderChatMessages() {
+      const box = document.getElementById('chatMessages');
+      if (CHAT_HISTORY.length === 0) return;
+      box.innerHTML = '';
+      CHAT_HISTORY.forEach((msg, msgIdx) => {
+        const wrap = document.createElement('div');
+        wrap.className = `p-3 rounded-xl border ${msg.role === 'user' ? 'bg-sky-950/50 border-sky-700/50 ml-6' : 'bg-slate-900/90 border-slate-800 mr-2'}`;
+        const header = `<div class="text-[10px] font-bold mb-1 ${msg.role === 'user' ? 'text-sky-300' : 'text-emerald-400'}">${msg.role === 'user' ? '👤 Sen' : '🤖 OMNI-APEX AI'}</div>`;
+        const body = document.createElement('div');
+        body.className = 'space-y-2 leading-relaxed';
+
+        if (msg.attachments?.length) {
+          const attRow = document.createElement('div');
+          attRow.className = 'flex flex-wrap gap-1.5 mb-1';
+          msg.attachments.forEach(a => {
+            if (a.mime.startsWith('image/') && a.dataUrl) {
+              attRow.innerHTML += `<img src="${a.dataUrl}" class="max-h-32 rounded-lg border border-slate-700" />`;
+            } else if (a.mime.startsWith('video/') && a.dataUrl) {
+              attRow.innerHTML += `<video src="${a.dataUrl}" controls class="max-h-36 rounded-lg border border-slate-700"></video>`;
+            } else if (a.mime.startsWith('audio/') && a.dataUrl) {
+              attRow.innerHTML += `<audio src="${a.dataUrl}" controls class="h-8"></audio>`;
+            } else {
+              attRow.innerHTML += `<span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px]">📎 ${escapeHtml(a.name)}</span>`;
+            }
+          });
+          body.appendChild(attRow);
+        }
+
+        // Kod bloklarını (bash, html, python, yaml, ssh, bat, markdown vb.) ve [[WRITE_FILE]] yamalarını ayrı kartta göster
+        const parts = msg.content.split(/(\[\[WRITE_FILE:\s*[^\]]+\]\][\s\S]*?\[\[\/WRITE_FILE\]\]|```[\s\S]*?```)/g);
+        parts.forEach((part) => {
+          const writeMatch = part.match(/^\[\[WRITE_FILE:\s*([^\]]+)\]\]([\s\S]*?)\[\[\/WRITE_FILE\]\]$/i);
+          if (writeMatch) {
+            const relPath = writeMatch[1].trim().replace(/^["'`]|["'`]$/g, '');
+            const rawBody = writeMatch[2].replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+            const patchCard = document.createElement('div');
+            patchCard.className = 'rounded-lg overflow-hidden border border-emerald-500/60 bg-slate-950';
+            patchCard.innerHTML = `
+              <div class="px-2.5 py-1.5 bg-emerald-950/60 flex justify-between items-center flex-wrap gap-1 border-b border-emerald-500/30">
+                <span class="text-[10px] font-mono font-bold text-emerald-300">📝 DOSYA YAMASI: ${escapeHtml(relPath)} (${rawBody.split('\n').length} satır)</span>
+                <div class="flex gap-1 items-center">
+                  <span class="patch-status text-[10px] text-slate-400"></span>
+                  <button class="btn-apply-patch text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-0.5 rounded">💾 Yedekle & Dosyaya Yaz</button>
+                </div>
+              </div>
+              <pre class="p-2.5 text-[11px] font-mono text-sky-200 overflow-x-auto max-h-64 select-all">${escapeHtml(rawBody)}</pre>
+            `;
+            const statusEl = patchCard.querySelector('.patch-status');
+            patchCard.querySelector('.btn-apply-patch').onclick = (e) => applyChatWriteFile(relPath, rawBody, e.target, statusEl);
+            body.appendChild(patchCard);
+          } else if (part.startsWith('```') && part.endsWith('```')) {
+            const inner = part.slice(3, -3);
+            const firstNl = inner.indexOf('\n');
+            const lang = (firstNl > -1 ? inner.slice(0, firstNl).trim() : 'code') || 'code';
+            const codeText = firstNl > -1 ? inner.slice(firstNl + 1) : inner;
+            const isExecLang = /^(bash|sh|zsh|powershell|ps1|cmd|bat|ssh|python|py)$/i.test(lang);
+
+            const codeCard = document.createElement('div');
+            codeCard.className = 'rounded-lg overflow-hidden border border-slate-700 bg-slate-950';
+            codeCard.innerHTML = `
+              <div class="px-2.5 py-1.5 bg-slate-800/90 flex justify-between items-center flex-wrap gap-1">
+                <span class="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-slate-900 text-amber-300 border border-slate-700">${escapeHtml(lang)}</span>
+                <div class="flex gap-1 flex-wrap">
+                  <button class="btn-copy text-[10px] bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded">📋 Kopyala</button>
+                  <button class="btn-studio text-[10px] bg-sky-600 hover:bg-sky-500 text-white px-2 py-0.5 rounded">⚡ Stüdyo</button>
+                  ${isExecLang ? '<button class="btn-exec text-[10px] bg-amber-600 hover:bg-amber-500 text-white px-2 py-0.5 rounded">▶️ Terminal</button>' : ''}
+                  <button class="btn-gh text-[10px] bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-0.5 rounded">🚀 GitHub</button>
+                  <button class="btn-win text-[10px] bg-indigo-700 hover:bg-indigo-600 text-white px-2 py-0.5 rounded">🖥️ Win</button>
+                  <button class="btn-and text-[10px] bg-teal-700 hover:bg-teal-600 text-white px-2 py-0.5 rounded">🤖 Android</button>
+                </div>
+              </div>
+              <pre class="p-2.5 text-[11px] font-mono text-emerald-300 overflow-x-auto max-h-72 select-all">${escapeHtml(codeText)}</pre>
+            `;
+            codeCard.querySelector('.btn-copy').onclick = (e) => copyTextWithFeedback(codeText, e.target);
+            codeCard.querySelector('.btn-studio').onclick = () => sendCodeToStudio(codeText);
+            const execBtn = codeCard.querySelector('.btn-exec');
+            if (execBtn) execBtn.onclick = () => { switchMainView('terminal'); runLocalCommand(codeText); };
+            codeCard.querySelector('.btn-gh').onclick = () => { sendCodeToStudio(codeText); buildCloudMultiPlatform(); };
+            codeCard.querySelector('.btn-win').onclick = () => { document.getElementById('codeWorkspace').value = codeText; writeCodeToWindowsFolder(); };
+            codeCard.querySelector('.btn-and').onclick = () => { document.getElementById('codeWorkspace').value = codeText; syncToAndroidAssets(); };
+            body.appendChild(codeCard);
+          } else if (part.trim()) {
+            const p = document.createElement('div');
+            p.className = 'whitespace-pre-wrap text-slate-200';
+            p.textContent = part.trim();
+            body.appendChild(p);
+          }
+        });
+
+        // Cevap altı aksiyonları (Kopyala, Yeniden Üret, Sesli Oku)
+        const footer = document.createElement('div');
+        footer.className = 'mt-2 pt-1.5 border-t border-slate-800/70 flex gap-2 flex-wrap text-[10px]';
+        footer.innerHTML = `<button class="f-copy text-slate-400 hover:text-white">📋 Cevabı Kopyala</button>`;
+        footer.querySelector('.f-copy').onclick = (e) => copyTextWithFeedback(msg.content, e.target);
+        if (msg.role === 'assistant') {
+          const regenBtn = document.createElement('button');
+          regenBtn.className = 'text-sky-400 hover:text-sky-300';
+          regenBtn.innerText = '🔄 Yeniden Üret';
+          regenBtn.onclick = () => regenerateResponse(msgIdx);
+          const ttsBtn = document.createElement('button');
+          ttsBtn.className = 'text-emerald-400 hover:text-emerald-300';
+          ttsBtn.innerText = '🔊 Sesli Oku';
+          ttsBtn.onclick = () => speakText(msg.content);
+          footer.appendChild(regenBtn);
+          footer.appendChild(ttsBtn);
+        }
+
+        wrap.innerHTML = header;
+        wrap.appendChild(body);
+        wrap.appendChild(footer);
+        box.appendChild(wrap);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function applyChatWriteFile(relPath, rawContent, btnEl, statusEl) {
+      if (!(await checkLocalBridge())) return alert('Yerel PowerShell köprüsü bağlı değil (baslat.bat ile açın).');
+      let clean = rawContent.trim();
+      const fenced = clean.match(/^```[a-zA-Z0-9_-]*\r?\n([\s\S]*?)\r?\n```$/);
+      if (fenced) clean = fenced[1];
+      if (!confirm(`"${relPath}" dosyası otomatik yedek (_backup) alınarak güncellensin mi?`)) return;
+      btnEl.disabled = true;
+      btnEl.innerText = '⏳ Yazılıyor...';
+      try {
+        const res = await fetch('/api/write-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: relPath, content: clean })
+        });
+        const d = await res.json();
+        if (!res.ok || !d.ok) throw new Error(d.error || 'Yazma başarısız');
+        if (relPath === 'index.html') {
+          await fetch('/api/write-file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'dist/index.html', content: clean }) }).catch(() => {});
+          await fetch('/api/write-file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'android/app/src/main/assets/public/index.html', content: clean }) }).catch(() => {});
+        }
+        btnEl.innerText = '✅ Uygulandı';
+        if (statusEl) statusEl.innerText = d.backup ? '🛡️ Yedek alındı' : '✅ Yeni dosya';
+        logAgent(`💾 Sohbet yaması uygulandı: ${relPath}`);
+      } catch (e) {
+        btnEl.disabled = false;
+        btnEl.innerText = '💾 Yedekle & Dosyaya Yaz';
+        alert('Yazma hatası: ' + e.message);
+      }
+    }
+
+    async function copyTextWithFeedback(text, btnEl) {
+      try {
+        await navigator.clipboard.writeText(text);
+        if (btnEl) {
+          const prev = btnEl.innerText;
+          btnEl.innerText = '✅ Kopyalandı';
+          setTimeout(() => { btnEl.innerText = prev; }, 1400);
+        }
+      } catch (e) { alert('Kopyalama hatası: ' + e.message); }
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return alert('Sesli okuma desteklenmiyor.');
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/```[\s\S]*?```/g, ' Kod bloğu. ').slice(0, 1500));
+      u.lang = 'tr-TR';
+      window.speechSynthesis.speak(u);
+    }
+
+    async function buildLiveSystemContext() {
+      let filesSummary = 'Yerel köprü henüz bağlı değil.';
+      const bridgeUp = await checkLocalBridge();
+      if (bridgeUp) {
+        try {
+          const r = await fetch('/api/list-files');
+          if (r.ok) {
+            const d = await r.json();
+            filesSummary = `Köprü Aktif (${d.root})\nProje Dosyaları:\n- ${(d.files || []).join('\n- ')}`;
+          }
+        } catch (_) {}
+      }
+      return `${selectedAgent.prompt}
+Sen OMNI-APEX STUDIO OS v3.0 içinde çalışan canlı otonom sistem ajanısın.
+Mevcut Durum:
+- Aktif GitHub Hesabı: ${cfg.ghuser || 'Ayarlanmadı'} / Hedef Repo: ${cfg.ghrepo || 'Ayarlanmadı'}
+- Sağlayıcı Anahtarları: Gemini(${cfg.gemini ? 'Var' : 'Yok'}), Claude(${cfg.claude ? 'Var' : 'Yok'}), OpenAI(${cfg.openai ? 'Var' : 'Yok'}), GitHub Token(${cfg.ghtoken ? 'Var' : 'Yok'})
+- ${filesSummary}
+
+Kurallar ve Canlı Araçlar:
+1. Dosya ve ayarlara erişemediğini ASLA SÖYLEME. Çalışma alanındaki bir dosyanın içeriğini okuman gerekiyorsa cevabının başına SADECE \`[[READ_FILE: goreceli/dosya_yolu]]\` yaz (örnek: \`[[READ_FILE: index.html]]\` veya \`[[READ_FILE: omni-bridge.ps1]]\` veya \`[[READ_FILE: package.json]]\`). Sistem o dosyayı gerçek diskten okuyup sana anında iletecektir; ardından gerçek kod üzerinden net analiz veya düzenleme ver.
+2. Kullanıcı çalışma alanındaki bir dosyayı doğrudan güncellemeni/oluşturmanı istediğinde tam güncel dosya içeriğini \`[[WRITE_FILE: goreceli/dosya_yolu]]\n...dosya içeriği...\n[[/WRITE_FILE]]\` bloğuyla ver; kullanıcı tek tıkla otomatik yedeğini (\`_backup\`) alarak diske yazabilecektir.
+3. Tüm kodları, komutları ve şablonları mutlaka uygun dil etiketiyle ayrı kopyalanabilir kod blokları (\`\`\`bash, \`\`\`html, \`\`\`python, \`\`\`yaml, \`\`\`ssh, \`\`\`bat, \`\`\`markdown) halinde üret.`;
+    }
+
+    async function sendChatMessage(overridePrompt = null) {
+      const inp = document.getElementById('chatInput');
+      const text = overridePrompt !== null ? overridePrompt : inp.value.trim();
+      if (!text && PENDING_ATTACHMENTS.length === 0) return;
+      if (overridePrompt === null) inp.value = '';
+      const atts = overridePrompt === null ? [...PENDING_ATTACHMENTS] : [];
+      if (overridePrompt === null) { PENDING_ATTACHMENTS = []; renderPendingAttachments(); }
+
+      const userPrompt = text || 'Ekteki dosya/medyayı analiz et.';
+      CHAT_HISTORY.push({ role: 'user', content: userPrompt, attachments: atts });
+      renderChatMessages();
+
+      const btn = document.getElementById('chatSendBtn');
+      btn.disabled = true;
+      btn.innerText = '⏳...';
+
+      // Canlı Aşama + SSE Akış Balonu oluştur
+      const box = document.getElementById('chatMessages');
+      const liveBubble = document.createElement('div');
+      liveBubble.className = 'p-3 rounded-xl border bg-slate-900/95 border-emerald-500/40 mr-2 space-y-2';
+      liveBubble.innerHTML = `
+        <div class="flex items-center justify-between text-[10px]">
+          <span class="font-bold text-emerald-400">🤖 OMNI-APEX AI • Canlı İcra</span>
+          <span id="liveStepBadge" class="px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 font-mono">⏳ 1/4 Niyet & Parametre Analizi...</span>
+        </div>
+        <div id="liveStepTrail" class="text-[10px] text-slate-400 font-mono space-y-0.5"></div>
+        <div id="liveStreamContent" class="text-xs text-slate-100 whitespace-pre-wrap leading-relaxed"></div>
+      `;
+      box.appendChild(liveBubble);
+      box.scrollTop = box.scrollHeight;
+
+      const setStep = (badgeText, trailLine) => {
+        const b = liveBubble.querySelector('#liveStepBadge');
+        const tr = liveBubble.querySelector('#liveStepTrail');
+        if (b) b.innerText = badgeText;
+        if (tr && trailLine) {
+          const line = document.createElement('div');
+          line.innerText = trailLine;
+          tr.appendChild(line);
+        }
+        box.scrollTop = box.scrollHeight;
+      };
+      const streamOutEl = liveBubble.querySelector('#liveStreamContent');
+
+      try {
+        const intent = OmniNeural.detectIntent(userPrompt, selectedAgent?.id || '');
+        const gc = OmniNeural.getGenerationConfig();
+        setStep('📂 2/4 Çalışma Alanı & RAG Bağlamı Yükleniyor...', `🧬 Mod: ${intent.preset.toUpperCase()} (T:${gc.temperature} | TopP:${gc.topP} | TopK:${gc.topK} | Max:${gc.maxOutputTokens})`);
+
+        const sys = await buildLiveSystemContext();
+        const ragHits = retrieveRagContext(userPrompt, 4);
+        setStep('⚡ 3/4 Model Canlı Akışı Başlatıldı...', `🧠 RAG Bağlamı: ${ragHits.length} parça • Köprü & Dosya Listesi Enjekte Edildi`);
+
+        let workingMsgs = CHAT_HISTORY.slice(-10);
+        let reply = '';
+        for (let hop = 0; hop < 3; hop++) {
+          reply = await callUniversalAI(sys, workingMsgs, {
+            skipIntentDetect: true,
+            genConfig: gc,
+            onStream: (partial) => {
+              if (streamOutEl) streamOutEl.innerText = partial;
+              box.scrollTop = box.scrollHeight;
+            }
+          });
+
+          const fileMatch = reply.match(/\[\[READ_FILE:\s*([^\]]+)\]\]/i);
+          if (!fileMatch || hop >= 2) break;
+          const relPath = fileMatch[1].trim().replace(/^["'`]|["'`]$/g, '');
+          setStep(`📄 4/4 Dosya Okunuyor: ${relPath}`, `🔍 Ajan Diskten Okuyor: ${relPath}`);
+          const fileTxt = await readWorkspaceRelFile(relPath);
+          const snippet = fileTxt
+            ? fileTxt.slice(0, 28000)
+            : `[UYARI: '${relPath}' dosyası okunamadı. Yerel köprünün açık olduğundan ve yolun doğru olduğundan emin ol.]`;
+
+          workingMsgs = [
+            ...workingMsgs,
+            { role: 'assistant', content: reply },
+            { role: 'user', content: `[SİSTEM DOSYA OKUMA ÇIKTISI: ${relPath}]\n\`\`\`\n${snippet}\n\`\`\`\nŞimdi bu gerçek dosya içeriğine dayanarak net ve tam yanıtını üret (tekrar READ_FILE çağırman gerekmiyorsa).` }
+          ];
+          if (streamOutEl) streamOutEl.innerText = `📂 ${relPath} okundu, gerçek kod üzerinden analiz ediliyor...`;
+        }
+
+        CHAT_HISTORY.push({ role: 'assistant', content: reply });
+        const compact = CHAT_HISTORY.slice(-25).map(m => ({
+          role: m.role,
+          content: m.content,
+          attachments: m.attachments?.map(a => ({ name: a.name, mime: a.mime }))
+        }));
+        localStorage.setItem('omni_chat_history', JSON.stringify(compact));
+        renderChatMessages();
+      } catch (e) {
+        CHAT_HISTORY.push({ role: 'assistant', content: `❌ Hata: ${e.message}` });
+        renderChatMessages();
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Gönder ➤';
+      }
+    }
+
+    async function regenerateResponse(assistantIdx) {
+      let prevUser = '';
+      for (let i = assistantIdx - 1; i >= 0; i--) {
+        if (CHAT_HISTORY[i].role === 'user') { prevUser = CHAT_HISTORY[i].content; break; }
+      }
+      if (!prevUser) return;
+      CHAT_HISTORY = CHAT_HISTORY.slice(0, assistantIdx);
+      const btn = document.getElementById('chatSendBtn');
+      btn.disabled = true;
+      btn.innerText = '🔄...';
+      try {
+        const sys = await buildLiveSystemContext();
+        const reply = await callUniversalAI(sys, CHAT_HISTORY.slice(-10));
+        CHAT_HISTORY.push({ role: 'assistant', content: reply });
+        localStorage.setItem('omni_chat_history', JSON.stringify(CHAT_HISTORY.slice(-25)));
+        renderChatMessages();
+      } catch (e) {
+        CHAT_HISTORY.push({ role: 'assistant', content: `❌ Yenileme Hatası: ${e.message}` });
+        renderChatMessages();
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Gönder ➤';
+      }
+    }
+
+    function exportChatJson() {
+      const blob = new Blob([JSON.stringify(CHAT_HISTORY, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `omni-sohbet-${Date.now()}.json`;
+      a.click();
+    }
+
+    function exportChatMarkdown() {
+      const md = CHAT_HISTORY.map(m => `## ${m.role === 'user' ? '👤 Kullanıcı' : '🤖 OMNI-APEX AI'}\n\n${m.content}`).join('\n\n---\n\n');
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `omni-sohbet-${Date.now()}.md`;
+      a.click();
+    }
+
+    function exportChatPdf() {
+      const win = window.open('', '_blank');
+      if (!win) return alert('Açılır pencere engellendi.');
+      const html = CHAT_HISTORY.map(m => `
+        <div style="margin-bottom:16px;padding:12px;border:1px solid #cbd5e1;border-radius:8px;">
+          <strong>${m.role === 'user' ? '👤 Kullanıcı' : '🤖 OMNI-APEX AI'}</strong>
+          <pre style="white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:12px;">${escapeHtml(m.content)}</pre>
+        </div>`).join('');
+      win.document.write(`<!DOCTYPE html><html><head><title>OMNI-APEX Sohbet PDF</title></head><body style="font-family:system-ui;padding:24px;"><h2>OMNI-APEX Sohbet Kaydı</h2>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+      win.document.close();
+    }
+
+    function copyEntireChat() {
+      const txt = CHAT_HISTORY.map(m => `[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
+      navigator.clipboard.writeText(txt).then(() => alert('✅ Tüm sohbet panoya kopyalandı!'));
+    }
+
+    function clearChat() {
+      CHAT_HISTORY = [];
+      localStorage.removeItem('omni_chat_history');
+      document.getElementById('chatMessages').innerHTML = '<div class="text-slate-400 text-xs">Sohbet temizlendi.</div>';
+    }
+
+    function sendCodeToStudio(codeText) {
+      pushSnapshot(document.getElementById('codeWorkspace').value);
+      document.getElementById('codeWorkspace').value = codeText;
+      refreshPreview();
+      switchMainView('studio');
+      toggleStudioSubTab('preview');
+    }
+
+    // 7. GÖRÜNÜM GEÇİŞLERİ & EMÜLATÖR HATA YAKALAYICI
+    function switchMainView(view) {
+      ['chat', 'studio', 'rag', 'agents', 'terminal', 'hardware', 'files'].forEach(v => {
+        document.getElementById('view_' + v).classList.toggle('hidden', v !== view);
+        document.getElementById('nav_' + v).className = v === view ? 'flex-1 min-w-[88px] py-2.5 tab-active' : 'flex-1 min-w-[88px] py-2.5 text-slate-400';
+      });
+      if (view === 'files') { renderSavedProjects(); loadBridgeWorkspaceFiles(); }
+      if (view === 'rag') updateHeaderStatus();
+      if (view === 'terminal') checkLocalBridge();
+    }
+
+    function toggleStudioSubTab(sub) {
+      ['preview', 'code', 'logs'].forEach(s => {
+        document.getElementById('subview_' + s).classList.toggle('hidden', s !== sub);
+        document.getElementById('sub_' + s).className = s === sub
+          ? 'flex-1 py-2 font-bold text-sky-400 border-b-2 border-sky-400'
+          : 'flex-1 py-2 font-bold text-slate-400';
+      });
+    }
+
+    function logAgent(msg) {
+      const box = document.getElementById('subview_logs');
+      const line = document.createElement('div');
+      line.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    let lastRuntimeError = '';
+    window.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'OMNI_PREVIEW_ERROR') {
+        lastRuntimeError = ev.data.message;
+        document.getElementById('runtimeErrorText').innerText = `⚠️ Emülatör Hatası: ${lastRuntimeError}`;
+        document.getElementById('runtimeErrorBanner').classList.remove('hidden');
+        logAgent(`🚨 [EMÜLATÖR HATASI]: ${lastRuntimeError}`);
+      }
+    });
+
+    function refreshPreview() {
+      const code = document.getElementById('codeWorkspace').value;
+      document.getElementById('lineCounter').innerText = code ? code.split('\n').length : 0;
+      document.getElementById('runtimeErrorBanner').classList.add('hidden');
+      lastRuntimeError = '';
+      if (!code.trim()) { document.getElementById('livePreview').srcdoc = ''; return; }
+      const errorBridge = `<script>
+        window.addEventListener('error', function(e) { parent.postMessage({ type: 'OMNI_PREVIEW_ERROR', message: e.message + ' (Satır: ' + e.lineno + ')' }, '*'); });
+        window.addEventListener('unhandledrejection', function(e) { parent.postMessage({ type: 'OMNI_PREVIEW_ERROR', message: 'Promise: ' + (e.reason?.message || e.reason) }, '*'); });
+      <\/script>`;
+      document.getElementById('livePreview').srcdoc = code.includes('<head>') ? code.replace('<head>', '<head>' + errorBridge) : errorBridge + code;
+    }
+
+    const undoStack = [];
+    function pushSnapshot(code) {
+      if (!code || !code.trim()) return;
+      undoStack.push(code);
+      if (undoStack.length > 15) undoStack.shift();
+      updateUndoBtn();
+    }
+    function undoCodeSnapshot() {
+      if (undoStack.length === 0) return;
+      document.getElementById('codeWorkspace').value = undoStack.pop();
+      updateUndoBtn();
+      refreshPreview();
+    }
+    function updateUndoBtn() {
+      const btn = document.getElementById('undoBtn');
+      btn.disabled = undoStack.length === 0;
+      btn.innerText = `↩️ Geri Al (${undoStack.length})`;
+    }
+
+    function cleanHtmlResponse(text) {
+      return text.replace(/^```(?:html)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    }
+
+    async function runAutonomousGeneration(isEvolution) {
+      try {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) return alert('Lütfen bir görev yazın.');
+        const targetMode = document.getElementById('buildTargetMode').value;
+        let existingCode = document.getElementById('codeWorkspace').value;
+        pushSnapshot(existingCode);
+        if (targetMode === 'index.html' && !existingCode) existingCode = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+        logAgent(`${selectedAgent.name} devreye girdi...`);
+        const sys = `${selectedAgent.prompt}\nTam donanım izinli tek parça eksiksiz <!DOCTYPE html> kodu üret. SADECE saf HTML döndür.`;
+        const usr = (isEvolution || targetMode === 'index.html') && existingCode
+          ? `MEVCUT KOD:\n${existingCode}\n\nEKLENECEK ÖZELLİK:\n${prompt}`
+          : prompt;
+        const html = cleanHtmlResponse(await callUniversalAI(sys, [{ role: 'user', content: usr }]));
+        document.getElementById('codeWorkspace').value = html;
+        refreshPreview();
+        logAgent('✅ Kod üretildi ve canlı emülatöre yüklendi.');
+      } catch (e) {
+        logAgent('HATA: ' + e.message);
+        alert(e.message);
+      }
+    }
+
+    async function autoHealRuntimeError() {
+      if (!lastRuntimeError) return;
+      const code = document.getElementById('codeWorkspace').value;
+      pushSnapshot(code);
+      try {
+        const fixed = cleanHtmlResponse(await callUniversalAI(
+          'Sen Kıdemli Hata Ayıklama Uzmanısın. Verilen HTML/JS kodundaki hatayı düzelt ve SADECE <!DOCTYPE html> döndür.',
+          [{ role: 'user', content: `HATA:\n${lastRuntimeError}\n\nKOD:\n${code}` }]
+        ));
+        document.getElementById('codeWorkspace').value = fixed;
+        refreshPreview();
+      } catch (e) { alert(e.message); }
+    }
+
+    async function runMultiAgentPipeline() {
+      try {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) return alert('Görev girin.');
+        pushSnapshot(document.getElementById('codeWorkspace').value);
+        toggleStudioSubTab('logs');
+        logAgent('🐝 1/3 [MİMAR AJAN]: Teknik mimari planlanıyor...');
+        const plan = await callUniversalAI('Sen Baş Yazılım Mimarısın. Modülleri maddeler halinde planla.', [{ role: 'user', content: prompt }]);
+        logAgent('🐝 2/3 [KODLAYICI AJAN]: Tam HTML5/JS koduna dökülüyor...');
+        const rawCode = await callUniversalAI('Sen Kıdemli Geliştiricisin. Sadece saf <!DOCTYPE html> döndür.', [{ role: 'user', content: `İstek: ${prompt}\nPlan:\n${plan}` }]);
+        logAgent('🐝 3/3 [DENETÇİ AJAN]: Güvenlik ve optimizasyon uygulanıyor...');
+        const finalCode = cleanHtmlResponse(await callUniversalAI('Sen Baş Kod Denetçisisin. Eksikleri tamamla ve sadece <!DOCTYPE html> döndür.', [{ role: 'user', content: rawCode }]));
+        document.getElementById('codeWorkspace').value = finalCode;
+        refreshPreview();
+        toggleStudioSubTab('preview');
+        logAgent('✅ 3 Ajanlı üretim tamamlandı!');
+      } catch (e) { logAgent('❌ Zincir Hatası: ' + e.message); }
+    }
+
+    async function runDivergeConvergePipeline() {
+      try {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) return alert('Görev girin.');
+        pushSnapshot(document.getElementById('codeWorkspace').value);
+        toggleStudioSubTab('logs');
+        logAgent('🌩️ FAZ 1 [KAŞİF & ULTRA VİZYONER • T:1.75 / TopP:0.85 / 8K]: Çığır açan tasarım & mimari fikir fırtınası başlatılıyor...');
+        const blueprint = await callUniversalAI(
+          'Sen Kuantum İnovasyon Mimarı ve Baş Tasarımcısın. Sıradan şablonları unut. Kullanıcının isteğini 10x daha ileri taşıyan çarpıcı bir UX konsepti, modüler mimari ve yenilikçi özellik listesi tasarla.',
+          [{ role: 'user', content: prompt }],
+          { preset: 'ultra' }
+        );
+        logAgent('🧱 FAZ 2 [CERRAH KODLAYICI • T:0.10 / TopK:15 / 32K]: Vizyon sıfır hatayla üretim kalitesinde koda dökülüyor...');
+        const finalCode = cleanHtmlResponse(await callUniversalAI(
+          'Sen Kıdemli Tam-Yığın Mühendisisin. Verilen vizyoner konsepti eksiksiz, responsive, tek parça çalışan <!DOCTYPE html> uygulamasına dönüştür. Sadece saf HTML döndür, yorum veya yer tutucu (TODO) bırakma.',
+          [{ role: 'user', content: `KULLANICI İSTEĞİ:\n${prompt}\n\nVİZYONER MİMARİ KONSEPT:\n${blueprint}` }],
+          { preset: 'code' }
+        ));
+        document.getElementById('codeWorkspace').value = finalCode;
+        refreshPreview();
+        toggleStudioSubTab('preview');
+        logAgent('✅ Çift Fazlı [Fırtına ➔ İnşa] sentezi tamamlandı ve emülatöre yüklendi!');
+      } catch (e) {
+        logAgent('❌ Fırtına ➔ İnşa Hatası: ' + e.message);
+        alert(e.message);
+      }
+    }
+
+    // 8. DONANIM İZİNLERİ
+    async function requestCameraAccess() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const vid = document.getElementById('cameraStream');
+        vid.srcObject = stream; vid.classList.remove('hidden');
+        document.getElementById('perm_cam').innerText = '✅ Aktif';
+      } catch (e) { document.getElementById('perm_cam').innerText = '❌ ' + e.message; }
+    }
+    async function requestMicAccess() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        document.getElementById('perm_mic').innerText = '✅ Aktif';
+      } catch (e) { document.getElementById('perm_mic').innerText = '❌ Reddedildi'; }
+    }
+    function startVoicePrompt() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) return alert('Ses tanıma desteklenmiyor.');
+      const rec = new SpeechRec();
+      rec.lang = 'tr-TR';
+      rec.onresult = (e) => { document.getElementById('promptInput').value += ' ' + e.results[0][0].transcript; };
+      rec.start();
+    }
+    let leafletMap = null;
+    function requestLocationAccess() {
+      if (!navigator.geolocation) return alert('GPS desteklenmiyor.');
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        document.getElementById('perm_geo').innerText = `✅ ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        const mapEl = document.getElementById('mapContainer');
+        mapEl.classList.remove('hidden');
+        if (!leafletMap) {
+          leafletMap = L.map('mapContainer').setView([latitude, longitude], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafletMap);
+        }
+        L.marker([latitude, longitude]).addTo(leafletMap).bindPopup('Konumunuz').openPopup();
+      }, err => { document.getElementById('perm_geo').innerText = '❌ ' + err.message; });
+    }
+    async function requestFileSystemAccess() {
+      try {
+        if ('storage' in navigator && 'persist' in navigator.storage) {
+          const granted = await navigator.storage.persist();
+          document.getElementById('perm_fs').innerText = granted ? '✅ Kalıcı İzin Verildi' : '✅ Standart Aktif';
+        }
+      } catch (e) { document.getElementById('perm_fs').innerText = '❌ ' + e.message; }
+    }
+
+    // 9. WINDOWS & ANDROID KLASÖR KÖPRÜSÜ
+    let winDirHandle = null;
+    async function connectWindowsFolder() {
+      if (!window.showDirectoryPicker) {
+        return alert('Lütfen Chrome veya Edge üzerinden http://localhost:8080 ile açın.');
+      }
+      try {
+        winDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        document.getElementById('winFolderStatus').innerText = `✅ Bağlı Klasör: ${winDirHandle.name}`;
+        document.getElementById('winSaveBtn').disabled = false;
+        await listWindowsFiles();
+      } catch (e) { if (e.name !== 'AbortError') alert(e.message); }
+    }
+
+    async function listWindowsFiles() {
+      if (!winDirHandle) return;
+      const list = document.getElementById('winFilesList');
+      list.innerHTML = '';
+      for await (const entry of winDirHandle.values()) {
+        if (entry.kind === 'file' && /\.(html|htm|js|css|json|md)$/i.test(entry.name)) {
+          const row = document.createElement('div');
+          row.className = 'p-2 rounded bg-slate-900 border border-slate-800 flex justify-between items-center';
+          row.innerHTML = `<span class="text-slate-200 font-mono text-[11px]">📄 ${entry.name}</span><button class="bg-sky-600 px-2 py-0.5 rounded text-[11px] text-white">Editöre Al</button>`;
+          row.querySelector('button').onclick = async () => {
+            const file = await entry.getFile();
+            pushSnapshot(document.getElementById('codeWorkspace').value);
+            document.getElementById('codeWorkspace').value = await file.text();
+            refreshPreview();
+            switchMainView('studio');
+          };
+          list.appendChild(row);
+        }
+      }
+    }
+
+    async function loadBridgeWorkspaceFiles() {
+      if (!(await checkLocalBridge())) return;
+      try {
+        const r = await fetch('/api/list-files');
+        if (!r.ok) return;
+        const d = await r.json();
+        document.getElementById('winFolderStatus').innerText = `🟢 Köprüyle Otomatik Bağlı (İzin penceresiz): ${d.root}`;
+        document.getElementById('winSaveBtn').disabled = false;
+        const list = document.getElementById('winFilesList');
+        list.innerHTML = '';
+        (d.files || []).forEach(relPath => {
+          const row = document.createElement('div');
+          row.className = 'p-2 rounded bg-slate-900 border border-slate-800 flex justify-between items-center gap-2';
+          row.innerHTML = `<span class="text-slate-200 font-mono text-[11px] truncate">📄 ${relPath}</span><button class="shrink-0 bg-sky-600 px-2 py-0.5 rounded text-[11px] text-white">Editöre Al</button>`;
+          row.querySelector('button').onclick = async () => {
+            const txt = await readWorkspaceRelFile(relPath);
+            pushSnapshot(document.getElementById('codeWorkspace').value);
+            document.getElementById('codeWorkspace').value = txt;
+            refreshPreview();
+            switchMainView('studio');
+          };
+          list.appendChild(row);
+        });
+      } catch (_) {}
+    }
+
+    async function writeCodeToWindowsFolder(forcedName = null) {
+      const code = document.getElementById('codeWorkspace').value;
+      if (!code.trim()) return alert('Yazılacak kod boş.');
+      const fileName = forcedName || prompt('Dosya adı:', (document.getElementById('apkAppName').value.trim() || 'app') + '.html');
+      if (!fileName) return;
+
+      if (!winDirHandle && (await checkLocalBridge())) {
+        const r = await fetch('/api/write-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: fileName, content: code })
+        });
+        const d = await r.json();
+        if (d.ok) {
+          await loadBridgeWorkspaceFiles();
+          logAgent(`💾 Köprüyle Windows klasörüne yazıldı: ${fileName}`);
+          return alert(`✅ ${fileName} izin penceresi olmadan doğrudan Windows klasörüne yazıldı.`);
+        }
+      }
+
+      if (!winDirHandle) { await connectWindowsFolder(); if (!winDirHandle) return; }
+      const fh = await winDirHandle.getFileHandle(fileName, { create: true });
+      const w = await fh.createWritable();
+      await w.write(code);
+      await w.close();
+      await listWindowsFiles();
+      logAgent(`💾 Windows klasörüne yazıldı: ${fileName}`);
+      alert(`✅ ${fileName} Windows klasörüne yazıldı.`);
+    }
+
+    let LOCAL_BRIDGE_OK = false;
+
+    async function checkLocalBridge() {
+      const st = document.getElementById('bridgeStatusText');
+      try {
+        const r = await fetch('/api/ping');
+        if (r.ok) {
+          const d = await r.json();
+          LOCAL_BRIDGE_OK = true;
+          if (st) st.innerText = `🟢 Aktif (${d.os} • Port ${d.port} • ${d.cwd})`;
+          return true;
+        }
+      } catch (_) {}
+      LOCAL_BRIDGE_OK = false;
+      if (st) st.innerText = '🔴 Kapalı — Yerel komutlar için baslat.bat üzerinden açın.';
+      return false;
+    }
+
+    async function runLocalCommand(overrideCmd = null) {
+      const inp = document.getElementById('terminalCmdInput');
+      const cmd = (overrideCmd || inp.value).trim();
+      if (!cmd) return;
+      if (!overrideCmd) inp.value = '';
+      const out = document.getElementById('terminalOutput');
+      out.textContent += `\n\nPS> ${cmd}\n⏳ Çalıştırılıyor...`;
+      out.scrollTop = out.scrollHeight;
+      try {
+        const r = await fetch('/api/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: cmd })
+        });
+        if (!r.ok) throw new Error('Yerel köprü aktif değil (baslat.bat ile açın).');
+        const d = await r.json();
+        out.textContent += `\n${d.stdout || ''}${d.stderr ? '\n[HATA/STDERR]:\n' + d.stderr : ''}\n[Çıkış Kodu: ${d.exitCode}]`;
+      } catch (e) {
+        out.textContent += `\n❌ ${e.message}`;
+      }
+      out.scrollTop = out.scrollHeight;
+    }
+
+    async function syncToAndroidAssets() {
+      const code = document.getElementById('codeWorkspace').value;
+      if (!code.trim()) return alert('Aktarılacak kod boş.');
+      if (await checkLocalBridge()) {
+        try {
+          await fetch('/api/write-file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: 'dist/index.html', content: code })
+          });
+          const r = await fetch('/api/write-file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: 'android/app/src/main/assets/public/index.html', content: code })
+          });
+          const d = await r.json();
+          if (d.ok) {
+            logAgent('🤖 Yerel Köprü ile dist/index.html ve android/assets güncellendi!');
+            return alert('✅ Kod hem dist/index.html hem android/app/src/main/assets/public/index.html içine yazıldı!');
+          }
+        } catch (_) {}
+      }
+      if (!winDirHandle) {
+        alert('Lütfen önce "Dosya & Git" sekmesinden omni-apex-studio klasörünü bağlayın.');
+        switchMainView('files');
+        return;
+      }
+      try {
+        const parts = ['android', 'app', 'src', 'main', 'assets', 'public'];
+        let dir = winDirHandle;
+        for (const p of parts) dir = await dir.getDirectoryHandle(p, { create: true });
+        const fh = await dir.getFileHandle('index.html', { create: true });
+        const w = await fh.createWritable();
+        await w.write(code);
+        await w.close();
+        logAgent('🤖 Android assets/public/index.html güncellendi!');
+        alert('✅ Kod android/app/src/main/assets/public/index.html içine yazıldı!');
+      } catch (e) {
+        alert('Android klasörüne yazma hatası: ' + e.message);
+      }
+    }
+
+    // 10. GITHUB ÇOKLU-PLATFORM BULUT DERLEME & SECRET LEAK GUARD
+    function detectSecretLeak(text) {
+      const patterns = [
+        { name: 'Google API Key', re: /AIzaSy[A-Za-z0-9_-]{20,}/ },
+        { name: 'GitHub PAT', re: /gh[pousr]_[A-Za-z0-9]{20,}/ },
+        { name: 'Anthropic Key', re: /sk-ant-[A-Za-z0-9_-]{20,}/ },
+        { name: 'OpenAI Key', re: /sk-(?:proj-)?[A-Za-z0-9]{24,}/ }
+      ];
+      return patterns.filter(p => p.re.test(text || '')).map(p => p.name);
+    }
+
+    function utf8ToB64(str) {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
+    }
+
+    async function buildCloudMultiPlatform() {
+      if (!cfg.ghtoken || !cfg.ghuser || !cfg.ghrepo) { toggleModal('settingsModal'); return alert('GitHub ayarlarını doldurun.'); }
+      const code = document.getElementById('codeWorkspace').value.trim();
+      if (!code) return alert('Önce kod üretin!');
+      const leaks = detectSecretLeak(code);
+      if (leaks.length && !confirm(`⚠️ DİKKAT: Kod içinde gizli anahtar (${leaks.join(', ')}) tespit edildi! Yine de GitHub'a göndermek istiyor musun?`)) return;
+
+      const targetPath = document.getElementById('buildTargetMode').value;
+      const platform = document.getElementById('targetPlatformSelect').value;
+      const statusMsg = document.getElementById('apkStatusMsg');
+      const dlBtn = document.getElementById('apkDownloadLink');
+      dlBtn.classList.add('hidden');
+
+      const apiBase = `https://api.github.com/repos/${cfg.ghuser}/${cfg.ghrepo}`;
+      const headers = { 'Authorization': `Bearer ${cfg.ghtoken}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+
+      try {
+        statusMsg.innerText = `🔄 1/3: Kod GitHub'a (${targetPath}) gönderiliyor...`;
+        let sha;
+        const getFile = await fetch(`${apiBase}/contents/${targetPath}`, { headers });
+        if (getFile.ok) sha = (await getFile.json()).sha;
+
+        const putRes = await fetch(`${apiBase}/contents/${targetPath}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ message: `Omni-Apex Sync: ${targetPath}`, content: utf8ToB64(code), ...(sha ? { sha } : {}) })
+        });
+        if (!putRes.ok) throw new Error('GitHub dosya yazma hatası!');
+
+        statusMsg.innerText = `⚙️ 2/3: Bulut Fabrikası (${platform}) tetikleniyor...`;
+        const appName = document.getElementById('apkAppName').value.trim() || 'OmniApexApp';
+        const appId = 'com.omniapex.' + appName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        let wfRes = await fetch(`${apiBase}/actions/workflows/build-all-platforms.yml/dispatches`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ ref: 'main', inputs: { app_name: appName, app_id: appId, target_platform: platform } })
+        });
+        if (!wfRes.ok) {
+          wfRes = await fetch(`${apiBase}/actions/workflows/build-apk.yml/dispatches`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ ref: 'main', inputs: { app_name: appName, app_id: appId } })
+          });
+        }
+        if (!wfRes.ok) throw new Error('GitHub Actions workflow tetiklenemedi!');
+
+        statusMsg.innerText = `🔨 3/3: ${platform.toUpperCase()} çıktıları GitHub Actions üzerinde derleniyor...`;
+        dlBtn.href = `https://github.com/${cfg.ghuser}/${cfg.ghrepo}/actions`;
+        dlBtn.classList.remove('hidden');
+        dlBtn.classList.add('flex');
+        pollApkRelease(apiBase, headers);
+      } catch (e) {
+        statusMsg.innerText = '❌ Hata: ' + e.message;
+      }
+    }
+
+    async function readWorkspaceRelFile(relPath) {
+      if (await checkLocalBridge()) {
+        const r = await fetch('/api/read-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: relPath })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.ok) return d.content;
+        }
+      }
+      if (winDirHandle) {
+        const parts = relPath.split('/');
+        let dir = winDirHandle;
+        for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i]);
+        const fh = await dir.getFileHandle(parts[parts.length - 1]);
+        return await (await fh.getFile()).text();
+      }
+      throw new Error(`"${relPath}" okunamadı. baslat.bat üzerinden açın veya Dosya & Git sekmesinden klasörü bağlayın.`);
+    }
+
+    async function bootstrapOmniStudioOnGitHub() {
+      if (!cfg.ghtoken || !cfg.ghuser || !cfg.ghrepo) { toggleModal('settingsModal'); return alert('Ayarlardan GitHub Token, Kullanıcı Adı ve Repo Adını girin.'); }
+      const statusMsg = document.getElementById('apkStatusMsg');
+      const dlBtn = document.getElementById('apkDownloadLink');
+      dlBtn.classList.add('hidden');
+
+      const apiBase = `https://api.github.com/repos/${cfg.ghuser}/${cfg.ghrepo}`;
+      const headers = { 'Authorization': `Bearer ${cfg.ghtoken}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+      const filesToPush = [
+        '.gitignore',
+        'package.json',
+        'capacitor.config.json',
+        'electron-main.js',
+        'manifest.json',
+        'index.html',
+        'dist/index.html',
+        'android/app/src/main/AndroidManifest.xml',
+        'android/app/src/main/res/xml/file_paths.xml',
+        'android/app/src/main/res/xml/network_security_config.xml',
+        '.github/workflows/build-all-platforms.yml'
+      ];
+
+      try {
+        statusMsg.innerText = '🔍 1/3: GitHub deposu kontrol ediliyor...';
+        const repoCheck = await fetch(apiBase, { headers });
+        if (repoCheck.status === 404) {
+          statusMsg.innerText = `📦 Repo (${cfg.ghrepo}) oluşturuluyor...`;
+          const createRes = await fetch('https://api.github.com/user/repos', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ name: cfg.ghrepo, private: false, auto_init: true, description: 'OMNI-APEX Studio OS & Multi-Platform App Factory' })
+          });
+          if (!createRes.ok) throw new Error('GitHub deposu oluşturulamadı (Token repo yetkisini kontrol edin).');
+          await new Promise(r => setTimeout(r, 1500));
+        }
+
+        for (let i = 0; i < filesToPush.length; i++) {
+          const p = filesToPush[i];
+          statusMsg.innerText = `📤 2/3: Yükleniyor (${i + 1}/${filesToPush.length}): ${p}`;
+          const content = await readWorkspaceRelFile(p);
+          let sha;
+          const existing = await fetch(`${apiBase}/contents/${p}`, { headers });
+          if (existing.ok) sha = (await existing.json()).sha;
+          const putRes = await fetch(`${apiBase}/contents/${p}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ message: `Omni-Apex Bootstrap: ${p}`, content: utf8ToB64(content), ...(sha ? { sha } : {}) })
+          });
+          if (!putRes.ok) throw new Error(`${p} yüklenemedi!`);
+        }
+
+        statusMsg.innerText = '🔨 3/3: Tüm dosyalar yüklendi! Android APK derlemesi GitHub Actions üzerinde başladı (~2 dk)...';
+        dlBtn.href = `https://github.com/${cfg.ghuser}/${cfg.ghrepo}/actions`;
+        dlBtn.classList.remove('hidden');
+        dlBtn.classList.add('flex');
+        pollApkRelease(apiBase, headers);
+      } catch (e) {
+        statusMsg.innerText = '❌ Bootstrap Hatası: ' + e.message;
+        alert(e.message);
+      }
+    }
+
+    function pollApkRelease(apiBase, headers) {
+      let sec = 0;
+      const timerEl = document.getElementById('apkTimer');
+      const statusMsg = document.getElementById('apkStatusMsg');
+      const dlBtn = document.getElementById('apkDownloadLink');
+      const iv = setInterval(async () => {
+        sec += 5;
+        timerEl.innerText = `${sec} sn`;
+        try {
+          const r = await fetch(`${apiBase}/releases/latest`, { headers });
+          if (r.ok) {
+            const rel = await r.json();
+            if (Date.now() - new Date(rel.published_at).getTime() < 240000 && rel.assets?.length) {
+              clearInterval(iv);
+              timerEl.innerText = 'HAZIR!';
+              statusMsg.innerText = `✅ ${rel.name} hazır! APK doğrudan indirilebilir.`;
+              dlBtn.href = rel.assets[0].browser_download_url;
+              dlBtn.innerText = '📥 APK İndir';
+              dlBtn.classList.remove('hidden');
+              dlBtn.classList.add('flex');
+            }
+          }
+        } catch (_) {}
+        if (sec >= 240) clearInterval(iv);
+      }, 5000);
+    }
+
+    async function syncToGoogleDrive() {
+      if (!cfg.driveurl) { toggleModal('settingsModal'); return alert('Google Drive Webhook URL girin.'); }
+      const code = document.getElementById('codeWorkspace').value || document.documentElement.outerHTML;
+      const name = (document.getElementById('apkAppName').value || 'Project') + '_' + Date.now() + '.html';
+      try {
+        await fetch(cfg.driveurl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ filename: name, content: code }) });
+        alert('✅ Google Drive klasörüne senkronize edildi!');
+      } catch (e) { alert('Drive Hatası: ' + e.message); }
+    }
+
+    // 11. YEREL PROJE KAYITLARI
+    function saveProjectLocally() {
+      const code = document.getElementById('codeWorkspace').value;
+      if (!code) return alert('Kaydedilecek kod yok.');
+      const list = JSON.parse(localStorage.getItem('omni_projects') || '[]');
+      list.unshift({ name: document.getElementById('apkAppName').value || 'Proje', date: new Date().toLocaleString(), lines: code.split('\n').length, code });
+      localStorage.setItem('omni_projects', JSON.stringify(list.slice(0, 30)));
+      renderSavedProjects();
+    }
+    function renderSavedProjects() {
+      const list = JSON.parse(localStorage.getItem('omni_projects') || '[]');
+      const box = document.getElementById('savedProjectsList');
+      box.innerHTML = list.length ? '' : '<div class="text-slate-500">Henüz kaydedilmiş yerel proje yok.</div>';
+      list.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center';
+        row.innerHTML = `<div><div class="font-bold text-white">${p.name} <span class="text-sky-400">(${p.lines} satır)</span></div><div class="text-[10px] text-slate-400">${p.date}</div></div><button class="bg-sky-600 px-2.5 py-1 rounded text-white text-[11px]" onclick="loadSavedProject(${idx})">Yükle</button>`;
+        box.appendChild(row);
+      });
+    }
+    window.loadSavedProject = function(idx) {
+      const list = JSON.parse(localStorage.getItem('omni_projects') || '[]');
+      if (list[idx]) {
+        pushSnapshot(document.getElementById('codeWorkspace').value);
+        document.getElementById('codeWorkspace').value = list[idx].code;
+        refreshPreview();
+        switchMainView('studio');
+      }
+    };
+
+    // GitHub Repolarım, Yeni Uygulama Reposu & Hata/Eksik Analizi
+    async function listMyGitHubRepos() {
+      if (!cfg.ghtoken) { toggleModal('settingsModal'); return alert('GitHub Token girin.'); }
+      const box = document.getElementById('myReposList');
+      box.innerHTML = '<div class="text-sky-400">⏳ Repolarınız getiriliyor...</div>';
+      try {
+        const r = await fetch('https://api.github.com/user/repos?sort=updated&per_page=30', {
+          headers: { 'Authorization': `Bearer ${cfg.ghtoken}`, 'Accept': 'application/vnd.github+json' }
+        });
+        const repos = await r.json();
+        if (!Array.isArray(repos)) throw new Error(repos.message || 'Repolar alınamadı.');
+        box.innerHTML = repos.length ? '' : '<div class="text-slate-500">Repo bulunamadı.</div>';
+        repos.forEach(repo => {
+          const row = document.createElement('div');
+          row.className = 'p-2 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center gap-2 flex-wrap';
+          row.innerHTML = `
+            <div class="min-w-0">
+              <div class="font-bold text-white truncate">${repo.full_name} ${repo.private ? '🔒' : '🌐'}</div>
+              <div class="text-[10px] text-slate-400">${repo.language || 'Web'} • Dal: ${repo.default_branch}</div>
+            </div>
+            <div class="flex gap-1">
+              <button class="btn-analyze bg-amber-600 hover:bg-amber-500 text-white px-2 py-1 rounded text-[10px] font-bold">🔍 Hata & Eksik Analiz</button>
+              <button class="btn-use bg-sky-600 hover:bg-sky-500 text-white px-2 py-1 rounded text-[10px]">🎯 Seç</button>
+            </div>
+          `;
+          row.querySelector('.btn-analyze').onclick = () => analyzeGitHubRepo(repo.full_name, repo.default_branch || 'main');
+          row.querySelector('.btn-use').onclick = () => {
+            cfg.ghuser = repo.owner.login;
+            cfg.ghrepo = repo.name;
+            localStorage.setItem('omni_ghuser', cfg.ghuser);
+            localStorage.setItem('omni_ghrepo', cfg.ghrepo);
+            applyCfgToInputs();
+            alert(`✅ Aktif hedef repo: ${repo.full_name}`);
+          };
+          box.appendChild(row);
+        });
+      } catch (e) { box.innerHTML = `<div class="text-rose-400">Hata: ${e.message}</div>`; }
+    }
+
+    async function createNewAppRepoPrompt() {
+      if (!cfg.ghtoken) { toggleModal('settingsModal'); return alert('GitHub Token girin.'); }
+      const name = prompt('Yeni uygulama için GitHub repo adı (örn: barkod-saha-app):');
+      if (!name) return;
+      try {
+        const r = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${cfg.ghtoken}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), private: false, auto_init: true, description: 'Generated by OMNI-APEX Studio OS' })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.message || 'Repo oluşturulamadı');
+        cfg.ghuser = d.owner.login;
+        cfg.ghrepo = d.name;
+        localStorage.setItem('omni_ghuser', cfg.ghuser);
+        localStorage.setItem('omni_ghrepo', cfg.ghrepo);
+        applyCfgToInputs();
+        await listMyGitHubRepos();
+        alert(`✅ Yeni repo oluşturuldu ve aktif edildi: ${d.full_name}`);
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function analyzeGitHubRepo(fullName, branch) {
+      const headers = { 'Accept': 'application/vnd.github+json' };
+      if (cfg.ghtoken) headers['Authorization'] = `Bearer ${cfg.ghtoken}`;
+      try {
+        const treeRes = await fetch(`https://api.github.com/repos/${fullName}/git/trees/${branch}?recursive=1`, { headers });
+        const treeData = await treeRes.json();
+        const paths = (treeData.tree || []).map(f => f.path);
+        const keyFiles = paths.filter(p => /^(package\.json|capacitor\.config\.json|README\.md|\.github\/workflows\/.*\.yml|android\/app\/src\/main\/AndroidManifest\.xml)$/i.test(p)).slice(0, 5);
+        let contents = '';
+        for (const p of keyFiles) {
+          const raw = await fetch(`https://raw.githubusercontent.com/${fullName}/${branch}/${p}`);
+          if (raw.ok) contents += `\n--- DOSYA: ${p} ---\n${(await raw.text()).slice(0, 4000)}\n`;
+        }
+        switchMainView('chat');
+        await sendChatMessage(`"${fullName}" GitHub reposunu kapsamlı analiz et: Hataları, eksik dosyaları, build/APK/EXE risklerini ve iyileştirme önerilerini tek tek çıkar.\n\nDOSYA AĞACI (${paths.length} dosya):\n${paths.slice(0, 120).join('\n')}\n${contents}`);
+      } catch (e) { alert('Analiz hatası: ' + e.message); }
+    }
+
+    // 12. .ENV YEDEKLEME, EKRAN YAKALAMA, KONSEY MODU, ŞABLONLAR, GH PAGES & GEMINI 3.8 LIVE
+    function buildEnvText() {
+      return [
+        `GEMINI_API_KEY=${cfg.gemini || ''}`,
+        `ANTHROPIC_API_KEY=${cfg.claude || ''}`,
+        `OPENAI_API_KEY=${cfg.openai || ''}`,
+        `OPENAI_BASE_URL=${cfg.openai_url || 'https://api.openai.com/v1'}`,
+        `OLLAMA_URL=${cfg.ollama || 'http://localhost:11434'}`,
+        `GITHUB_TOKEN=${cfg.ghtoken || ''}`,
+        `GITHUB_USER=${cfg.ghuser || ''}`,
+        `GITHUB_REPO=${cfg.ghrepo || ''}`,
+        `GOOGLE_DRIVE_WEBHOOK=${cfg.driveurl || ''}`,
+        `AI_TEMPERATURE=${cfg.temp ?? 0.2}`
+      ].join('\n');
+    }
+
+    function exportEnvFile() {
+      const blob = new Blob([buildEnvText()], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '.env';
+      a.click();
+    }
+
+    function importEnvFile(file) {
+      if (!file) return;
+      const map = {
+        GEMINI_API_KEY: 'gemini', ANTHROPIC_API_KEY: 'claude', OPENAI_API_KEY: 'openai',
+        OPENAI_BASE_URL: 'openai_url', OLLAMA_URL: 'ollama', GITHUB_TOKEN: 'ghtoken',
+        GITHUB_USER: 'ghuser', GITHUB_REPO: 'ghrepo', GOOGLE_DRIVE_WEBHOOK: 'driveurl', AI_TEMPERATURE: 'temp'
+      };
+      const r = new FileReader();
+      r.onload = () => {
+        (r.result || '').split(/\r?\n/).forEach(line => {
+          const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+          if (m && map[m[1]]) {
+            const k = map[m[1]];
+            const val = m[2].replace(/^["']|["']$/g, '').trim();
+            if (val) {
+              cfg[k] = k === 'temp' ? parseFloat(val) : val;
+              localStorage.setItem('omni_' + k, cfg[k]);
+            }
+          }
+        });
+        applyCfgToInputs();
+        refreshAllModels();
+        alert('✅ .env dosyasından ayarlar geri yüklendi!');
+      };
+      r.readAsText(file);
+    }
+
+    async function saveEnvToBridge() {
+      if (!(await checkLocalBridge())) return alert('Yerel köprü aktif değil (baslat.bat üzerinden açın).');
+      const r = await fetch('/api/write-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: '.env', content: buildEnvText() })
+      });
+      const d = await r.json();
+      if (d.ok) alert('✅ Ayarlar yerel .env dosyasına kaydedildi (.gitignore ile korunuyor).');
+    }
+
+    async function captureScreenToChat() {
+      if (!navigator.mediaDevices?.getDisplayMedia) return alert('Ekran yakalama bu tarayıcıda desteklenmiyor.');
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const vid = document.createElement('video');
+        vid.srcObject = stream;
+        await vid.play();
+        await new Promise(r => setTimeout(r, 250));
+        const canvas = document.createElement('canvas');
+        canvas.width = vid.videoWidth || 1280;
+        canvas.height = vid.videoHeight || 720;
+        canvas.getContext('2d').drawImage(vid, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        PENDING_ATTACHMENTS.push({ name: `ekran_${Date.now()}.jpg`, mime: 'image/jpeg', dataUrl, base64: dataUrl.split(',')[1] });
+        renderPendingAttachments();
+      } catch (e) { if (e.name !== 'AbortError') alert('Ekran yakalama hatası: ' + e.message); }
+    }
+
+    async function runDialecticalCouncil() {
+      const inp = document.getElementById('chatInput');
+      const text = inp.value.trim();
+      if (!text) return alert('Konsey için bir soru/görev yazın.');
+      inp.value = '';
+      CHAT_HISTORY.push({ role: 'user', content: `[⚔️ ÇOKLU-MODEL KONSEYİ]\n${text}` });
+      renderChatMessages();
+
+      const candidates = [];
+      const geminiEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'gemini');
+      if (cfg.gemini) candidates.push({ label: 'Gemini', id: geminiEntry ? geminiEntry[0] : 'gemini-2.5-flash' });
+      if (cfg.claude) candidates.push({ label: 'Claude', id: 'claude:claude-sonnet-4-20250514' });
+      const oaiEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'openai');
+      if (cfg.openai && oaiEntry) candidates.push({ label: 'OpenAI/Router', id: oaiEntry[0] });
+      const ollEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'ollama');
+      if (ollEntry) candidates.push({ label: 'Yerel Ollama', id: ollEntry[0] });
+
+      if (candidates.length === 0) return alert('En az 1 AI sağlayıcı anahtarı veya yerel Ollama aktif olmalı.');
+      const origModel = document.getElementById('modelSelect').value;
+      const sys = await buildLiveSystemContext();
+      const results = [];
+
+      for (const c of candidates.slice(0, 3)) {
+        try {
+          document.getElementById('modelSelect').value = c.id;
+          const ans = await callUniversalAI(sys, [{ role: 'user', content: text }]);
+          results.push(`### 🤖 ${c.label} (${c.id})\n${ans}`);
+        } catch (e) {
+          results.push(`### ⚠️ ${c.label}\nHata: ${e.message}`);
+        }
+      }
+      document.getElementById('modelSelect').value = origModel;
+      CHAT_HISTORY.push({ role: 'assistant', content: results.join('\n\n---\n\n') });
+      localStorage.setItem('omni_chat_history', JSON.stringify(CHAT_HISTORY.slice(-25)));
+      renderChatMessages();
+    }
+
+    function loadStarterTemplate(type) {
+      if (!type) return;
+      const templates = {
+        qr: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Kamera Tarayıcı</title><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-slate-950 text-white p-4 space-y-3"><h1 class="text-lg font-bold text-sky-400">📷 Canlı Kamera & Barkod</h1><video id="v" autoplay playsinline class="w-full h-64 bg-black rounded-xl object-cover"></video><button onclick="startCam()" class="w-full bg-sky-600 py-2.5 rounded-xl font-bold">Kamerayı Aç</button><div id="out" class="text-xs text-emerald-400"></div><script>async function startCam(){const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=s;out.innerText='Kamera aktif!';}<\/script></body></html>`,
+        gps: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>GPS Saha Notu</title><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-slate-950 text-white p-4 space-y-3"><h1 class="text-lg font-bold text-amber-400">📍 GPS Saha Notu</h1><button onclick="mark()" class="w-full bg-amber-600 py-2.5 rounded-xl font-bold">Konumu Kaydet</button><ul id="list" class="space-y-2 text-xs"></ul><script>function mark(){navigator.geolocation.getCurrentPosition(p=>{const li=document.createElement('li');li.className='p-2 bg-slate-900 rounded';li.innerText=new Date().toLocaleTimeString()+' -> '+p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5);list.prepend(li);});}<\/script></body></html>`,
+        voice: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Sesli Not</title><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-slate-950 text-white p-4 space-y-3"><h1 class="text-lg font-bold text-emerald-400">🎙️ Sesli Not</h1><button onclick="rec()" class="w-full bg-rose-600 py-2.5 rounded-xl font-bold">Dinlemeyi Başlat</button><textarea id="txt" rows="6" class="w-full bg-slate-900 rounded-xl p-3 text-sm"></textarea><script>function rec(){const S=window.SpeechRecognition||window.webkitSpeechRecognition;if(!S)return alert('Desteklenmiyor');const r=new S();r.lang='tr-TR';r.onresult=e=>txt.value+=e.results[0][0].transcript+' ';r.start();}<\/script></body></html>`
+      };
+      if (templates[type]) {
+        pushSnapshot(document.getElementById('codeWorkspace').value);
+        document.getElementById('codeWorkspace').value = templates[type];
+        refreshPreview();
+        toggleStudioSubTab('preview');
+      }
+    }
+
+    async function enableGitHubPages() {
+      if (!cfg.ghtoken || !cfg.ghuser || !cfg.ghrepo) { toggleModal('settingsModal'); return alert('GitHub ayarlarını doldurun.'); }
+      const headers = { 'Authorization': `Bearer ${cfg.ghtoken}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+      try {
+        const r = await fetch(`https://api.github.com/repos/${cfg.ghuser}/${cfg.ghrepo}/pages`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ source: { branch: 'main', path: '/' } })
+        });
+        const liveUrl = `https://${cfg.ghuser}.github.io/${cfg.ghrepo}/`;
+        if (r.ok || r.status === 409) {
+          document.getElementById('apkStatusMsg').innerText = `🌐 GitHub Pages aktif! Canlı Web Adresi: ${liveUrl}`;
+          alert(`🌐 GitHub Pages hazır!\nAdres: ${liveUrl}\n(İlk yayının aktifleşmesi ~1 dk sürebilir)`);
+        } else {
+          const d = await r.json();
+          throw new Error(d.message || 'Pages etkinleştirilemedi');
+        }
+      } catch (e) { alert('Pages Hatası: ' + e.message); }
+    }
+
+    // GEMINI 3.8 LIVE GERÇEK ZAMANLI SES + KAMERA/EKRAN AKIŞI
+    let liveSession = null;
+    let liveMicCtx = null;
+    let liveMicStream = null;
+    let livePlayCtx = null;
+    let liveNextPlayTime = 0;
+    let liveVideoStream = null;
+    let liveVideoTimer = null;
+
+    function toggleGeminiLive() {
+      if (liveSession) stopGeminiLive();
+      else startGeminiLive();
+    }
+
+    async function startGeminiLive() {
+      if (!cfg.gemini) { toggleModal('settingsModal'); return alert('Canlı sohbet için Google AI Studio API Key girin.'); }
+      const bar = document.getElementById('liveSessionBar');
+      const statusEl = document.getElementById('liveStatusLabel');
+      const btn = document.getElementById('liveToggleBtn');
+      bar.classList.remove('hidden');
+      statusEl.innerText = 'Gemini 3.8 Live bağlanıyor...';
+      btn.innerText = '⏹️ Canlıyı Kapat';
+      btn.className = 'text-[10px] px-2.5 py-1 rounded bg-rose-600 text-white font-bold';
+
+      try {
+        const { GoogleGenAI } = await import('https://esm.sh/@google/genai');
+        const ai = new GoogleGenAI({ apiKey: cfg.gemini });
+        livePlayCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+        liveNextPlayTime = livePlayCtx.currentTime;
+
+        liveSession = await ai.live.connect({
+          model: 'gemini-3.8-live',
+          config: {
+            responseModalities: ['AUDIO'],
+            inputAudioTranscription: {},
+            outputAudioTranscription: {},
+            systemInstruction: { parts: [{ text: `${selectedAgent.prompt} Kullanıcıyla Türkçe, akıcı ve net konuş.` }] }
+          },
+          callbacks: {
+            onopen: () => { statusEl.innerText = '🟢 Canlı Sohbet Aktif (Mikrofon Dinleniyor)'; },
+            onmessage: (response) => {
+              const content = response.serverContent;
+              if (content?.interrupted) {
+                liveNextPlayTime = livePlayCtx ? livePlayCtx.currentTime : 0;
+              }
+              if (content?.modelTurn?.parts) {
+                for (const part of content.modelTurn.parts) {
+                  if (part.inlineData?.data && livePlayCtx) playPcm24k(part.inlineData.data);
+                }
+              }
+              if (content?.inputTranscription?.text) {
+                logAgent(`🎤 [SEN]: ${content.inputTranscription.text}`);
+              }
+              if (content?.outputTranscription?.text) {
+                statusEl.innerText = `🔊 AI: ${content.outputTranscription.text.slice(0, 70)}...`;
+              }
+            },
+            onerror: (err) => { statusEl.innerText = '❌ Live Hata: ' + (err.message || err); },
+            onclose: () => { stopGeminiLive(); }
+          }
+        });
+
+        // 16kHz PCM Mikrofon Yakalama
+        liveMicStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+        liveMicCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        const src = liveMicCtx.createMediaStreamSource(liveMicStream);
+        const proc = liveMicCtx.createScriptProcessor(4096, 1, 1);
+        proc.onaudioprocess = (e) => {
+          if (!liveSession) return;
+          const f32 = e.inputBuffer.getChannelData(0);
+          const i16 = new Int16Array(f32.length);
+          for (let i = 0; i < f32.length; i++) {
+            const s = Math.max(-1, Math.min(1, f32[i]));
+            i16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+          const bytes = new Uint8Array(i16.buffer);
+          let bin = '';
+          for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+          liveSession.sendRealtimeInput({ audio: { data: btoa(bin), mimeType: 'audio/pcm;rate=16000' } });
+        };
+        src.connect(proc);
+        proc.connect(liveMicCtx.destination);
+      } catch (e) {
+        statusEl.innerText = '❌ Bağlanamadı: ' + e.message;
+        stopGeminiLive();
+      }
+    }
+
+    function playPcm24k(b64) {
+      const bin = atob(b64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      const i16 = new Int16Array(bytes.buffer);
+      const buf = livePlayCtx.createBuffer(1, i16.length, 24000);
+      const ch = buf.getChannelData(0);
+      for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 32768;
+      const src = livePlayCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(livePlayCtx.destination);
+      const startAt = Math.max(livePlayCtx.currentTime, liveNextPlayTime);
+      src.start(startAt);
+      liveNextPlayTime = startAt + buf.duration;
+    }
+
+    async function toggleLiveVideo(mode) {
+      if (!liveSession) return alert('Önce Canlı Sohbet başlatın.');
+      if (liveVideoTimer) { clearInterval(liveVideoTimer); liveVideoTimer = null; }
+      if (liveVideoStream) { liveVideoStream.getTracks().forEach(t => t.stop()); liveVideoStream = null; }
+      const vid = document.getElementById('liveVideoPreview');
+      try {
+        liveVideoStream = mode === 'screen'
+          ? await navigator.mediaDevices.getDisplayMedia({ video: true })
+          : await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        vid.srcObject = liveVideoStream;
+        vid.classList.remove('hidden');
+        const canvas = document.createElement('canvas');
+        liveVideoTimer = setInterval(() => {
+          if (!liveSession || vid.videoWidth === 0) return;
+          canvas.width = 640;
+          canvas.height = Math.round(640 * (vid.videoHeight / vid.videoWidth));
+          canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
+          const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+          liveSession.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
+        }, 1000);
+      } catch (e) { alert('Video akışı hatası: ' + e.message); }
+    }
+
+    function stopGeminiLive() {
+      if (liveVideoTimer) { clearInterval(liveVideoTimer); liveVideoTimer = null; }
+      if (liveVideoStream) { liveVideoStream.getTracks().forEach(t => t.stop()); liveVideoStream = null; }
+      if (liveMicStream) { liveMicStream.getTracks().forEach(t => t.stop()); liveMicStream = null; }
+      if (liveMicCtx) { try { liveMicCtx.close(); } catch (_) {} liveMicCtx = null; }
+      if (livePlayCtx) { try { livePlayCtx.close(); } catch (_) {} livePlayCtx = null; }
+      if (liveSession) { try { liveSession.close(); } catch (_) {} liveSession = null; }
+      document.getElementById('liveVideoPreview').classList.add('hidden');
+      document.getElementById('liveSessionBar').classList.add('hidden');
+      const btn = document.getElementById('liveToggleBtn');
+      btn.innerText = '🎙️ Canlı Sohbet';
+      btn.className = 'text-[10px] px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold';
+    }
+
+    // BAŞLANGIÇ
+    updateHeaderStatus();
+    renderModelOptions();
+    OmniNeural.initUI();
+    renderChatMessages();
+    syncSettingsWithBridge();
+    refreshTelemetry();
+    setInterval(refreshTelemetry, 20000);
+    if (cfg.gemini || cfg.claude || cfg.openai) refreshAllModels();
+  </script>
+</body>
+</html>

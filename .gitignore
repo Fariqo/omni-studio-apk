@@ -1,0 +1,8 @@
+.env
+.env.*
+settings.json
+node_modules/
+release/
+_backup/
+*.bak_*
+*.log
