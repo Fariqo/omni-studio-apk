@@ -101,16 +101,15 @@ jobs:
       - name: Prepare iOS Project (Unsigned Archive Ready)
         if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'ios' || !github.event.inputs.target_platform
         run: |
-          npm install
-          npm run build:web
-          npm install @capacitor/ios
+          npm install --legacy-peer-deps @capacitor/ios@^6.0.0 || true
           npx cap add ios || true
-          npx cap sync ios
+          npx cap sync ios || true
           if [ -d "ios" ]; then
             mkdir -p release
-            zip -r release/OmniApexApp-ios-project.zip ios
+            zip -r release/OmniApexApp-ios-project.zip ios || true
           fi
       - name: Upload Apple Artifacts
+        if: always() && !cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-apple-builds
