@@ -1,0 +1,118 @@
+name: OMNI-APEX Multi-Platform Build Factory
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'Uygulama Adı'
+        required: true
+        default: 'OmniApexApp'
+      app_id:
+        description: 'Uygulama Paket Kimliği'
+        required: true
+        default: 'com.omniapex.studio'
+      target_platform:
+        description: 'Hedef Platform (all, android, windows, macos, ios)'
+        required: true
+        default: 'android'
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'android'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Bootstrap Capacitor Android & Apply Full Permissions
+        run: |
+          npm install
+          npm run build:web
+          if [ ! -f "android/gradlew" ]; then
+            mkdir -p /tmp/android_overlay
+            if [ -d "android/app/src/main" ]; then
+              cp -r android/app/src/main/* /tmp/android_overlay/ || true
+            fi
+            rm -rf android
+            npx cap add android
+            mkdir -p android/app/src/main/res/xml
+            cp -r /tmp/android_overlay/* android/app/src/main/ || true
+          fi
+          npx cap sync android
+      - name: Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-android-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+      - name: Publish APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Omni-Apex Build #${{ github.run_number }}
+          files: android/app/build/outputs/apk/debug/*.apk
+
+  build-windows:
+    if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'windows'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build Windows EXE / MSI
+        run: |
+          npm install
+          npm run build:web
+          npm run electron:win
+      - name: Upload Windows Installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-windows-setup
+          path: |
+            release/*.exe
+            release/*.msi
+
+  build-macos-ios:
+    if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || github.event.inputs.target_platform == 'ios'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build macOS DMG
+        if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos'
+        run: |
+          npm install
+          npm run build:web
+          npm run electron:mac
+      - name: Prepare iOS Project (Unsigned Archive Ready)
+        if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'ios'
+        run: |
+          npm install
+          npm run build:web
+          npm install @capacitor/ios
+          npx cap add ios || true
+          npx cap sync ios
+      - name: Upload Apple Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-apple-builds
+          path: |
+            release/*.dmg
+            ios/
