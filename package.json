@@ -8,9 +8,9 @@
   "scripts": {
     "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');\"",
     "android:sync": "npx cap sync android",
-    "electron:win": "electron-builder --win nsis msi portable",
-    "electron:mac": "electron-builder --mac dmg",
-    "electron:linux": "electron-builder --linux AppImage"
+    "electron:win": "electron-builder --win nsis portable --publish never",
+    "electron:mac": "electron-builder --mac dmg --publish never",
+    "electron:linux": "electron-builder --linux AppImage --publish never"
   },
   "build": {
     "appId": "com.omniapex.studio",
@@ -23,7 +23,7 @@
       "electron-main.js"
     ],
     "win": {
-      "target": ["nsis", "msi", "portable"]
+      "target": ["nsis", "portable"]
     },
     "mac": {
       "target": ["dmg"],

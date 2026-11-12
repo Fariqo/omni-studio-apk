@@ -68,7 +68,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Build Windows EXE / MSI / Portable
+      - name: Build Windows EXE / Portable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install
           npm run build:web
@@ -77,9 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-windows-setup
-          path: |
-            release/*.exe
-            release/*.msi
+          path: release/*.exe
 
   build-macos-ios:
     if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || github.event.inputs.target_platform == 'ios' || !github.event.inputs.target_platform
@@ -93,6 +93,7 @@ jobs:
         if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || !github.event.inputs.target_platform
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install
           npm run build:web
