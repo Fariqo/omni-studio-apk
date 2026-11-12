@@ -3,6 +3,8 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 $cfgDir = Join-Path $env:LOCALAPPDATA "OmniApexStudio"
 $cfgFile = Join-Path $cfgDir "settings.json"
+$chatsFile = Join-Path $cfgDir "chats.json"
+$hubFile = Join-Path $cfgDir "hub_data.json"
 
 $port = 8080
 $listener = $null
@@ -127,6 +129,76 @@ while ($listener.IsListening) {
             if (-not (Test-Path $cfgDir)) { New-Item -ItemType Directory -Path $cfgDir -Force | Out-Null }
             [System.IO.File]::WriteAllText($cfgFile, $rawBody, [System.Text.Encoding]::UTF8)
             Send-Json $res @{ ok = $true }
+            $res.Close()
+            continue
+        }
+
+        if ($path -eq "/api/load-chats") {
+            if (Test-Path $chatsFile -PathType Leaf) {
+                $raw = [System.IO.File]::ReadAllText($chatsFile, [System.Text.Encoding]::UTF8)
+                $res.StatusCode = 200
+                $res.ContentType = "application/json; charset=utf-8"
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes($raw)
+                $res.OutputStream.Write($bytes, 0, $bytes.Length)
+            } else {
+                Send-Json $res @{ ok = $false; sessions = @{} }
+            }
+            $res.Close()
+            continue
+        }
+
+        if ($path -eq "/api/save-chats" -and $req.HttpMethod -eq "POST") {
+            $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
+            $rawBody = $reader.ReadToEnd()
+            if (-not (Test-Path $cfgDir)) { New-Item -ItemType Directory -Path $cfgDir -Force | Out-Null }
+            [System.IO.File]::WriteAllText($chatsFile, $rawBody, [System.Text.Encoding]::UTF8)
+            Send-Json $res @{ ok = $true }
+            $res.Close()
+            continue
+        }
+
+        if ($path -eq "/api/load-hub") {
+            if (Test-Path $hubFile -PathType Leaf) {
+                $raw = [System.IO.File]::ReadAllText($hubFile, [System.Text.Encoding]::UTF8)
+                $res.StatusCode = 200
+                $res.ContentType = "application/json; charset=utf-8"
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes($raw)
+                $res.OutputStream.Write($bytes, 0, $bytes.Length)
+            } else {
+                Send-Json $res @{ ok = $false }
+            }
+            $res.Close()
+            continue
+        }
+
+        if ($path -eq "/api/save-hub" -and $req.HttpMethod -eq "POST") {
+            $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
+            $rawBody = $reader.ReadToEnd()
+            if (-not (Test-Path $cfgDir)) { New-Item -ItemType Directory -Path $cfgDir -Force | Out-Null }
+            [System.IO.File]::WriteAllText($hubFile, $rawBody, [System.Text.Encoding]::UTF8)
+            Send-Json $res @{ ok = $true }
+            $res.Close()
+            continue
+        }
+
+        if ($path -eq "/api/capture-screen") {
+            try {
+                Add-Type -AssemblyName System.Windows.Forms
+                Add-Type -AssemblyName System.Drawing
+                $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+                $bmp = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
+                $gfx = [System.Drawing.Graphics]::FromImage($bmp)
+                $gfx.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
+                $ms = New-Object System.IO.MemoryStream
+                $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
+                $base64 = [Convert]::ToBase64String($ms.ToArray())
+                $gfx.Dispose()
+                $bmp.Dispose()
+                $ms.Dispose()
+                Send-Json $res @{ ok = $true; dataUrl = "data:image/png;base64," + $base64 }
+            } catch {
+                Send-Json $res @{ ok = $false; error = $_.Exception.Message } 500
+            }
             $res.Close()
             continue
         }

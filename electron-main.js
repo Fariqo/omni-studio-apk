@@ -1,7 +1,15 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session, desktopCapturer } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { spawn } = require('child_process');
 const http = require('http');
+
+// Kalici kullanici verisi (localStorage, IndexedDB ve ayarlar asla silinmez)
+const userDataPath = path.join(app.getPath('appData'), 'OmniApexStudio');
+if (!fs.existsSync(userDataPath)) {
+  try { fs.mkdirSync(userDataPath, { recursive: true }); } catch (_) {}
+}
+app.setPath('userData', userDataPath);
 
 let bridgeProc = null;
 
@@ -14,7 +22,7 @@ function ensureBridgeRunning() {
       path.join(process.cwd(), 'omni-bridge.ps1')
     ];
     const script = candidates.find(p => {
-      try { return require('fs').existsSync(p); } catch (_) { return false; }
+      try { return fs.existsSync(p); } catch (_) { return false; }
     });
     if (script && process.platform === 'win32') {
       try {
@@ -28,14 +36,28 @@ function ensureBridgeRunning() {
 
 function createWindow() {
   ensureBridgeRunning();
+
+  // Ekran ve pencere yakalama izni (getDisplayMedia destegi)
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+      if (sources && sources.length > 0) {
+        callback({ video: sources[0] });
+      } else {
+        callback({});
+      }
+    }).catch(() => callback({}));
+  });
+
   const win = new BrowserWindow({
-    width: 1280,
-    height: 840,
+    width: 1360,
+    height: 880,
     backgroundColor: '#060911',
     autoHideMenuBar: true,
+    title: 'OMNI-APEX STUDIO OS v3.0',
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      partition: 'persist:omni_apex_session'
     }
   });
   win.loadFile(path.join(__dirname, 'dist', 'index.html'));

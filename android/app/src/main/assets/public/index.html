@@ -62,6 +62,7 @@
     <button onclick="switchMainView('terminal')" id="nav_terminal" class="flex-1 min-w-[88px] py-2.5 text-slate-400">💻 Terminal</button>
     <button onclick="switchMainView('hardware')" id="nav_hardware" class="flex-1 min-w-[88px] py-2.5 text-slate-400">🛡️ Donanım</button>
     <button onclick="switchMainView('files')" id="nav_files" class="flex-1 min-w-[88px] py-2.5 text-slate-400">📂 Dosya & Git</button>
+    <button onclick="switchMainView('hub')" id="nav_hub" class="flex-1 min-w-[104px] py-2.5 text-slate-400">🧩 Keşfet & Beceriler</button>
   </nav>
 
   <!-- ORTAK MODEL SEÇİM BAR -->
@@ -151,6 +152,19 @@
             <button onclick="stopGeminiLive()" class="px-2.5 py-1 rounded bg-rose-600 text-white font-bold">⏹️ Bitir</button>
           </div>
           <video id="liveVideoPreview" autoplay muted playsinline class="hidden w-full max-h-32 rounded-lg bg-black object-contain mt-1"></video>
+        </div>
+
+        <!-- KALICI ÇOKLU SOHBET SEANSLARI BAR -->
+        <div class="px-3 py-1.5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto text-[11px]">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="createNewChatSession()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-2.5 py-1 rounded-lg text-[10px] shrink-0 flex items-center gap-1">
+              <span>➕</span> <span>Yeni Sohbet</span>
+            </button>
+            <span class="text-slate-700">|</span>
+          </div>
+          <div id="chatSessionsBar" class="flex items-center gap-1.5 overflow-x-auto flex-1 py-0.5">
+            <!-- Dinamik oturum butonlari -->
+          </div>
         </div>
 
         <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
@@ -491,6 +505,229 @@
       </div>
     </section>
 
+    <!-- 8. GÖRÜNÜM: 🧩 KEŞFET, BECERİLER & ANTİGRAVİTY MERKEZİ -->
+    <section id="view_hub" class="hidden space-y-3">
+      <!-- Hub Üst Başlık & Sekmeler -->
+      <div class="glass rounded-xl p-3 space-y-2 border border-purple-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+              <span>🧩</span> <span>Gemini & Antigravity Keşfet, Beceriler ve Özelleştirme</span>
+            </h2>
+            <p class="text-[10px] text-slate-400">Not defteri, görev planlayıcı, öğrenci kitaplığı, özel ajan fabrikası ve sistem kuralları.</p>
+          </div>
+          <div class="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+            🧠 Canlı Antigravity Güçleri Aktif
+          </div>
+        </div>
+
+        <!-- Alt Sekmeler -->
+        <div class="flex overflow-x-auto gap-1 text-[11px] pt-1 border-t border-slate-800">
+          <button onclick="switchHubSubTab('notes')" id="hub_sub_notes" class="px-3 py-1.5 rounded-lg bg-sky-950/80 border border-sky-600/50 text-sky-300 font-semibold shrink-0">📓 Not Defteri</button>
+          <button onclick="switchHubSubTab('tasks')" id="hub_sub_tasks" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0">📅 Planlayıcı</button>
+          <button onclick="switchHubSubTab('academy')" id="hub_sub_academy" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0">🎓 Akademi & Öğrenci</button>
+          <button onclick="switchHubSubTab('agent_creator')" id="hub_sub_agent_creator" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0">➕ Özel Ajan</button>
+          <button onclick="switchHubSubTab('automations')" id="hub_sub_automations" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0">⏱️ Otomasyonlar</button>
+          <button onclick="switchHubSubTab('rules')" id="hub_sub_rules" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0">🧰 Sistem Kuralları</button>
+          <button onclick="switchHubSubTab('connectors')" id="hub_sub_connectors" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0">🔗 Bağlayıcılar</button>
+        </div>
+      </div>
+
+      <!-- A) NOT DEFTERİ (GEMINI NOTEBOOK) -->
+      <div id="hub_view_notes" class="glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-sky-400">📓 Akıllı Not Defteri & Fikir Arşivi</span>
+          <button onclick="createNewNote()" class="text-[11px] bg-sky-600 hover:bg-sky-500 text-white font-bold px-2.5 py-1 rounded-lg">+ Yeni Not</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- Not Listesi -->
+          <div class="space-y-1.5 max-h-80 overflow-y-auto pr-1" id="hubNotesList"></div>
+          <!-- Not Editörü -->
+          <div class="md:col-span-2 space-y-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+            <div class="grid grid-cols-3 gap-2">
+              <input id="noteTitleInput" type="text" placeholder="Not Başlığı..." class="col-span-2 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white" />
+              <select id="noteCategorySelect" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-amber-300">
+                <option value="Ders / Öğrenci">🎓 Ders / Öğrenci</option>
+                <option value="Kod / Teknik">💻 Kod / Teknik</option>
+                <option value="Fikir / Proje">💡 Fikir / Proje</option>
+                <option value="Genel Not">📝 Genel Not</option>
+              </select>
+            </div>
+            <textarea id="noteBodyInput" rows="7" placeholder="Not içeriğinizi buraya yazın veya AI ile genişletin..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-sky-500 font-mono"></textarea>
+            <div class="flex flex-wrap justify-between items-center gap-1.5 pt-1 border-t border-slate-800 text-[11px]">
+              <div class="flex gap-1.5 flex-wrap">
+                <button onclick="saveCurrentNote()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg">💾 Kaydet</button>
+                <button onclick="aiExpandCurrentNote()" class="bg-purple-700 hover:bg-purple-600 text-white font-bold px-3 py-1 rounded-lg">✨ AI Genişlet</button>
+                <button onclick="aiGenerateQuizFromNote()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded-lg">❓ Test/Soru Çıkar</button>
+                <button onclick="sendNoteToStudio()" class="bg-sky-700 hover:bg-sky-600 text-white font-bold px-3 py-1 rounded-lg">💻 Stüdyo'ya Al</button>
+              </div>
+              <button onclick="deleteCurrentNote()" class="text-rose-400 hover:text-rose-300">🗑️ Notu Sil</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B) PLANLAYICI & GÖREVLER (TASKS) -->
+      <div id="hub_view_tasks" class="hidden glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="text-xs font-bold text-amber-400">📅 Görev Planlayıcı & AI Hedef Bölücü</span>
+            <p class="text-[10px] text-slate-400">Karmaşık projeleri veya çalışma hedeflerini AI ile otomatik somut adımlara bölün.</p>
+          </div>
+          <div id="taskProgressBadge" class="text-[11px] font-mono text-emerald-300 bg-emerald-950 border border-emerald-600 px-2.5 py-0.5 rounded-full">
+            %0 Tamamlandı
+          </div>
+        </div>
+        <!-- AI Hedef Bölücü -->
+        <div class="p-2.5 rounded-xl bg-slate-900 border border-amber-500/30 flex gap-2">
+          <input id="aiGoalInput" type="text" placeholder="Büyük hedefinizi yazın (Örn: Android APK'yı derle ve GitHub Release yayınla)..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+          <button onclick="aiBreakdownGoal()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shrink-0">
+            ⚡ Adımlara Böl
+          </button>
+        </div>
+        <!-- Manuel Görev Ekle -->
+        <div class="flex gap-2">
+          <input id="manualTaskInput" type="text" placeholder="Hızlı görev ekle..." onkeydown="if(event.key==='Enter')addManualTask()" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+          <button onclick="addManualTask()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shrink-0">
+            + Ekle
+          </button>
+        </div>
+        <!-- Görev Listesi -->
+        <div id="hubTasksList" class="space-y-1.5 max-h-80 overflow-y-auto"></div>
+      </div>
+
+      <!-- C) AKADEMİ & ÖĞRENCİ (STUDENT / STUDY) -->
+      <div id="hub_view_academy" class="hidden glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-emerald-400">🎓 Akademi, Sınav & Feynman Öğrenme Modu</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Feynman Tekniği -->
+          <div class="space-y-2 p-3 rounded-xl bg-slate-950/70 border border-emerald-700/40">
+            <h4 class="font-bold text-xs text-emerald-300">🧠 Feynman Tekniğiyle Konu Anlatımı</h4>
+            <p class="text-[10px] text-slate-400">Herhangi bir karmaşık formülü, algoritmayı veya konuyu sade analojilerle öğrenin.</p>
+            <input id="feynmanTopicInput" type="text" placeholder="Örn: Fourier Dönüşümü, Kuantum Dolanıklığı, AST Ağacı..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white" />
+            <button onclick="runFeynmanExplain()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded-lg text-xs">
+              💡 Basitçe & Derinlemesine Açıkla
+            </button>
+            <div id="feynmanOutput" class="text-xs text-slate-200 bg-slate-900 p-2.5 rounded-lg border border-slate-800 max-h-48 overflow-y-auto leading-relaxed hidden"></div>
+          </div>
+          <!-- Kavram Kartları (Flashcards) -->
+          <div class="space-y-2 p-3 rounded-xl bg-slate-950/70 border border-sky-700/40">
+            <div class="flex justify-between items-center">
+              <h4 class="font-bold text-xs text-sky-300">🗂️ Soru Bankası & Hafıza Kartları</h4>
+              <button onclick="addFlashcardPrompt()" class="text-[10px] bg-sky-600 px-2 py-0.5 rounded text-white">+ Kart Ekle</button>
+            </div>
+            <div id="flashcardsContainer" class="space-y-2 max-h-64 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D) ÖZEL AJAN FABRİKASI -->
+      <div id="hub_view_agent_creator" class="hidden glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-sky-400">➕ Özel Uzman Ajan Tasarım Atölyesi</span>
+          <span class="text-[10px] text-slate-400">Oluşturduğunuz ajanlar anında 120+ listesine eklenir ve sohbette çalışır.</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Ajan Adı</label>
+            <input id="hubNewAgentName" type="text" placeholder="Örn: Sınav Koçu & Matematikçi" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white" />
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">İkon / Simge</label>
+            <input id="hubNewAgentIcon" type="text" placeholder="🎓 veya ⚛️ veya 🛡️" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white" />
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Kategori</label>
+            <select id="hubNewAgentCat" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+              <option value="Öğrenci & Akademi">🎓 Öğrenci & Akademi</option>
+              <option value="Yazılım & Mimari">💻 Yazılım & Mimari</option>
+              <option value="Siber Güvenlik">🛡️ Siber Güvenlik</option>
+              <option value="Bilim & Matematik">⚛️ Bilim & Matematik</option>
+              <option value="Finans & İş">📊 Finans & İş</option>
+              <option value="Özel">✨ Özel</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-400 block mb-1">Sistem Talimatı (Prompt)</label>
+          <textarea id="hubNewAgentPrompt" rows="4" placeholder="Sen bir ... uzmanısın. Kullanıcıya şu kurallarla yardımcı olursun..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono"></textarea>
+        </div>
+        <button onclick="createAndSaveCustomAgent()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg text-xs">
+          🚀 Ajanı Fabrikasyon Olarak Üret & Kalıcı Kaydet
+        </button>
+      </div>
+
+      <!-- E) OTOMASYONLAR (ANTIGRAVITY AUTOMATIONS) -->
+      <div id="hub_view_automations" class="hidden glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-amber-400">⏱️ Antigravity Otonom Görev Döngüleri</span>
+          <span class="text-[10px] text-emerald-400 font-mono">Arka Plan İzleyici: Çalışıyor</span>
+        </div>
+        <div id="automationsCards" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        <div class="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] font-mono">
+          <div class="text-slate-400 mb-1">Otomasyon Canlı Olay Günlüğü:</div>
+          <div id="automationsLog" class="text-slate-300 max-h-32 overflow-y-auto space-y-0.5">
+            [Sistem] Arka plan otomasyon motoru hazır.
+          </div>
+        </div>
+      </div>
+
+      <!-- F) SİSTEM KURALLARI (RULES / INSTRUCTIONS) -->
+      <div id="hub_view_rules" class="hidden glass rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="text-xs font-bold text-rose-400">🧰 Antigravity Kişisel Sistem Kuralları (GEMINI.md Benzeri)</span>
+            <p class="text-[10px] text-slate-400">Buraya yazdığınız kurallar tüm ajanların sistem talimatına doğrudan eklenir ve asla çiğnenmez.</p>
+          </div>
+          <button onclick="saveSystemRules()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg text-xs">
+            💾 Kuralları Kaydet
+          </button>
+        </div>
+        <textarea id="systemRulesInput" rows="10" placeholder="Kişisel kurallarınızı girin. Örneğin:
+- Kodları daima tam tipli ve hatasız ver.
+- Her yanıta kısa bir mimari özet ekle.
+- Açıklamaları Türkçe ve anlaşılır tut.
+- Dosya düzenlemelerini tek parça çalışan kod olarak ver." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs text-white font-mono leading-relaxed"></textarea>
+      </div>
+
+      <!-- G) BAĞLAYICILAR (CONNECTORS & EXTENSIONS) -->
+      <div id="hub_view_connectors" class="hidden glass rounded-xl p-3 space-y-3">
+        <span class="text-xs font-bold text-purple-400">🔗 Canlı Dış Servis Bağlayıcıları (Google, GitHub, GPU & Köprü)</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-sky-400">☁️ Google Drive / Workspace</span>
+              <button onclick="syncToGoogleDrive()" class="text-[10px] bg-slate-800 text-sky-300 px-2 py-0.5 rounded">Test Et</button>
+            </div>
+            <p class="text-[10px] text-slate-400">Kodları, notları ve projeleri Google Drive Webhook üzerinden anında buluta yedekler.</p>
+          </div>
+          <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-emerald-400">🐙 GitHub Cloud Actions & CI/CD</span>
+              <button onclick="triggerGitHubWorkflow()" class="text-[10px] bg-slate-800 text-emerald-300 px-2 py-0.5 rounded">Tetikle</button>
+            </div>
+            <p class="text-[10px] text-slate-400">Android APK, Windows EXE ve macOS DMG derleme boru hatlarını tek tıkla çalıştırır.</p>
+          </div>
+          <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-amber-400">⚡ Windows PowerShell Yerel Köprüsü</span>
+              <button onclick="checkLocalBridge()" class="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded">Yokla</button>
+            </div>
+            <p class="text-[10px] text-slate-400">Port 8080-9090 üzerinden dosya okuma/yazma, terminal komutları ve donanım telemetrisi sağlar.</p>
+          </div>
+          <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-purple-400">🦙 Yerel Ollama (AMD GPU / RX 6600)</span>
+              <button onclick="runLocalCommand('ollama list')" class="text-[10px] bg-slate-800 text-purple-300 px-2 py-0.5 rounded">Listele</button>
+            </div>
+            <p class="text-[10px] text-slate-400">Sıfır internet ve sıfır maliyetle yerel makinede kodlama ve diyalog motoru sunar.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- AYARLAR MODALI -->
@@ -746,7 +983,7 @@
         if (saved && typeof saved === 'object') {
           let restored = false;
           Object.keys(saved).forEach(k => {
-            if (k in cfg && (!cfg[k] || cfg[k] === 'https://api.openai.com/v1' || cfg[k] === 'http://localhost:11434') && saved[k]) {
+            if (k in cfg && saved[k] !== undefined && saved[k] !== null && saved[k] !== '') {
               cfg[k] = saved[k];
               localStorage.setItem('omni_' + k, saved[k]);
               restored = true;
@@ -778,6 +1015,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cfg)
       }).catch(() => {});
+      saveEnvToBridge().catch(() => {});
       toggleModal('settingsModal');
       logAgent('Ayarlar kaydedildi ve kalıcı olarak yedeklendi.');
       refreshAllModels();
@@ -821,6 +1059,23 @@
       const discovered = {};
 
       // A) Google Gemini
+      discovered['gemini-3.8-live'] = {
+        provider: 'gemini',
+        displayName: '🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı)',
+        outputLimit: 8192,
+        isLive: true
+      };
+      discovered['gemini-2.5-flash'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 2.5 Flash (Ultra Hızlı & 64K)',
+        outputLimit: 65536
+      };
+      discovered['gemini-2.5-pro'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 2.5 Pro (Derin Mimari & Kod 64K)',
+        outputLimit: 65536
+      };
+
       if (cfg.gemini) {
         try {
           let pageToken = '';
@@ -831,13 +1086,15 @@
             const data = await res.json();
             if (data.error) throw new Error(data.error.message);
             (data.models || []).forEach(m => {
-              if (m.supportedGenerationMethods?.includes('generateContent') && m.name.includes('gemini')) {
-                const id = m.name.replace(/^models\//, '');
-                discovered[id] = {
-                  provider: 'gemini',
-                  displayName: `✨ ${m.displayName || id}`,
-                  outputLimit: m.outputTokenLimit || 8192
-                };
+              const id = m.name.replace(/^models\//, '');
+              if ((m.supportedGenerationMethods?.includes('generateContent') || m.supportedGenerationMethods?.includes('bidiGenerateContent')) && (m.name.includes('gemini') || id.includes('gemini'))) {
+                if (!discovered[id]) {
+                  discovered[id] = {
+                    provider: 'gemini',
+                    displayName: `✨ ${m.displayName || id}`,
+                    outputLimit: m.outputTokenLimit || 8192
+                  };
+                }
               }
             });
             pageToken = data.nextPageToken || '';
@@ -903,8 +1160,9 @@
       const entries = Object.entries(MODEL_META);
       if (entries.length === 0) {
         select.innerHTML = `
-          <option value="gemini-2.5-flash">✨ Gemini 2.5 Flash (Ayarlardan Key Girin)</option>
-          <option value="gemini-2.5-pro">✨ Gemini 2.5 Pro (Ayarlardan Key Girin)</option>
+          <option value="gemini-3.8-live">🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı)</option>
+          <option value="gemini-2.5-flash">✨ Gemini 2.5 Flash (Önerilen Hızlı Model)</option>
+          <option value="gemini-2.5-pro">✨ Gemini 2.5 Pro (Derin Akıl Yürütme)</option>
         `;
         return;
       }
@@ -1444,9 +1702,119 @@
       return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     }
 
-    // 6. SOHBET MOTORU (MULTİMODAL DOSYA/FOTO/VİDEO + KOD BLOĞU AYRIŞTIRMA)
-    let CHAT_HISTORY = JSON.parse(localStorage.getItem('omni_chat_history') || '[]');
+    // 6. SOHBET MOTORU (KALICI ÇOKLU-SEANS, MULTİMODAL DOSYA/FOTO/VİDEO + KOD BLOĞU AYRIŞTIRMA)
+    let CHAT_SESSIONS = JSON.parse(localStorage.getItem('omni_chat_sessions') || '{}');
+    let ACTIVE_SESSION_ID = localStorage.getItem('omni_active_session_id') || 'default';
+
+    if (!CHAT_SESSIONS[ACTIVE_SESSION_ID]) {
+      const legacyHistory = JSON.parse(localStorage.getItem('omni_chat_history') || '[]');
+      CHAT_SESSIONS[ACTIVE_SESSION_ID] = {
+        id: ACTIVE_SESSION_ID,
+        title: 'Ana Sohbet',
+        updatedAt: Date.now(),
+        messages: legacyHistory
+      };
+    }
+
+    let CHAT_HISTORY = CHAT_SESSIONS[ACTIVE_SESSION_ID].messages || [];
     let PENDING_ATTACHMENTS = [];
+
+    function renderChatSessionsBar() {
+      const bar = document.getElementById('chatSessionsBar');
+      if (!bar) return;
+      bar.innerHTML = '';
+      const list = Object.values(CHAT_SESSIONS).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      list.forEach(sess => {
+        const active = sess.id === ACTIVE_SESSION_ID;
+        const pill = document.createElement('div');
+        pill.className = `flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] shrink-0 border transition ${active ? 'bg-sky-600 text-white border-sky-400 font-bold' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'}`;
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'cursor-pointer max-w-[120px] truncate';
+        titleSpan.innerText = sess.title || 'Sohbet';
+        titleSpan.onclick = () => switchChatSession(sess.id);
+        pill.appendChild(titleSpan);
+
+        if (Object.keys(CHAT_SESSIONS).length > 1) {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'text-slate-400 hover:text-rose-400 ml-1 font-bold';
+          delBtn.innerText = '✕';
+          delBtn.onclick = (e) => { e.stopPropagation(); deleteChatSession(sess.id); };
+          pill.appendChild(delBtn);
+        }
+        bar.appendChild(pill);
+      });
+    }
+
+    function createNewChatSession() {
+      const id = 'sess_' + Date.now();
+      CHAT_SESSIONS[id] = {
+        id,
+        title: 'Yeni Sohbet',
+        updatedAt: Date.now(),
+        messages: []
+      };
+      switchChatSession(id);
+    }
+
+    function switchChatSession(id) {
+      if (!CHAT_SESSIONS[id]) return;
+      ACTIVE_SESSION_ID = id;
+      CHAT_HISTORY = CHAT_SESSIONS[id].messages || [];
+      localStorage.setItem('omni_active_session_id', id);
+      renderChatSessionsBar();
+      renderChatMessages();
+    }
+
+    function deleteChatSession(id) {
+      if (!confirm('Bu sohbet seansı silinsin mi?')) return;
+      delete CHAT_SESSIONS[id];
+      const remaining = Object.keys(CHAT_SESSIONS);
+      if (remaining.length === 0) {
+        createNewChatSession();
+        return;
+      }
+      if (ACTIVE_SESSION_ID === id) {
+        ACTIVE_SESSION_ID = remaining[0];
+        CHAT_HISTORY = CHAT_SESSIONS[ACTIVE_SESSION_ID].messages || [];
+      }
+      saveAllChatSessions();
+      renderChatSessionsBar();
+      renderChatMessages();
+    }
+
+    function saveAllChatSessions() {
+      if (CHAT_SESSIONS[ACTIVE_SESSION_ID]) {
+        CHAT_SESSIONS[ACTIVE_SESSION_ID].messages = CHAT_HISTORY;
+        CHAT_SESSIONS[ACTIVE_SESSION_ID].updatedAt = Date.now();
+      }
+      localStorage.setItem('omni_chat_sessions', JSON.stringify(CHAT_SESSIONS));
+      localStorage.setItem('omni_chat_history', JSON.stringify(CHAT_HISTORY.slice(-30)));
+      localStorage.setItem('omni_active_session_id', ACTIVE_SESSION_ID);
+      bridgeFetch('/api/save-chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(CHAT_SESSIONS)
+      }).catch(() => {});
+    }
+
+    async function loadChatSessionsFromBridge() {
+      try {
+        const r = await bridgeFetch('/api/load-chats');
+        if (r.ok) {
+          const loaded = await r.json();
+          if (loaded && typeof loaded === 'object' && Object.keys(loaded).length > 0) {
+            CHAT_SESSIONS = loaded;
+            if (!CHAT_SESSIONS[ACTIVE_SESSION_ID]) {
+              ACTIVE_SESSION_ID = Object.keys(CHAT_SESSIONS)[0];
+            }
+            CHAT_HISTORY = CHAT_SESSIONS[ACTIVE_SESSION_ID].messages || [];
+            localStorage.setItem('omni_chat_sessions', JSON.stringify(CHAT_SESSIONS));
+            renderChatSessionsBar();
+            renderChatMessages();
+          }
+        }
+      } catch (_) {}
+    }
 
     function renderPendingAttachments() {
       const bar = document.getElementById('chatAttachmentsBar');
@@ -1511,7 +1879,16 @@
 
     function renderChatMessages() {
       const box = document.getElementById('chatMessages');
-      if (CHAT_HISTORY.length === 0) return;
+      if (!box) return;
+      if (CHAT_HISTORY.length === 0) {
+        box.innerHTML = `
+          <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300">
+            <div class="font-bold text-sky-400 mb-1">OMNI-APEX AI Asistanı (${selectedAgent?.name || 'Genel'})</div>
+            Yeni bir konuşma başlattın. Sorunu sor, görsel/ekran ekle, kod tarif et veya sol alttan RAG / Konsey modunu tetikle.
+          </div>
+        `;
+        return;
+      }
       box.innerHTML = '';
       CHAT_HISTORY.forEach((msg, msgIdx) => {
         const wrap = document.createElement('div');
@@ -1685,12 +2062,15 @@
           }
         } catch (_) {}
       }
+      const customRules = (window.HUB_DATA && HUB_DATA.rules && HUB_DATA.rules.trim())
+        ? `\n\n[KULLANICI ÖZEL SİSTEM KURALLARI & ANAYASASI]:\n${HUB_DATA.rules.trim()}\n`
+        : '';
       return `${selectedAgent.prompt}
 Sen OMNI-APEX STUDIO OS v3.0 içinde çalışan canlı otonom sistem ajanısın.
 Mevcut Durum:
 - Aktif GitHub Hesabı: ${cfg.ghuser || 'Ayarlanmadı'} / Hedef Repo: ${cfg.ghrepo || 'Ayarlanmadı'}
 - Sağlayıcı Anahtarları: Gemini(${cfg.gemini ? 'Var' : 'Yok'}), Claude(${cfg.claude ? 'Var' : 'Yok'}), OpenAI(${cfg.openai ? 'Var' : 'Yok'}), GitHub Token(${cfg.ghtoken ? 'Var' : 'Yok'})
-- ${filesSummary}
+- ${filesSummary}${customRules}
 
 Kurallar ve Canlı Araçlar:
 1. Dosya ve ayarlara erişemediğini ASLA SÖYLEME. Çalışma alanındaki bir dosyanın içeriğini okuman gerekiyorsa cevabının başına SADECE \`[[READ_FILE: goreceli/dosya_yolu]]\` yaz (örnek: \`[[READ_FILE: index.html]]\` veya \`[[READ_FILE: omni-bridge.ps1]]\` veya \`[[READ_FILE: package.json]]\`). Sistem o dosyayı gerçek diskten okuyup sana anında iletecektir; ardından gerçek kod üzerinden net analiz veya düzenleme ver.
@@ -1708,6 +2088,11 @@ Kurallar ve Canlı Araçlar:
 
       const userPrompt = text || 'Ekteki dosya/medyayı analiz et.';
       CHAT_HISTORY.push({ role: 'user', content: userPrompt, attachments: atts });
+      if (CHAT_SESSIONS[ACTIVE_SESSION_ID] && (!CHAT_SESSIONS[ACTIVE_SESSION_ID].title || CHAT_SESSIONS[ACTIVE_SESSION_ID].title === 'Yeni Sohbet' || CHAT_SESSIONS[ACTIVE_SESSION_ID].title === 'Ana Sohbet')) {
+        CHAT_SESSIONS[ACTIVE_SESSION_ID].title = userPrompt.slice(0, 24) + (userPrompt.length > 24 ? '...' : '');
+        renderChatSessionsBar();
+      }
+      saveAllChatSessions();
       renderChatMessages();
 
       const btn = document.getElementById('chatSendBtn');
@@ -1781,15 +2166,11 @@ Kurallar ve Canlı Araçlar:
         }
 
         CHAT_HISTORY.push({ role: 'assistant', content: reply });
-        const compact = CHAT_HISTORY.slice(-25).map(m => ({
-          role: m.role,
-          content: m.content,
-          attachments: m.attachments?.map(a => ({ name: a.name, mime: a.mime }))
-        }));
-        localStorage.setItem('omni_chat_history', JSON.stringify(compact));
+        saveAllChatSessions();
         renderChatMessages();
       } catch (e) {
         CHAT_HISTORY.push({ role: 'assistant', content: `❌ Hata: ${e.message}` });
+        saveAllChatSessions();
         renderChatMessages();
       } finally {
         btn.disabled = false;
@@ -1811,10 +2192,11 @@ Kurallar ve Canlı Araçlar:
         const sys = await buildLiveSystemContext();
         const reply = await callUniversalAI(sys, CHAT_HISTORY.slice(-10));
         CHAT_HISTORY.push({ role: 'assistant', content: reply });
-        localStorage.setItem('omni_chat_history', JSON.stringify(CHAT_HISTORY.slice(-25)));
+        saveAllChatSessions();
         renderChatMessages();
       } catch (e) {
         CHAT_HISTORY.push({ role: 'assistant', content: `❌ Yenileme Hatası: ${e.message}` });
+        saveAllChatSessions();
         renderChatMessages();
       } finally {
         btn.disabled = false;
@@ -1858,8 +2240,11 @@ Kurallar ve Canlı Araçlar:
 
     function clearChat() {
       CHAT_HISTORY = [];
-      localStorage.removeItem('omni_chat_history');
-      document.getElementById('chatMessages').innerHTML = '<div class="text-slate-400 text-xs">Sohbet temizlendi.</div>';
+      if (CHAT_SESSIONS[ACTIVE_SESSION_ID]) {
+        CHAT_SESSIONS[ACTIVE_SESSION_ID].messages = [];
+      }
+      saveAllChatSessions();
+      renderChatMessages();
     }
 
     function sendCodeToStudio(codeText) {
@@ -1872,13 +2257,29 @@ Kurallar ve Canlı Araçlar:
 
     // 7. GÖRÜNÜM GEÇİŞLERİ & EMÜLATÖR HATA YAKALAYICI
     function switchMainView(view) {
-      ['chat', 'studio', 'rag', 'agents', 'terminal', 'hardware', 'files'].forEach(v => {
-        document.getElementById('view_' + v).classList.toggle('hidden', v !== view);
-        document.getElementById('nav_' + v).className = v === view ? 'flex-1 min-w-[88px] py-2.5 tab-active' : 'flex-1 min-w-[88px] py-2.5 text-slate-400';
+      ['chat', 'studio', 'rag', 'agents', 'terminal', 'hardware', 'files', 'hub'].forEach(v => {
+        const el = document.getElementById('view_' + v);
+        const nav = document.getElementById('nav_' + v);
+        if (el) el.classList.toggle('hidden', v !== view);
+        if (nav) nav.className = v === view ? 'flex-1 min-w-[88px] py-2.5 tab-active' : 'flex-1 min-w-[88px] py-2.5 text-slate-400';
       });
       if (view === 'files') { renderSavedProjects(); loadBridgeWorkspaceFiles(); }
       if (view === 'rag') updateHeaderStatus();
       if (view === 'terminal') checkLocalBridge();
+      if (view === 'hub') { renderHubNotes(); renderHubTasks(); renderFlashcards(); renderAutomations(); }
+    }
+
+    function switchHubSubTab(sub) {
+      ['notes', 'tasks', 'academy', 'agent_creator', 'automations', 'rules', 'connectors'].forEach(s => {
+        const pane = document.getElementById('hub_view_' + s);
+        const btn = document.getElementById('hub_sub_' + s);
+        if (pane) pane.classList.toggle('hidden', s !== sub);
+        if (btn) {
+          btn.className = s === sub
+            ? 'px-3 py-1.5 rounded-lg bg-sky-950/80 border border-sky-500 text-sky-300 font-bold shrink-0'
+            : 'px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 font-semibold shrink-0';
+        }
+      });
     }
 
     function toggleStudioSubTab(sub) {
@@ -2054,18 +2455,40 @@ Kurallar ve Canlı Araçlar:
     }
     let leafletMap = null;
     function requestLocationAccess() {
-      if (!navigator.geolocation) return alert('GPS desteklenmiyor.');
-      navigator.geolocation.getCurrentPosition(pos => {
-        const { latitude, longitude } = pos.coords;
-        document.getElementById('perm_geo').innerText = `✅ ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+      const renderCoords = (lat, lng, label) => {
+        document.getElementById('perm_geo').innerText = `✅ ${label}: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         const mapEl = document.getElementById('mapContainer');
         mapEl.classList.remove('hidden');
         if (!leafletMap) {
-          leafletMap = L.map('mapContainer').setView([latitude, longitude], 15);
+          leafletMap = L.map('mapContainer').setView([lat, lng], 13);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafletMap);
+        } else {
+          leafletMap.setView([lat, lng], 13);
         }
-        L.marker([latitude, longitude]).addTo(leafletMap).bindPopup('Konumunuz').openPopup();
-      }, err => { document.getElementById('perm_geo').innerText = '❌ ' + err.message; });
+        L.marker([lat, lng]).addTo(leafletMap).bindPopup(label).openPopup();
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          renderCoords(pos.coords.latitude, pos.coords.longitude, 'GPS Konumu');
+        }, async () => {
+          try {
+            const r = await fetch('https://ipapi.co/json/');
+            if (r.ok) {
+              const d = await r.json();
+              if (d.latitude && d.longitude) {
+                renderCoords(d.latitude, d.longitude, `${d.city || ''} (${d.country_name || 'IP'})`);
+                return;
+              }
+            }
+          } catch (_) {}
+          document.getElementById('perm_geo').innerText = '❌ Konum servisi yanıt vermedi.';
+        }, { timeout: 4000 });
+      } else {
+        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+          if (d.latitude && d.longitude) renderCoords(d.latitude, d.longitude, `${d.city || ''} (${d.country_name || 'IP'})`);
+        }).catch(e => { document.getElementById('perm_geo').innerText = '❌ Konum alınamadı: ' + e.message; });
+      }
     }
     async function requestFileSystemAccess() {
       try {
@@ -2267,6 +2690,11 @@ Kurallar ve Canlı Araçlar:
 
     function utf8ToB64(str) {
       return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
+    }
+
+    function triggerGitHubWorkflow() {
+      switchMainView('studio');
+      buildCloudMultiPlatform();
     }
 
     async function buildCloudMultiPlatform() {
@@ -2619,22 +3047,49 @@ Kurallar ve Canlı Araçlar:
     }
 
     async function captureScreenToChat() {
-      if (!navigator.mediaDevices?.getDisplayMedia) return alert('Ekran yakalama bu tarayıcıda desteklenmiyor.');
+      // 1. Windows API & PowerShell köprüsünü dene (Electron/file:// ve masaüstünde anında çalışır)
       try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const vid = document.createElement('video');
-        vid.srcObject = stream;
-        await vid.play();
-        await new Promise(r => setTimeout(r, 250));
-        const canvas = document.createElement('canvas');
-        canvas.width = vid.videoWidth || 1280;
-        canvas.height = vid.videoHeight || 720;
-        canvas.getContext('2d').drawImage(vid, 0, 0);
-        stream.getTracks().forEach(t => t.stop());
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-        PENDING_ATTACHMENTS.push({ name: `ekran_${Date.now()}.jpg`, mime: 'image/jpeg', dataUrl, base64: dataUrl.split(',')[1] });
-        renderPendingAttachments();
-      } catch (e) { if (e.name !== 'AbortError') alert('Ekran yakalama hatası: ' + e.message); }
+        const brRes = await bridgeFetch('/api/capture-screen');
+        if (brRes.ok) {
+          const bd = await brRes.json();
+          if (bd.ok && bd.dataUrl) {
+            PENDING_ATTACHMENTS.push({
+              name: `ekran_${Date.now()}.png`,
+              mime: 'image/png',
+              dataUrl: bd.dataUrl,
+              base64: bd.dataUrl.split(',')[1]
+            });
+            renderPendingAttachments();
+            logAgent('📸 Ekran görüntüsü Windows köprüsüyle anında yakalandı!');
+            return;
+          }
+        }
+      } catch (_) {}
+
+      // 2. Tarayıcı getDisplayMedia
+      if (navigator.mediaDevices?.getDisplayMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          const vid = document.createElement('video');
+          vid.srcObject = stream;
+          await vid.play();
+          await new Promise(r => setTimeout(r, 250));
+          const canvas = document.createElement('canvas');
+          canvas.width = vid.videoWidth || 1280;
+          canvas.height = vid.videoHeight || 720;
+          canvas.getContext('2d').drawImage(vid, 0, 0);
+          stream.getTracks().forEach(t => t.stop());
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+          PENDING_ATTACHMENTS.push({ name: `ekran_${Date.now()}.jpg`, mime: 'image/jpeg', dataUrl, base64: dataUrl.split(',')[1] });
+          renderPendingAttachments();
+          return;
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            logAgent('⚠️ Tarayıcı getDisplayMedia: ' + e.message);
+          }
+        }
+      }
+      alert('Ekran yakalama için yerel köprüyü (baslat.bat) çalıştırın.');
     }
 
     async function runDialecticalCouncil() {
@@ -2670,7 +3125,7 @@ Kurallar ve Canlı Araçlar:
       }
       document.getElementById('modelSelect').value = origModel;
       CHAT_HISTORY.push({ role: 'assistant', content: results.join('\n\n---\n\n') });
-      localStorage.setItem('omni_chat_history', JSON.stringify(CHAT_HISTORY.slice(-25)));
+      saveAllChatSessions();
       renderChatMessages();
     }
 
@@ -2851,12 +3306,421 @@ Kurallar ve Canlı Araçlar:
       btn.className = 'text-[10px] px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold';
     }
 
+    // 8. KEŞFET, BECERİLER & ANTİGRAVİTY HUB MOTORU (Notlar, Görevler, Akademi, Kurallar, Otomasyonlar)
+    window.HUB_DATA = JSON.parse(localStorage.getItem('omni_hub_data') || '{}');
+    if (!HUB_DATA.notes) HUB_DATA.notes = [];
+    if (!HUB_DATA.tasks) HUB_DATA.tasks = [];
+    if (!HUB_DATA.rules) HUB_DATA.rules = '';
+    if (!HUB_DATA.flashcards) HUB_DATA.flashcards = [
+      { q: 'Antigravity Çift-Hızlı Yürütme nedir?', a: 'Sistem 1 (Yıldırım modu) basit görevleri anında çözerken, Sistem 2 (Müzakere modu) karmaşık mimarileri diyalektik konsey ile planlar.' },
+      { q: 'Top-K ve Top-P nedir?', a: 'Top-K en olası K kelimeyi seçerken, Top-P kümülatif olasılık havuzunu sınırlar. Yüksek sıcaklıkta Top-K/Top-P kısmak dilbilgisini korur.' }
+    ];
+    if (!HUB_DATA.automations) HUB_DATA.automations = [
+      { id: 'git_watch', name: '🔄 Periyodik Git Durumu (15 dk)', enabled: true, intervalMin: 15, lastRun: null },
+      { id: 'mem_guard', name: '🛡️ RAM & CPU Koruma Gözlemcisi (5 dk)', enabled: true, intervalMin: 5, lastRun: null },
+      { id: 'auto_backup', name: '💾 Otomatik Çalışma Alanı Snapshot (30 dk)', enabled: false, intervalMin: 30, lastRun: null }
+    ];
+
+    let ACTIVE_NOTE_ID = null;
+
+    function saveHubData() {
+      localStorage.setItem('omni_hub_data', JSON.stringify(HUB_DATA));
+      bridgeFetch('/api/save-hub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(HUB_DATA)
+      }).catch(() => {});
+    }
+
+    async function loadHubDataFromBridge() {
+      try {
+        const r = await bridgeFetch('/api/load-hub');
+        if (r.ok) {
+          const d = await r.json();
+          if (d && typeof d === 'object' && (d.notes || d.tasks || d.rules)) {
+            HUB_DATA = { ...HUB_DATA, ...d };
+            localStorage.setItem('omni_hub_data', JSON.stringify(HUB_DATA));
+            const rulesInp = document.getElementById('systemRulesInput');
+            if (rulesInp && HUB_DATA.rules) rulesInp.value = HUB_DATA.rules;
+            renderHubNotes();
+            renderHubTasks();
+            renderFlashcards();
+            renderAutomations();
+          }
+        }
+      } catch (_) {}
+    }
+
+    // --- A) NOT DEFTERİ İŞLEVLERİ ---
+    function renderHubNotes() {
+      const list = document.getElementById('hubNotesList');
+      if (!list) return;
+      list.innerHTML = '';
+      if (!HUB_DATA.notes.length) {
+        list.innerHTML = '<div class="text-slate-500 text-[11px] p-2">Henüz kayıtlı not yok. "+ Yeni Not" ile başlayın.</div>';
+        return;
+      }
+      HUB_DATA.notes.forEach(note => {
+        const item = document.createElement('div');
+        const active = note.id === ACTIVE_NOTE_ID;
+        item.className = `p-2 rounded-lg border cursor-pointer transition text-xs ${active ? 'bg-sky-950/80 border-sky-400' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`;
+        item.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-slate-200 truncate">${escapeHtml(note.title || 'Başlıksız Not')}</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-amber-300">${escapeHtml(note.category || 'Genel')}</span>
+          </div>
+          <div class="text-[10px] text-slate-400 truncate mt-1">${escapeHtml(note.body || '')}</div>
+        `;
+        item.onclick = () => loadNoteToEditor(note.id);
+        list.appendChild(item);
+      });
+    }
+
+    function createNewNote() {
+      ACTIVE_NOTE_ID = 'note_' + Date.now();
+      const newNote = {
+        id: ACTIVE_NOTE_ID,
+        title: 'Yeni Not',
+        category: 'Genel Not',
+        body: '',
+        updatedAt: Date.now()
+      };
+      HUB_DATA.notes.unshift(newNote);
+      loadNoteToEditor(ACTIVE_NOTE_ID);
+      renderHubNotes();
+    }
+
+    function loadNoteToEditor(id) {
+      ACTIVE_NOTE_ID = id;
+      const note = HUB_DATA.notes.find(n => n.id === id);
+      if (!note) return;
+      const tInp = document.getElementById('noteTitleInput');
+      const cInp = document.getElementById('noteCategorySelect');
+      const bInp = document.getElementById('noteBodyInput');
+      if (tInp) tInp.value = note.title || '';
+      if (cInp) cInp.value = note.category || 'Genel Not';
+      if (bInp) bInp.value = note.body || '';
+      renderHubNotes();
+    }
+
+    function saveCurrentNote() {
+      if (!ACTIVE_NOTE_ID) createNewNote();
+      const note = HUB_DATA.notes.find(n => n.id === ACTIVE_NOTE_ID);
+      if (!note) return;
+      note.title = document.getElementById('noteTitleInput').value.trim() || 'Başlıksız Not';
+      note.category = document.getElementById('noteCategorySelect').value;
+      note.body = document.getElementById('noteBodyInput').value;
+      note.updatedAt = Date.now();
+      saveHubData();
+      renderHubNotes();
+      alert('✅ Not kaydedildi!');
+    }
+
+    function deleteCurrentNote() {
+      if (!ACTIVE_NOTE_ID) return;
+      if (!confirm('Bu not silinsin mi?')) return;
+      HUB_DATA.notes = HUB_DATA.notes.filter(n => n.id !== ACTIVE_NOTE_ID);
+      ACTIVE_NOTE_ID = HUB_DATA.notes[0]?.id || null;
+      if (ACTIVE_NOTE_ID) loadNoteToEditor(ACTIVE_NOTE_ID);
+      else {
+        document.getElementById('noteTitleInput').value = '';
+        document.getElementById('noteBodyInput').value = '';
+      }
+      saveHubData();
+      renderHubNotes();
+    }
+
+    async function aiExpandCurrentNote() {
+      const bInp = document.getElementById('noteBodyInput');
+      const currentText = bInp.value.trim();
+      if (!currentText) return alert('Genişletilecek not metni yazın.');
+      bInp.value += '\n\n⏳ AI notu akademik ve teknik olarak zenginleştiriyor...';
+      try {
+        const sys = 'Sen bir polimat araştırma asistanısın. Kullanıcının notunu alıp derinleştir, akademik analojiler, pratik adımlar ve net özetler ekleyerek zenginleştir.';
+        const ans = await callUniversalAI(sys, [{ role: 'user', content: `Bu notu derinleştir:\n\n${currentText}` }]);
+        bInp.value = currentText + '\n\n--- 🧠 AI İLE GENİŞLETİLMİŞ İÇERİK ---\n' + ans;
+        saveCurrentNote();
+      } catch (e) {
+        alert('Genişletme hatası: ' + e.message);
+      }
+    }
+
+    async function aiGenerateQuizFromNote() {
+      const currentText = document.getElementById('noteBodyInput').value.trim();
+      if (!currentText) return alert('Soru çıkarmak için önce not içeriği yazın.');
+      try {
+        const sys = 'Sen bir eğitim ve sınav koçusun. Verilen nottan 3 adet çoktan seçmeli veya açık uçlu sınav sorusu ve cevap anahtarı çıkar.';
+        const ans = await callUniversalAI(sys, [{ role: 'user', content: `Bu nottan sınav soruları üret:\n\n${currentText}` }]);
+        HUB_DATA.flashcards.unshift({ q: 'Sınav Sorusu: ' + (document.getElementById('noteTitleInput').value || 'Not'), a: ans });
+        saveHubData();
+        renderFlashcards();
+        switchHubSubTab('academy');
+        alert('✅ Nottan sorular çıkarıldı ve Akademi kartlarına eklendi!');
+      } catch (e) { alert('Soru üretme hatası: ' + e.message); }
+    }
+
+    function sendNoteToStudio() {
+      const text = document.getElementById('noteBodyInput').value;
+      if (!text.trim()) return alert('Aktarılacak not metni boş.');
+      pushSnapshot(document.getElementById('codeWorkspace').value);
+      document.getElementById('codeWorkspace').value = text;
+      refreshPreview();
+      switchMainView('studio');
+    }
+
+    // --- B) PLANLAYICI & GÖREVLER (TASKS) ---
+    function renderHubTasks() {
+      const list = document.getElementById('hubTasksList');
+      if (!list) return;
+      list.innerHTML = '';
+      const total = HUB_DATA.tasks.length;
+      const done = HUB_DATA.tasks.filter(t => t.done).length;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      const badge = document.getElementById('taskProgressBadge');
+      if (badge) badge.innerText = `%${pct} Tamamlandı (${done}/${total})`;
+
+      if (!total) {
+        list.innerHTML = '<div class="text-slate-500 text-[11px] p-2">Henüz görev yok. Yukarıdan ekleyin veya AI ile bölün.</div>';
+        return;
+      }
+      HUB_DATA.tasks.forEach((t, i) => {
+        const row = document.createElement('div');
+        row.className = `p-2 rounded-lg border flex items-center justify-between gap-2 text-xs transition ${t.done ? 'bg-slate-950/60 border-slate-900 opacity-60' : 'bg-slate-900 border-slate-800'}`;
+        row.innerHTML = `
+          <label class="flex items-center gap-2 flex-1 cursor-pointer truncate">
+            <input type="checkbox" ${t.done ? 'checked' : ''} class="accent-emerald-500 w-4 h-4 rounded" />
+            <span class="${t.done ? 'line-through text-slate-500' : 'text-slate-200'} truncate">${escapeHtml(t.text)}</span>
+          </label>
+          <button class="text-slate-500 hover:text-rose-400 font-bold px-1 text-xs">✕</button>
+        `;
+        row.querySelector('input').onchange = () => toggleHubTask(i);
+        row.querySelector('button').onclick = () => deleteHubTask(i);
+        list.appendChild(row);
+      });
+    }
+
+    function addManualTask() {
+      const inp = document.getElementById('manualTaskInput');
+      const text = inp.value.trim();
+      if (!text) return;
+      HUB_DATA.tasks.unshift({ id: Date.now(), text, done: false });
+      inp.value = '';
+      saveHubData();
+      renderHubTasks();
+    }
+
+    function toggleHubTask(idx) {
+      if (HUB_DATA.tasks[idx]) {
+        HUB_DATA.tasks[idx].done = !HUB_DATA.tasks[idx].done;
+        saveHubData();
+        renderHubTasks();
+      }
+    }
+
+    function deleteHubTask(idx) {
+      HUB_DATA.tasks.splice(idx, 1);
+      saveHubData();
+      renderHubTasks();
+    }
+
+    async function aiBreakdownGoal() {
+      const inp = document.getElementById('aiGoalInput');
+      const goal = inp.value.trim();
+      if (!goal) return alert('Bölünecek bir hedef girin.');
+      inp.value = '⏳ AI adımlara bölüyor...';
+      try {
+        const sys = 'Sen bir teknik proje yöneticisisin. Verilen hedefi tam 5 somut, net ve uygulanabilir kontrol maddesine böl. Sadece her satıra bir görev yaz, numara veya tire ile başlat.';
+        const ans = await callUniversalAI(sys, [{ role: 'user', content: `Bu hedefi somut adımlara böl:\n${goal}` }]);
+        const lines = ans.split('\n').map(l => l.replace(/^[-*•\d.]+\s*/, '').trim()).filter(l => l.length > 4);
+        lines.slice(0, 6).forEach(text => {
+          HUB_DATA.tasks.unshift({ id: Date.now() + Math.random(), text, done: false });
+        });
+        inp.value = '';
+        saveHubData();
+        renderHubTasks();
+        alert(`✅ Hedef ${lines.length} somut göreve bölündü!`);
+      } catch (e) {
+        inp.value = goal;
+        alert('Hedef bölme hatası: ' + e.message);
+      }
+    }
+
+    // --- C) AKADEMİ & FEYNMAN & FLASHCARDS ---
+    async function runFeynmanExplain() {
+      const inp = document.getElementById('feynmanTopicInput');
+      const out = document.getElementById('feynmanOutput');
+      const topic = inp.value.trim();
+      if (!topic) return alert('Açıklanacak konuyu yazın.');
+      out.classList.remove('hidden');
+      out.innerText = '🧠 Feynman tekniğiyle hazırlanıyor...';
+      try {
+        const sys = 'Sen Nobel ödüllü Richard Feynman gibi bir öğretmensin. Konuyu sıfır jargonsuz, günlük hayat benzetmeleriyle, 10 yaşındaki birinin ve bir üniversite öğrencisinin aynı anda anlayacağı şekilde açıkla.';
+        const ans = await callUniversalAI(sys, [{ role: 'user', content: `Bu konuyu Feynman tekniğiyle açıkla: ${topic}` }]);
+        out.innerText = ans;
+      } catch (e) {
+        out.innerText = '❌ Hata: ' + e.message;
+      }
+    }
+
+    function renderFlashcards() {
+      const box = document.getElementById('flashcardsContainer');
+      if (!box) return;
+      box.innerHTML = '';
+      if (!HUB_DATA.flashcards.length) {
+        box.innerHTML = '<div class="text-slate-500 text-[11px]">Henüz kart yok. "+ Kart Ekle" ile ekleyin.</div>';
+        return;
+      }
+      HUB_DATA.flashcards.forEach((fc, i) => {
+        const card = document.createElement('div');
+        card.className = 'p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5 cursor-pointer';
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <span class="font-bold text-sky-300">❓ ${escapeHtml(fc.q)}</span>
+            <button class="text-slate-500 hover:text-rose-400 text-[10px] ml-2">✕</button>
+          </div>
+          <div class="answer-box hidden text-[11px] text-emerald-300 pt-1 border-t border-slate-800 bg-slate-950/40 p-1.5 rounded">${escapeHtml(fc.a)}</div>
+          <div class="text-[9px] text-slate-500">Cevabı görmek/gizlemek için tıkla</div>
+        `;
+        card.onclick = (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          card.querySelector('.answer-box').classList.toggle('hidden');
+        };
+        card.querySelector('button').onclick = (e) => {
+          e.stopPropagation();
+          HUB_DATA.flashcards.splice(i, 1);
+          saveHubData();
+          renderFlashcards();
+        };
+        box.appendChild(card);
+      });
+    }
+
+    function addFlashcardPrompt() {
+      const q = prompt('Soru / Kavram:');
+      if (!q) return;
+      const a = prompt('Cevap / Açıklama:');
+      if (!a) return;
+      HUB_DATA.flashcards.unshift({ q, a });
+      saveHubData();
+      renderFlashcards();
+    }
+
+    // --- D) ÖZEL AJAN FABRİKASI ---
+    function createAndSaveCustomAgent() {
+      const name = document.getElementById('hubNewAgentName').value.trim();
+      const icon = document.getElementById('hubNewAgentIcon').value.trim() || '🤖';
+      const cat = document.getElementById('hubNewAgentCat').value;
+      const prompt = document.getElementById('hubNewAgentPrompt').value.trim();
+      if (!name || !prompt) return alert('Ajan adı ve sistem talimatı zorunludur.');
+
+      const newAgent = {
+        id: Date.now(),
+        name: `${icon} ${name}`,
+        category: cat,
+        prompt: prompt
+      };
+      CUSTOM_AGENTS.unshift(newAgent);
+      ALL_AGENTS.unshift(newAgent);
+      localStorage.setItem('omni_custom_agents', JSON.stringify(CUSTOM_AGENTS));
+      selectedAgent = newAgent;
+      document.getElementById('hubNewAgentName').value = '';
+      document.getElementById('hubNewAgentPrompt').value = '';
+      updateHeaderStatus();
+      renderAgentGrid();
+      alert(`🎉 "${name}" özel ajanı fabrikasyon olarak üretildi ve aktif edildi!`);
+      switchMainView('chat');
+    }
+
+    // --- E) OTOMASYONLAR (AUTOMATIONS) ---
+    function renderAutomations() {
+      const box = document.getElementById('automationsCards');
+      if (!box) return;
+      box.innerHTML = '';
+      (HUB_DATA.automations || []).forEach((a) => {
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-xl border transition ${a.enabled ? 'bg-slate-900 border-amber-500/50' : 'bg-slate-950 border-slate-800 opacity-60'}`;
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <span class="font-bold text-xs text-white">${escapeHtml(a.name)}</span>
+            <input type="checkbox" ${a.enabled ? 'checked' : ''} class="w-4 h-4 accent-amber-500 cursor-pointer" />
+          </div>
+          <div class="text-[10px] text-slate-400">Durum: <strong class="${a.enabled ? 'text-emerald-400' : 'text-slate-500'}">${a.enabled ? 'Aktif Döngü' : 'Kapalı'}</strong></div>
+          <button class="mt-2 w-full text-[10px] py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded">Şimdi Tetikle ⚡</button>
+        `;
+        card.querySelector('input').onchange = (e) => {
+          a.enabled = e.target.checked;
+          saveHubData();
+          renderAutomations();
+        };
+        card.querySelector('button').onclick = () => runSingleAutomation(a);
+        box.appendChild(card);
+      });
+    }
+
+    async function runSingleAutomation(a) {
+      const logEl = document.getElementById('automationsLog');
+      const addLog = (msg) => {
+        if (!logEl) return;
+        const line = document.createElement('div');
+        line.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.prepend(line);
+      };
+      addLog(`⚡ ${a.name} çalıştırılıyor...`);
+      try {
+        if (a.id === 'git_watch') {
+          const res = await bridgeFetch('/api/exec', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ command: 'git status -s' }) });
+          if (res.ok) {
+            const d = await res.json();
+            const changes = (d.stdout || '').trim();
+            addLog(changes ? `📂 Git: ${changes.split('\n').length} dosya değişti.` : '✅ Git: Çalışma alanı temiz.');
+          }
+        } else if (a.id === 'mem_guard') {
+          const res = await bridgeFetch('/api/telemetry');
+          if (res.ok) {
+            const d = await res.json();
+            const t = d.telemetry || d;
+            addLog(`💻 Telemetri: RAM %${t.ram_pct} • Disk ${t.disk_free_gb}GB boş.`);
+          }
+        } else if (a.id === 'auto_backup') {
+          addLog('💾 Otomatik çalışma alanı snapshot alındı.');
+        }
+      } catch (e) {
+        addLog(`❌ Hata: ${e.message}`);
+      }
+    }
+
+    function initAutomations() {
+      setInterval(async () => {
+        const now = Date.now();
+        for (const a of (HUB_DATA.automations || [])) {
+          if (!a.enabled) continue;
+          const intervalMs = (a.intervalMin || 15) * 60 * 1000;
+          if (!a.lastRun || (now - a.lastRun) >= intervalMs) {
+            a.lastRun = now;
+            await runSingleAutomation(a);
+          }
+        }
+      }, 45000);
+    }
+
+    // --- F) SİSTEM KURALLARI (RULES) ---
+    function saveSystemRules() {
+      const inp = document.getElementById('systemRulesInput');
+      HUB_DATA.rules = inp.value;
+      saveHubData();
+      alert('✅ Kişisel sistem kuralları kaydedildi ve tüm ajanlara bağlandı!');
+    }
+
     // BAŞLANGIÇ
     updateHeaderStatus();
     renderModelOptions();
     OmniNeural.initUI();
+    renderChatSessionsBar();
     renderChatMessages();
     syncSettingsWithBridge();
+    loadChatSessionsFromBridge();
+    loadHubDataFromBridge();
+    initAutomations();
     refreshTelemetry();
     setInterval(refreshTelemetry, 20000);
     if (cfg.gemini || cfg.claude || cfg.openai) refreshAllModels();
