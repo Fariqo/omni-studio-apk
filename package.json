@@ -9,7 +9,7 @@
     "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');if(fs.existsSync('manifest.json'))fs.copyFileSync('manifest.json','dist/manifest.json');\"",
     "android:sync": "npm run build:web && npx cap sync android",
     "electron:win": "electron-builder --win nsis portable --publish never",
-    "electron:mac": "electron-builder --mac dmg zip --publish never",
+    "electron:mac": "electron-builder --mac dmg zip --arm64 --x64 --publish never",
     "electron:linux": "electron-builder --linux AppImage --publish never"
   },
   "build": {
@@ -20,32 +20,20 @@
     },
     "files": [
       "dist/**/*",
-      "electron-main.js",
+      "electron-main.js"
+    ],
+    "extraResources": [
       "omni-bridge.ps1",
-      "baslat.bat",
-      "package.json"
+      "baslat.bat"
     ],
     "win": {
       "target": ["nsis", "portable"]
     },
     "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": ["x64", "arm64"]
-        },
-        {
-          "target": "zip",
-          "arch": ["x64", "arm64"]
-        }
-      ],
+      "target": ["dmg", "zip"],
       "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
-    },
-    "dmg": {
-      "sign": false,
-      "filesystem": "HFS+"
     },
     "linux": {
       "target": ["AppImage"]

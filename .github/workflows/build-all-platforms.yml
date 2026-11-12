@@ -97,7 +97,7 @@ jobs:
         run: |
           npm install
           npm run build:web
-          npm run electron:mac || npx electron-builder --mac zip --publish never
+          npm run electron:mac || npx electron-builder --mac dmg zip --publish never || npx electron-builder --mac zip --publish never
       - name: Prepare iOS Project (Unsigned Archive Ready)
         if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'ios' || !github.event.inputs.target_platform
         run: |
@@ -135,7 +135,8 @@ jobs:
       - name: Publish All Platforms to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Omni-Apex Multi-Platform Build #${{ github.run_number }}
+          tag_name: v3.0.${{ github.run_number }}
+          name: Omni-Apex Studio OS v3.0.${{ github.run_number }}
+          make_latest: true
           files: release-files/*
 
