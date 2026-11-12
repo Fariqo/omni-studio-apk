@@ -75,13 +75,21 @@
           🔄 Çek
         </button>
       </div>
-      <div class="flex items-center gap-2 text-[11px]">
+      <div class="flex items-center gap-1.5 text-[11px] flex-wrap">
+        <label class="flex items-center gap-1 cursor-pointer bg-slate-900 border border-slate-700 px-2 py-1 rounded-lg" title="Google Canlı Web Arama: Ezbere yanıt vermez, güncel webi anlık araştırır">
+          <input id="webSearchToggle" type="checkbox" checked class="accent-sky-400" />
+          <span class="text-sky-300 font-semibold">🌐 Canlı Web Ara</span>
+        </label>
+        <label class="flex items-center gap-1 cursor-pointer bg-slate-900 border border-slate-700 px-2 py-1 rounded-lg" title="Geliştirici / Uncensored Modu: Gemini etik/güvenlik filtrelerini (BLOCK_NONE) kaldırır, kodları kısıtlamaz">
+          <input id="uncensoredToggle" type="checkbox" checked class="accent-amber-400" />
+          <span class="text-amber-300 font-semibold">🔓 Filtresiz Kod</span>
+        </label>
         <button onclick="document.getElementById('omniNeuralPanel').classList.toggle('hidden')" id="neuralSummaryBadge" class="bg-slate-900 hover:bg-slate-800 border border-emerald-600/50 px-2.5 py-1 rounded-lg text-emerald-300 font-semibold">
           🧬 Adaptif: Kod (0.10 • 32K)
         </button>
-        <label class="flex items-center gap-1.5 cursor-pointer bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg">
+        <label class="flex items-center gap-1 cursor-pointer bg-slate-900 border border-slate-700 px-2 py-1 rounded-lg">
           <input id="ragEnabledToggle" type="checkbox" checked class="accent-sky-400" />
-          <span class="text-emerald-300 font-semibold">🧠 RAG Aktif</span>
+          <span class="text-emerald-300 font-semibold">🧠 RAG</span>
         </label>
         <span id="tokenStats" class="text-[10px] text-slate-400 font-mono">Hazır</span>
       </div>
@@ -1086,20 +1094,30 @@
       select.innerHTML = '<option>⏳ Tüm sağlayıcılar taranıyor...</option>';
       const discovered = {};
 
-      // A) Google Gemini - En Güncel ve Kararlı Amiral Gemileri
-      discovered['gemini-3.8-flash'] = {
+      // A) Google Gemini - Gemini 4 & 3.x Gerçek Amiral Gemileri (Carbon, Argon, Hydrogen, Flash, Live)
+      discovered['gemini-4-carbon'] = {
         provider: 'gemini',
-        displayName: '✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil & 64K)',
+        displayName: '👑 Gemini 4 Carbon (Frontier Derin Akıl Yürütme & Kod)',
         outputLimit: 65536
       };
-      discovered['gemini-3.8-pro'] = {
+      discovered['gemini-4-argon'] = {
         provider: 'gemini',
-        displayName: '✨ Gemini 3.8 Pro (En Üstün Akıl Yürütme & Kod 64K)',
+        displayName: '⚡ Gemini 4 Argon (Amiral Gemisi Yazılım & Mühendislik)',
+        outputLimit: 32768
+      };
+      discovered['gemini-4-hydrogen'] = {
+        provider: 'gemini',
+        displayName: '🚀 Gemini 4 Hydrogen (Ultra Hızlı Ajan & Kod İcrası)',
+        outputLimit: 65536
+      };
+      discovered['gemini-3.8-flash'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil Multimodal)',
         outputLimit: 65536
       };
       discovered['gemini-3.1-pro'] = {
         provider: 'gemini',
-        displayName: '✨ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu 64K)',
+        displayName: '🛠️ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu)',
         outputLimit: 65536
       };
       discovered['gemini-3.8-live'] = {
@@ -1192,19 +1210,23 @@
 
     function renderModelOptions() {
       const select = document.getElementById('modelSelect');
-      // Deprecated 2.5 modellerini temizle
-      const entries = Object.entries(MODEL_META).filter(([id]) => !id.includes('2.5') && !id.includes('gemini-1.'));
+      // Deprecated 2.5 ve uydurma 3.8-pro modellerini temizle
+      const entries = Object.entries(MODEL_META).filter(([id]) => 
+        !id.includes('2.5') && !id.includes('gemini-1.') && id !== 'gemini-3.8-pro'
+      );
       if (entries.length === 0) {
         select.innerHTML = `
-          <option value="gemini-3.8-flash">✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil & 64K)</option>
-          <option value="gemini-3.8-pro">✨ Gemini 3.8 Pro (En Üstün Akıl Yürütme & Kod 64K)</option>
-          <option value="gemini-3.1-pro">✨ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu 64K)</option>
-          <option value="gemini-3.8-live">🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı)</option>
+          <option value="gemini-4-carbon">👑 Gemini 4 Carbon (Frontier Derin Akıl Yürütme & Kod 64K)</option>
+          <option value="gemini-4-argon">⚡ Gemini 4 Argon (Amiral Gemisi Yazılım & Mühendislik 32K)</option>
+          <option value="gemini-4-hydrogen">🚀 Gemini 4 Hydrogen (Ultra Hızlı Ajan & Kod İcrası 64K)</option>
+          <option value="gemini-3.8-flash">✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil Multimodal 64K)</option>
+          <option value="gemini-3.1-pro">🛠️ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu 64K)</option>
+          <option value="gemini-3.8-live">🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı 8K)</option>
         `;
         return;
       }
       const order = { gemini: 1, claude: 2, openai: 3, ollama: 4 };
-      const flagships = ['gemini-3.8-flash', 'gemini-3.8-pro', 'gemini-3.1-pro', 'gemini-3.8-live'];
+      const flagships = ['gemini-4-carbon', 'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.1-pro', 'gemini-3.8-live'];
       entries.sort(([idA, a], [idB, b]) => {
         if (order[a.provider] !== order[b.provider]) return (order[a.provider] || 9) - (order[b.provider] || 9);
         const idxA = flagships.indexOf(idA);
@@ -1216,8 +1238,8 @@
       });
 
       let prev = localStorage.getItem('omni_selected_model');
-      if (!prev || prev.includes('2.5') || !entries.some(([id]) => id === prev)) {
-        prev = 'gemini-3.8-flash';
+      if (!prev || prev.includes('2.5') || prev === 'gemini-3.8-pro' || !entries.some(([id]) => id === prev)) {
+        prev = entries.some(([id]) => id === 'gemini-4-carbon') ? 'gemini-4-carbon' : 'gemini-4-hydrogen';
         localStorage.setItem('omni_selected_model', prev);
       }
       select.innerHTML = '';
@@ -1564,8 +1586,8 @@
       const rawModelId = document.getElementById('modelSelect').value;
       let modelId = rawModelId;
       if (modelId === 'gemini-3.8-live') {
-        modelId = 'gemini-3.8-flash';
-        logAgent('ℹ️ Gemini 3.8 Live sesli akış modelidir. Metin yanıtı için stabil Gemini 3.8 Flash adaptif olarak devreye alındı.');
+        modelId = MODEL_META['gemini-4-hydrogen'] ? 'gemini-4-hydrogen' : 'gemini-3.8-flash';
+        logAgent(`ℹ️ Gemini 3.8 Live sesli akış modelidir. Metin yanıtı için ${modelId} adaptif olarak devreye alındı.`);
       }
       const meta = MODEL_META[modelId] || { provider: 'gemini', outputLimit: 65536 };
 
@@ -1705,6 +1727,24 @@
         }
       };
 
+      // 1. Sıfır Sansür & Güvenlik/Etik Duvarlarını Kaldırma (BLOCK_NONE) - Kod ve teknik üretim boğulmaz
+      const uncensored = document.getElementById('uncensoredToggle')?.checked !== false;
+      if (uncensored) {
+        payload.safetySettings = [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' }
+        ];
+      }
+
+      // 2. Google Canlı Web Arama & Grounding (Ezbere yanıt vermez, güncel webi anlık araştırır)
+      const webSearchEnabled = document.getElementById('webSearchToggle')?.checked !== false;
+      if (webSearchEnabled) {
+        payload.tools = [{ googleSearch: {} }];
+      }
+
       if (typeof options.onStream === 'function') {
         const streamRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:streamGenerateContent?alt=sse&key=${encodeURIComponent(cfg.gemini)}`, {
           method: 'POST',
@@ -1743,6 +1783,12 @@
               if (chunk.usageMetadata) {
                 const u = chunk.usageMetadata;
                 document.getElementById('tokenStats').innerText = `G:${u.promptTokenCount || 0} / Ç:${u.candidatesTokenCount || 0}`;
+              }
+              if (chunk.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+                const srcTitles = chunk.candidates[0].groundingMetadata.groundingChunks.map(c => c.web?.title).filter(Boolean);
+                if (srcTitles.length) {
+                  document.getElementById('tokenStats').innerText = `🌐 Canlı Web: ${srcTitles.slice(0, 2).join(', ')}`;
+                }
               }
             } catch (parseErr) {
               if (parseErr.message && !/JSON/i.test(parseErr.message)) throw parseErr;
@@ -3190,7 +3236,7 @@ Kurallar ve Canlı Araçlar:
 
       const candidates = [];
       const geminiEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'gemini');
-      if (cfg.gemini) candidates.push({ label: 'Gemini', id: geminiEntry ? geminiEntry[0] : 'gemini-3.8-flash' });
+      if (cfg.gemini) candidates.push({ label: 'Gemini', id: geminiEntry ? geminiEntry[0] : 'gemini-4-carbon' });
       if (cfg.claude) candidates.push({ label: 'Claude', id: 'claude:claude-sonnet-4-20250514' });
       const oaiEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'openai');
       if (cfg.openai && oaiEntry) candidates.push({ label: 'OpenAI/Router', id: oaiEntry[0] });
