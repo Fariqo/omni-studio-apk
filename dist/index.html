@@ -87,7 +87,7 @@
     </div>
 
     <!-- ADAPTİF + MANUEL 5-MODLU NÖRAL PARAMETRE PANELİ -->
-    <div id="omniNeuralPanel" class="hidden glass rounded-xl p-3 mt-2 space-y-2.5 border border-emerald-500/30 text-xs">
+    <div id="omniNeuralPanel" class="glass rounded-xl p-3 mt-2 space-y-2.5 border border-emerald-500/30 text-xs">
       <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2">
         <div>
           <span class="font-bold text-emerald-400">🧬 Adaptif Nöral Parametre & Token Motoru</span>
@@ -535,15 +535,44 @@
         <label class="text-slate-400 block mb-1">Google Drive Apps Script Webhook URL</label>
         <input id="cfg_driveurl" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="text-slate-400 block mb-1">Yaratıcılık (Temperature): <span id="tempValLabel">0.2</span></label>
-          <input id="cfg_temp" type="range" min="0" max="1.2" step="0.1" value="0.2" oninput="document.getElementById('tempValLabel').innerText=this.value" class="w-full accent-sky-400" />
+      <!-- 5-MODLU NÖRAL PARAMETRE & HİPERPARAMETRE PANELİ -->
+      <div class="p-3 rounded-xl bg-slate-900 border border-emerald-500/40 space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-emerald-400">🧬 5-Modlu Yaratıcılık, Keskinlik & Token Motoru</span>
+          <button type="button" onclick="toggleModal('settingsModal'); document.getElementById('omniNeuralPanel').classList.remove('hidden');" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded">
+            🎛️ Paneli Aç
+          </button>
         </div>
-        <div class="flex items-end gap-1">
-          <button onclick="exportConfigJson()" class="flex-1 bg-slate-800 border border-slate-600 text-slate-200 py-1.5 rounded text-[11px]">📤 JSON</button>
-          <button onclick="document.getElementById('importCfgInput').click()" class="flex-1 bg-slate-800 border border-slate-600 text-slate-200 py-1.5 rounded text-[11px]">📥 JSON</button>
-          <input id="importCfgInput" type="file" accept=".json" class="hidden" onchange="importConfigJson(this.files[0])" />
+        <div class="text-[11px] text-slate-300">
+          Uygulama sabit tek bir sıcaklıkla değil, <strong>5 amaca özel adaptif nöral matrisle</strong> çalışır:
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-1 text-[10px]">
+          <button type="button" onclick="OmniNeural.selectPreset('chat'); syncModalWithNeural();" class="p-1.5 rounded bg-slate-800 border border-slate-700 hover:border-sky-400 text-sky-300 text-left">
+            <strong>💬 Sohbet</strong><br/><span class="text-slate-400">0.75 • 1K</span>
+          </button>
+          <button type="button" onclick="OmniNeural.selectPreset('code'); syncModalWithNeural();" class="p-1.5 rounded bg-slate-800 border border-slate-700 hover:border-emerald-400 text-emerald-300 text-left">
+            <strong>💻 Kod</strong><br/><span class="text-slate-400">0.10 • 32K</span>
+          </button>
+          <button type="button" onclick="OmniNeural.selectPreset('design'); syncModalWithNeural();" class="p-1.5 rounded bg-slate-800 border border-slate-700 hover:border-purple-400 text-purple-300 text-left">
+            <strong>🎨 Tasarım</strong><br/><span class="text-slate-400">0.90 • 16K</span>
+          </button>
+          <button type="button" onclick="OmniNeural.selectPreset('ideation'); syncModalWithNeural();" class="p-1.5 rounded bg-slate-800 border border-slate-700 hover:border-amber-400 text-amber-300 text-left">
+            <strong>💡 Fikir</strong><br/><span class="text-slate-400">1.35 • 8K</span>
+          </button>
+          <button type="button" onclick="OmniNeural.selectPreset('ultra'); syncModalWithNeural();" class="p-1.5 rounded bg-slate-800 border border-slate-700 hover:border-rose-400 text-rose-300 text-left">
+            <strong>⚡ Ultra</strong><br/><span class="text-slate-400">1.75 • 8K</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+          <div>
+            <label class="text-slate-400 block mb-1">Seçili Taban Sıcaklık: <strong id="tempValLabel" class="text-emerald-400">0.10</strong></label>
+            <input id="cfg_temp" type="range" min="0" max="2" step="0.05" value="0.10" oninput="document.getElementById('tempValLabel').innerText=this.value; if(window.OmniNeural){ OmniNeural.current.temp=parseFloat(this.value); OmniNeural.onManualSlide(); }" class="w-full accent-emerald-400" />
+          </div>
+          <div class="flex items-end gap-1">
+            <button type="button" onclick="exportConfigJson()" class="flex-1 bg-slate-800 border border-slate-600 text-slate-200 py-1.5 rounded text-[11px]">📤 JSON</button>
+            <button type="button" onclick="document.getElementById('importCfgInput').click()" class="flex-1 bg-slate-800 border border-slate-600 text-slate-200 py-1.5 rounded text-[11px]">📥 JSON</button>
+            <input id="importCfgInput" type="file" accept=".json" class="hidden" onchange="importConfigJson(this.files[0])" />
+          </div>
         </div>
       </div>
       <div class="grid grid-cols-3 gap-1.5">
@@ -1157,10 +1186,26 @@
         const p = NEURAL_PRESETS[this.activePreset] || NEURAL_PRESETS.chat;
         setTxt('neuralSummaryBadge', `🧬 ${this.adaptive ? 'Adaptif' : 'Manuel'}: ${p.short} (${this.current.temp.toFixed(2)} • ${tokLabel})`);
 
+        const modalTemp = document.getElementById('cfg_temp');
+        const modalLbl = document.getElementById('tempValLabel');
+        if (modalTemp) modalTemp.value = this.current.temp;
+        if (modalLbl) modalLbl.innerText = this.current.temp.toFixed(2);
+
         const noticeEl = document.getElementById('omniEntropyNotice');
         if (noticeEl) noticeEl.innerText = customNotice || p.note;
       }
     };
+
+    function syncModalWithNeural() {
+      if (!window.OmniNeural) return;
+      const t = OmniNeural.current.temp;
+      const el = document.getElementById('cfg_temp');
+      const lbl = document.getElementById('tempValLabel');
+      if (el) el.value = t;
+      if (lbl) lbl.innerText = t.toFixed(2);
+      cfg.temp = t;
+      localStorage.setItem('omni_temp', t);
+    }
 
     // 5. EVRENSEL AI ÇAĞRI MOTORU (Gemini SSE Akışı / Claude / OpenAI / Ollama + RAG + Adaptif Parametre)
     async function callUniversalAI(systemPrompt, messagesArray, options = {}) {
