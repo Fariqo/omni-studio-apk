@@ -161,6 +161,7 @@ while ($listener.IsListening) {
             $reader = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
             $body = $reader.ReadToEnd() | ConvertFrom-Json
             $cmd = ([string]$body.command).Trim()
+            $shell = if ($body.shell) { [string]$body.shell.ToLower() } else { "powershell" }
             $notice = ""
             $lower = $cmd.ToLower()
             if ($interactiveTraps.ContainsKey($lower)) {
@@ -168,8 +169,23 @@ while ($listener.IsListening) {
                 $cmd = $interactiveTraps[$lower]
             }
             $psi = New-Object System.Diagnostics.ProcessStartInfo
-            $psi.FileName = "powershell.exe"
-            $psi.Arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + ($cmd | ConvertTo-Json)
+            if ($shell -eq "cmd") {
+                $psi.FileName = "cmd.exe"
+                $psi.Arguments = "/c " + $cmd
+            } elseif ($shell -eq "bash") {
+                $bashExe = if (Test-Path "C:\Program Files\Git\bin\bash.exe") { "C:\Program Files\Git\bin\bash.exe" } elseif (Get-Command bash.exe -ErrorAction SilentlyContinue) { "bash.exe" } else { $null }
+                if ($bashExe) {
+                    $psi.FileName = $bashExe
+                    $psi.Arguments = "-c `"$cmd`""
+                } else {
+                    $notice += "[BILGI] Bash bulunamadi, PowerShell uzerinden calistirildi:`n"
+                    $psi.FileName = "powershell.exe"
+                    $psi.Arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + ($cmd | ConvertTo-Json)
+                }
+            } else {
+                $psi.FileName = "powershell.exe"
+                $psi.Arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + ($cmd | ConvertTo-Json)
+            }
             $psi.WorkingDirectory = $root
             $psi.RedirectStandardInput = $true
             $psi.RedirectStandardOutput = $true

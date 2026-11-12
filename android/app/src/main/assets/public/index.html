@@ -409,16 +409,22 @@
         </div>
 
         <div class="flex flex-wrap gap-1.5 text-[11px]">
+          <button onclick="document.getElementById('terminalShellSelect').value='cmd'; runLocalCommand('ipconfig')" class="bg-slate-900 border border-slate-700 hover:border-amber-400 px-2.5 py-1 rounded text-amber-300">💻 CMD: ipconfig</button>
+          <button onclick="document.getElementById('terminalShellSelect').value='powershell'; runLocalCommand('Get-Process | Select-Object -First 10')" class="bg-slate-900 border border-slate-700 hover:border-sky-400 px-2.5 py-1 rounded text-sky-300">⚡ PS: Süreçler</button>
           <button onclick="runLocalCommand('git status')" class="bg-slate-900 border border-slate-700 hover:border-sky-500 px-2.5 py-1 rounded text-slate-200">git status</button>
           <button onclick="runLocalCommand('adb devices')" class="bg-slate-900 border border-slate-700 hover:border-emerald-500 px-2.5 py-1 rounded text-emerald-300">📱 adb devices</button>
-          <button onclick="runLocalCommand('cd android; ./gradlew assembleDebug')" class="bg-slate-900 border border-slate-700 hover:border-amber-500 px-2.5 py-1 rounded text-amber-300">🔨 Gradle APK Derle</button>
-          <button onclick="runLocalCommand('adb install -r android/app/build/outputs/apk/debug/app-debug.apk')" class="bg-slate-900 border border-slate-700 hover:border-emerald-500 px-2.5 py-1 rounded text-emerald-300">📲 ADB APK Kur</button>
           <button onclick="runLocalCommand('ollama list')" class="bg-slate-900 border border-slate-700 hover:border-purple-500 px-2.5 py-1 rounded text-purple-300">🦙 ollama list</button>
+          <button onclick="runLocalCommand('cd android; ./gradlew assembleDebug')" class="bg-slate-900 border border-slate-700 hover:border-amber-500 px-2.5 py-1 rounded text-amber-300">🔨 Gradle APK Derle</button>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+          <select id="terminalShellSelect" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs rounded-lg px-2.5 py-2 font-mono focus:outline-none focus:border-amber-400">
+            <option value="powershell">⚡ PowerShell</option>
+            <option value="cmd">💻 CMD</option>
+            <option value="bash">🐧 Git Bash / WSL</option>
+          </select>
           <input id="terminalCmdInput" type="text" onkeydown="if(event.key==='Enter')runLocalCommand()"
-            placeholder="PowerShell / Git / Python / ADB / Gradle / MCP komutu yazın..."
+            placeholder="Komut yazın (ipconfig, dir, git status, adb devices, ollama list)..."
             class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-500" />
           <button onclick="runLocalCommand()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs">▶️ Çalıştır</button>
         </div>
@@ -588,13 +594,44 @@
   </div>
 
   <script>
-    // 0. ORTAM ALGILAMA & TEMA MOTORU
-    (function detectEnvironment() {
+    // 0. KÖPRÜ PROTOKOLÜ & AKILLI PORT ARAMA (file://, Electron & Web Uyumluluğu)
+    let BRIDGE_BASE_URL = location.protocol.startsWith('http') ? '' : 'http://localhost:8080';
+
+    async function bridgeFetch(endpoint, options = {}) {
+      const ep = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+      if (BRIDGE_BASE_URL) {
+        try {
+          const res = await fetch(BRIDGE_BASE_URL + ep, options);
+          if (res.ok || res.status < 500) return res;
+        } catch (_) {}
+      }
+      for (const p of [8080, 8081, 8082, 8888, 9090]) {
+        try {
+          const testUrl = `http://localhost:${p}${ep}`;
+          const res = await fetch(testUrl, options);
+          if (res.ok || res.status < 500) {
+            BRIDGE_BASE_URL = `http://localhost:${p}`;
+            updateEnvBadge(p);
+            return res;
+          }
+        } catch (_) {}
+      }
+      return fetch(ep, options);
+    }
+
+    function updateEnvBadge(bridgePort = null) {
       const badge = document.getElementById('envBadge');
+      if (!badge) return;
       const isWin = navigator.platform.toLowerCase().includes('win');
-      const proto = location.protocol === 'file:' ? '⚠️ file://' : `🟢 ${location.host || 'Web'}`;
-      badge.innerText = `${isWin ? '🪟 Windows' : '📱 Mobil'} • ${proto}`;
-    })();
+      let statusStr = location.protocol === 'file:' ? '⚠️ file://' : `🟢 ${location.host || 'Web'}`;
+      if (bridgePort) {
+        statusStr = `🟢 Köprü Port ${bridgePort}`;
+      } else if (BRIDGE_BASE_URL) {
+        statusStr = `🟢 ${BRIDGE_BASE_URL.replace(/^http:\/\//, '')}`;
+      }
+      badge.innerText = `${isWin ? '🪟 Windows' : '📱 Mobil'} • ${statusStr}`;
+    }
+    updateEnvBadge();
 
     function applyTheme(theme) {
       document.body.classList.remove('theme-light', 'theme-crt', 'theme-oled');
@@ -703,7 +740,7 @@
 
     async function syncSettingsWithBridge() {
       try {
-        const r = await fetch('/api/load-settings');
+        const r = await bridgeFetch('/api/load-settings');
         if (!r.ok) return;
         const saved = await r.json();
         if (saved && typeof saved === 'object') {
@@ -736,7 +773,7 @@
       });
       if (!cfg.openai_url) cfg.openai_url = 'https://api.openai.com/v1';
       if (!cfg.ollama) cfg.ollama = 'http://localhost:11434';
-      fetch('/api/save-settings', {
+      bridgeFetch('/api/save-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cfg)
@@ -1039,7 +1076,7 @@
       const badge = document.getElementById('telemetryBadge');
       if (!badge) return;
       try {
-        const res = await fetch('/api/telemetry');
+        const res = await bridgeFetch('/api/telemetry');
         if (!res.ok) throw new Error('offline');
         const payload = await res.json();
         const t = payload.telemetry || payload;
@@ -1596,7 +1633,7 @@
       btnEl.disabled = true;
       btnEl.innerText = '⏳ Yazılıyor...';
       try {
-        const res = await fetch('/api/write-file', {
+        const res = await bridgeFetch('/api/write-file', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path: relPath, content: clean })
@@ -1604,8 +1641,8 @@
         const d = await res.json();
         if (!res.ok || !d.ok) throw new Error(d.error || 'Yazma başarısız');
         if (relPath === 'index.html') {
-          await fetch('/api/write-file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'dist/index.html', content: clean }) }).catch(() => {});
-          await fetch('/api/write-file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'android/app/src/main/assets/public/index.html', content: clean }) }).catch(() => {});
+          await bridgeFetch('/api/write-file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'dist/index.html', content: clean }) }).catch(() => {});
+          await bridgeFetch('/api/write-file', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'android/app/src/main/assets/public/index.html', content: clean }) }).catch(() => {});
         }
         btnEl.innerText = '✅ Uygulandı';
         if (statusEl) statusEl.innerText = d.backup ? '🛡️ Yedek alındı' : '✅ Yeni dosya';
@@ -1641,7 +1678,7 @@
       const bridgeUp = await checkLocalBridge();
       if (bridgeUp) {
         try {
-          const r = await fetch('/api/list-files');
+          const r = await bridgeFetch('/api/list-files');
           if (r.ok) {
             const d = await r.json();
             filesSummary = `Köprü Aktif (${d.root})\nProje Dosyaları:\n- ${(d.files || []).join('\n- ')}`;
@@ -2077,7 +2114,7 @@ Kurallar ve Canlı Araçlar:
     async function loadBridgeWorkspaceFiles() {
       if (!(await checkLocalBridge())) return;
       try {
-        const r = await fetch('/api/list-files');
+        const r = await bridgeFetch('/api/list-files');
         if (!r.ok) return;
         const d = await r.json();
         document.getElementById('winFolderStatus').innerText = `🟢 Köprüyle Otomatik Bağlı (İzin penceresiz): ${d.root}`;
@@ -2107,7 +2144,7 @@ Kurallar ve Canlı Araçlar:
       if (!fileName) return;
 
       if (!winDirHandle && (await checkLocalBridge())) {
-        const r = await fetch('/api/write-file', {
+        const r = await bridgeFetch('/api/write-file', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path: fileName, content: code })
@@ -2135,11 +2172,12 @@ Kurallar ve Canlı Araçlar:
     async function checkLocalBridge() {
       const st = document.getElementById('bridgeStatusText');
       try {
-        const r = await fetch('/api/ping');
+        const r = await bridgeFetch('/api/ping');
         if (r.ok) {
           const d = await r.json();
           LOCAL_BRIDGE_OK = true;
-          if (st) st.innerText = `🟢 Aktif (${d.os} • Port ${d.port} • ${d.cwd})`;
+          if (st) st.innerText = `🟢 Aktif (${d.os || 'Windows'} • Port ${d.port || 8080} • ${d.cwd || '.'})`;
+          updateEnvBadge(d.port || 8080);
           return true;
         }
       } catch (_) {}
@@ -2150,23 +2188,26 @@ Kurallar ve Canlı Araçlar:
 
     async function runLocalCommand(overrideCmd = null) {
       const inp = document.getElementById('terminalCmdInput');
+      const shellSel = document.getElementById('terminalShellSelect');
+      const shell = shellSel ? shellSel.value : 'powershell';
       const cmd = (overrideCmd || inp.value).trim();
       if (!cmd) return;
       if (!overrideCmd) inp.value = '';
+      const promptSym = shell === 'cmd' ? 'CMD>' : (shell === 'bash' ? '$' : 'PS>');
       const out = document.getElementById('terminalOutput');
-      out.textContent += `\n\nPS> ${cmd}\n⏳ Çalıştırılıyor...`;
+      out.textContent += `\n\n${promptSym} ${cmd}\n⏳ Çalıştırılıyor...`;
       out.scrollTop = out.scrollHeight;
       try {
-        const r = await fetch('/api/exec', {
+        const r = await bridgeFetch('/api/exec', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command: cmd })
+          body: JSON.stringify({ command: cmd, shell: shell })
         });
-        if (!r.ok) throw new Error('Yerel köprü aktif değil (baslat.bat ile açın).');
+        if (!r.ok) throw new Error('Yerel köprü aktif değil (baslat.bat veya bridge çalıştırın).');
         const d = await r.json();
         out.textContent += `\n${d.stdout || ''}${d.stderr ? '\n[HATA/STDERR]:\n' + d.stderr : ''}\n[Çıkış Kodu: ${d.exitCode}]`;
       } catch (e) {
-        out.textContent += `\n❌ ${e.message}`;
+        out.textContent += `\n❌ ${e.message}\n💡 Köprü (Port 8080/8081/8082) başlatılmamış olabilir. baslat.bat veya omni-bridge.ps1 çalıştırıldığından emin olun.`;
       }
       out.scrollTop = out.scrollHeight;
     }
@@ -2176,12 +2217,12 @@ Kurallar ve Canlı Araçlar:
       if (!code.trim()) return alert('Aktarılacak kod boş.');
       if (await checkLocalBridge()) {
         try {
-          await fetch('/api/write-file', {
+          await bridgeFetch('/api/write-file', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ path: 'dist/index.html', content: code })
           });
-          const r = await fetch('/api/write-file', {
+          const r = await bridgeFetch('/api/write-file', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ path: 'android/app/src/main/assets/public/index.html', content: code })
@@ -2287,7 +2328,7 @@ Kurallar ve Canlı Araçlar:
 
     async function readWorkspaceRelFile(relPath) {
       if (await checkLocalBridge()) {
-        const r = await fetch('/api/read-file', {
+        const r = await bridgeFetch('/api/read-file', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path: relPath })
@@ -2568,7 +2609,7 @@ Kurallar ve Canlı Araçlar:
 
     async function saveEnvToBridge() {
       if (!(await checkLocalBridge())) return alert('Yerel köprü aktif değil (baslat.bat üzerinden açın).');
-      const r = await fetch('/api/write-file', {
+      const r = await bridgeFetch('/api/write-file', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: '.env', content: buildEnvText() })
