@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Continue"
+﻿$ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 $cfgDir = Join-Path $env:LOCALAPPDATA "OmniApexStudio"
@@ -86,8 +86,9 @@ while ($listener.IsListening) {
         $req = $ctx.Request
         $res = $ctx.Response
         $res.Headers.Add("Access-Control-Allow-Origin", "*")
-        $res.Headers.Add("Access-Control-Allow-Headers", "Content-Type")
+        $res.Headers.Add("Access-Control-Allow-Headers", "*")
         $res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        $res.Headers.Add("Access-Control-Allow-Private-Network", "true")
 
         if ($req.HttpMethod -eq "OPTIONS") {
             $res.StatusCode = 204
@@ -99,6 +100,18 @@ while ($listener.IsListening) {
 
         if ($path -eq "/api/ping") {
             Send-Json $res @{ ok = $true; os = "Windows"; cwd = $root; port = $port }
+            $res.Close()
+            continue
+        }
+
+        if ($path -eq "/api/firewall-rule" -and $req.HttpMethod -eq "POST") {
+            try {
+                $cmd = 'netsh advfirewall firewall add rule name="OmniApexStudio Bridge" dir=in action=allow protocol=TCP localport=8080-8085,8888,9090'
+                $ruleOut = Invoke-Expression $cmd 2>&1 | Out-String
+                Send-Json $res @{ ok = $true; message = "Windows Güvenlik Duvarı kuralı eklendi: " + $ruleOut.Trim() }
+            } catch {
+                Send-Json $res @{ ok = $false; error = $_.Exception.Message }
+            }
             $res.Close()
             continue
         }

@@ -4,6 +4,11 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const http = require('http');
 
+// Guvenlik Duvari ve Yerel Ag / Loopback baglanti kisitlamalarini kaldir
+app.commandLine.appendSwitch('disable-features', 'BlockInsecurePrivateNetworkRequests');
+app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
+app.commandLine.appendSwitch('ignore-certificate-errors', 'true');
+
 // Kalici kullanici verisi (localStorage, IndexedDB ve ayarlar asla silinmez)
 const userDataPath = path.join(app.getPath('appData'), 'OmniApexStudio');
 if (!fs.existsSync(userDataPath)) {

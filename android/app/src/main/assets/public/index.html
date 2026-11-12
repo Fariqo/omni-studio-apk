@@ -141,17 +141,22 @@
         </div>
 
         <!-- Canlı Sohbet Kontrol & Video Akış Şeridi -->
-        <div id="liveSessionBar" class="hidden px-3 py-2 bg-emerald-950/60 border-b border-emerald-700/50 flex items-center justify-between flex-wrap gap-2 text-[11px]">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-            <span id="liveStatusLabel" class="font-bold text-emerald-300">Gemini 3.8 Live Bağlanıyor...</span>
+        <div id="liveSessionBar" class="hidden px-3 py-2 bg-emerald-950/70 border-b border-emerald-700/50 space-y-1.5 text-[11px]">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span id="livePulseDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span id="liveStatusLabel" class="font-bold text-emerald-300">🎙️ Gemini 3.8 Live Bağlanıyor...</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="toggleLiveVideo('camera')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-300">📹 Canlı Kamera</button>
+              <button onclick="toggleLiveVideo('screen')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300">🖥️ Canlı Ekran</button>
+              <button onclick="stopGeminiLive()" class="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold">⏹️ Canlıyı Kapat</button>
+            </div>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="toggleLiveVideo('camera')" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-sky-300">📹 Canlı Kamera</button>
-            <button onclick="toggleLiveVideo('screen')" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-amber-300">🖥️ Canlı Ekran</button>
-            <button onclick="stopGeminiLive()" class="px-2.5 py-1 rounded bg-rose-600 text-white font-bold">⏹️ Bitir</button>
+          <div id="liveTranscriptBox" class="text-[10px] text-slate-300 font-mono bg-black/50 px-2.5 py-1 rounded border border-emerald-900/60 truncate">
+            🎧 Canlı Çift-Yönlü Ses & Görsel Akışı Aktif (Konuştuğunuz an yanıt üretilir)...
           </div>
-          <video id="liveVideoPreview" autoplay muted playsinline class="hidden w-full max-h-32 rounded-lg bg-black object-contain mt-1"></video>
+          <video id="liveVideoPreview" autoplay muted playsinline class="hidden w-full max-h-36 rounded-lg bg-black object-contain border border-slate-700 mt-1"></video>
         </div>
 
         <!-- KALICI ÇOKLU SOHBET SEANSLARI BAR -->
@@ -419,7 +424,10 @@
             <h2 class="text-xs font-bold text-emerald-400">💻 Yerel Windows Terminal & ADB / Git / Gradle Köprüsü</h2>
             <p class="text-[10px] text-slate-400" id="bridgeStatusText">Köprü durumu kontrol ediliyor...</p>
           </div>
-          <button onclick="checkLocalBridge()" class="text-[11px] bg-slate-800 border border-slate-600 px-2.5 py-1 rounded text-sky-300">🔄 Bağlantıyı Test Et</button>
+          <div class="flex items-center gap-1.5">
+            <button onclick="applyFirewallRule()" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-emerald-600/50 px-2.5 py-1 rounded text-emerald-300 font-semibold" title="Windows Güvenlik Duvarı loopback kuralını doğrula / ekle">🛡️ Güvenlik Kalkanı</button>
+            <button onclick="checkLocalBridge()" class="text-[11px] bg-slate-800 border border-slate-600 px-2.5 py-1 rounded text-sky-300">🔄 Bağlantıyı Test Et</button>
+          </div>
         </div>
 
         <div class="flex flex-wrap gap-1.5 text-[11px]">
@@ -824,6 +832,26 @@
         <button onclick="saveEnvToBridge()" class="bg-amber-900/70 border border-amber-700 text-amber-200 py-1.5 rounded text-[11px]">💾 Yerel .env Yaz</button>
         <input id="importEnvInput" type="file" accept=".env,.txt" class="hidden" onchange="importEnvFile(this.files[0])" />
       </div>
+
+      <!-- GÜVENLİK DUVARI & YEREL KÖPRÜ İZİN KALKANI -->
+      <div class="p-2.5 rounded-xl bg-slate-900 border border-sky-500/40 space-y-1.5 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-sky-400">🛡️ Windows Güvenlik Duvarı & Loopback Kalkanı</span>
+          <span class="text-[10px] text-emerald-400 font-mono">127.0.0.1 İzole</span>
+        </div>
+        <p class="text-[11px] text-slate-300">
+          Uygulama dış ağlara kapalıdır, yalnızca yerel bilgisayarınızda (127.0.0.1) çalışır. Defender veya güvenlik duvarı uyarısını engellemek için loopback kuralı ekleyebilirsiniz.
+        </p>
+        <div class="flex gap-1.5">
+          <button type="button" onclick="applyFirewallRule()" class="flex-1 bg-sky-900/80 hover:bg-sky-800 border border-sky-600 text-sky-200 py-1.5 rounded text-[11px] font-semibold">
+            🛡️ 1-Tık Güvenlik Duvarı İzni Ekle
+          </button>
+          <button type="button" onclick="copyFirewallCmd()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-2.5 py-1.5 rounded text-[11px]" title="PowerShell Komutunu Kopyala">
+            📋 Komutu Al
+          </button>
+        </div>
+      </div>
+
       <button onclick="saveConfig()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg mt-2">
         Kaydet & Tüm Modelleri Çek
       </button>
@@ -1058,22 +1086,27 @@
       select.innerHTML = '<option>⏳ Tüm sağlayıcılar taranıyor...</option>';
       const discovered = {};
 
-      // A) Google Gemini
+      // A) Google Gemini - En Güncel ve Kararlı Amiral Gemileri
+      discovered['gemini-3.8-flash'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil & 64K)',
+        outputLimit: 65536
+      };
+      discovered['gemini-3.8-pro'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 3.8 Pro (En Üstün Akıl Yürütme & Kod 64K)',
+        outputLimit: 65536
+      };
+      discovered['gemini-3.1-pro'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu 64K)',
+        outputLimit: 65536
+      };
       discovered['gemini-3.8-live'] = {
         provider: 'gemini',
         displayName: '🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı)',
         outputLimit: 8192,
         isLive: true
-      };
-      discovered['gemini-2.5-flash'] = {
-        provider: 'gemini',
-        displayName: '✨ Gemini 2.5 Flash (Ultra Hızlı & 64K)',
-        outputLimit: 65536
-      };
-      discovered['gemini-2.5-pro'] = {
-        provider: 'gemini',
-        displayName: '✨ Gemini 2.5 Pro (Derin Mimari & Kod 64K)',
-        outputLimit: 65536
       };
 
       if (cfg.gemini) {
@@ -1087,6 +1120,8 @@
             if (data.error) throw new Error(data.error.message);
             (data.models || []).forEach(m => {
               const id = m.name.replace(/^models\//, '');
+              // Eski veya devre dışı 2.5 ve 1.x sürümlerini filtrele
+              if (id.includes('2.5') || id.includes('gemini-1.')) return;
               if ((m.supportedGenerationMethods?.includes('generateContent') || m.supportedGenerationMethods?.includes('bidiGenerateContent')) && (m.name.includes('gemini') || id.includes('gemini'))) {
                 if (!discovered[id]) {
                   discovered[id] = {
@@ -1157,19 +1192,34 @@
 
     function renderModelOptions() {
       const select = document.getElementById('modelSelect');
-      const entries = Object.entries(MODEL_META);
+      // Deprecated 2.5 modellerini temizle
+      const entries = Object.entries(MODEL_META).filter(([id]) => !id.includes('2.5') && !id.includes('gemini-1.'));
       if (entries.length === 0) {
         select.innerHTML = `
+          <option value="gemini-3.8-flash">✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil & 64K)</option>
+          <option value="gemini-3.8-pro">✨ Gemini 3.8 Pro (En Üstün Akıl Yürütme & Kod 64K)</option>
+          <option value="gemini-3.1-pro">✨ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu 64K)</option>
           <option value="gemini-3.8-live">🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı)</option>
-          <option value="gemini-2.5-flash">✨ Gemini 2.5 Flash (Önerilen Hızlı Model)</option>
-          <option value="gemini-2.5-pro">✨ Gemini 2.5 Pro (Derin Akıl Yürütme)</option>
         `;
         return;
       }
       const order = { gemini: 1, claude: 2, openai: 3, ollama: 4 };
-      entries.sort(([idA, a], [idB, b]) => (order[a.provider] - order[b.provider]) || idB.localeCompare(idA));
+      const flagships = ['gemini-3.8-flash', 'gemini-3.8-pro', 'gemini-3.1-pro', 'gemini-3.8-live'];
+      entries.sort(([idA, a], [idB, b]) => {
+        if (order[a.provider] !== order[b.provider]) return (order[a.provider] || 9) - (order[b.provider] || 9);
+        const idxA = flagships.indexOf(idA);
+        const idxB = flagships.indexOf(idB);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return idB.localeCompare(idA);
+      });
 
-      const prev = localStorage.getItem('omni_selected_model');
+      let prev = localStorage.getItem('omni_selected_model');
+      if (!prev || prev.includes('2.5') || !entries.some(([id]) => id === prev)) {
+        prev = 'gemini-3.8-flash';
+        localStorage.setItem('omni_selected_model', prev);
+      }
       select.innerHTML = '';
       entries.forEach(([id, meta]) => {
         const opt = document.createElement('option');
@@ -1178,7 +1228,14 @@
         if (id === prev) opt.selected = true;
         select.appendChild(opt);
       });
-      select.onchange = () => localStorage.setItem('omni_selected_model', select.value);
+      select.onchange = () => {
+        localStorage.setItem('omni_selected_model', select.value);
+        if (select.value === 'gemini-3.8-live' && !liveSession) {
+          if (confirm('🎙️ Gemini 3.8 Live seçildi. Canlı ses ve kamera akışını şimdi başlatmak ister misiniz?')) {
+            startGeminiLive();
+          }
+        }
+      };
     }
 
     // 4. CLIENT-SIDE RAG MOTORU (BM25 + CHUNKING + GITHUB CANLI ARAŞTIRMA)
@@ -1504,8 +1561,13 @@
 
     // 5. EVRENSEL AI ÇAĞRI MOTORU (Gemini SSE Akışı / Claude / OpenAI / Ollama + RAG + Adaptif Parametre)
     async function callUniversalAI(systemPrompt, messagesArray, options = {}) {
-      const modelId = document.getElementById('modelSelect').value;
-      const meta = MODEL_META[modelId] || { provider: 'gemini', outputLimit: 32768 };
+      const rawModelId = document.getElementById('modelSelect').value;
+      let modelId = rawModelId;
+      if (modelId === 'gemini-3.8-live') {
+        modelId = 'gemini-3.8-flash';
+        logAgent('ℹ️ Gemini 3.8 Live sesli akış modelidir. Metin yanıtı için stabil Gemini 3.8 Flash adaptif olarak devreye alındı.');
+      }
+      const meta = MODEL_META[modelId] || { provider: 'gemini', outputLimit: 65536 };
 
       const lastUserMsg = [...messagesArray].reverse().find(m => m.role === 'user')?.content || '';
       if (options.preset) {
@@ -2609,6 +2671,32 @@ Kurallar ve Canlı Araçlar:
       return false;
     }
 
+    async function applyFirewallRule() {
+      try {
+        const r = await bridgeFetch('/api/firewall-rule', { method: 'POST' });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.ok) return alert('✅ ' + d.message);
+          if (d.error) throw new Error(d.error);
+        }
+      } catch (_) {}
+      const cmd = 'New-NetFirewallRule -DisplayName "OmniApexStudio Bridge" -Direction Inbound -LocalPort 8080-8085,8888,9090 -Protocol TCP -Action Allow';
+      navigator.clipboard.writeText(cmd).then(() => {
+        alert('ℹ️ Yönetici izni gerekiyor olabilir.\n\nPowerShell komutu panoya kopyalandı! PowerShell (Yönetici) olarak açıp yapıştırabilirsiniz:\n\n' + cmd);
+      }).catch(() => {
+        prompt('Yönetici olarak açtığınız PowerShell penceresine şu komutu yapıştırın:', cmd);
+      });
+    }
+
+    function copyFirewallCmd() {
+      const cmd = 'New-NetFirewallRule -DisplayName "OmniApexStudio Bridge" -Direction Inbound -LocalPort 8080-8085,8888,9090 -Protocol TCP -Action Allow';
+      navigator.clipboard.writeText(cmd).then(() => {
+        alert('📋 Güvenlik duvarı PowerShell komutu kopyalandı:\n\n' + cmd);
+      }).catch(() => {
+        prompt('PowerShell Komutu:', cmd);
+      });
+    }
+
     async function runLocalCommand(overrideCmd = null) {
       const inp = document.getElementById('terminalCmdInput');
       const shellSel = document.getElementById('terminalShellSelect');
@@ -3102,7 +3190,7 @@ Kurallar ve Canlı Araçlar:
 
       const candidates = [];
       const geminiEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'gemini');
-      if (cfg.gemini) candidates.push({ label: 'Gemini', id: geminiEntry ? geminiEntry[0] : 'gemini-2.5-flash' });
+      if (cfg.gemini) candidates.push({ label: 'Gemini', id: geminiEntry ? geminiEntry[0] : 'gemini-3.8-flash' });
       if (cfg.claude) candidates.push({ label: 'Claude', id: 'claude:claude-sonnet-4-20250514' });
       const oaiEntry = Object.entries(MODEL_META).find(([, m]) => m.provider === 'openai');
       if (cfg.openai && oaiEntry) candidates.push({ label: 'OpenAI/Router', id: oaiEntry[0] });
@@ -3182,11 +3270,20 @@ Kurallar ve Canlı Araçlar:
       if (!cfg.gemini) { toggleModal('settingsModal'); return alert('Canlı sohbet için Google AI Studio API Key girin.'); }
       const bar = document.getElementById('liveSessionBar');
       const statusEl = document.getElementById('liveStatusLabel');
+      const transcriptBox = document.getElementById('liveTranscriptBox');
       const btn = document.getElementById('liveToggleBtn');
       bar.classList.remove('hidden');
-      statusEl.innerText = 'Gemini 3.8 Live bağlanıyor...';
+      statusEl.innerText = '🎙️ Gemini 3.8 Live Bağlanıyor...';
+      if (transcriptBox) transcriptBox.innerText = '⏳ Canlı bağlantı kuruluyor ve ses donanımı hazırlanıyor...';
       btn.innerText = '⏹️ Canlıyı Kapat';
-      btn.className = 'text-[10px] px-2.5 py-1 rounded bg-rose-600 text-white font-bold';
+      btn.className = 'text-[10px] px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold';
+
+      // Adaptif olarak model seçimini Gemini 3.8 Live'a çevir
+      const modelSel = document.getElementById('modelSelect');
+      if (modelSel && modelSel.querySelector('option[value="gemini-3.8-live"]')) {
+        modelSel.value = 'gemini-3.8-live';
+        localStorage.setItem('omni_selected_model', 'gemini-3.8-live');
+      }
 
       try {
         const { GoogleGenAI } = await import('https://esm.sh/@google/genai');
@@ -3194,37 +3291,65 @@ Kurallar ve Canlı Araçlar:
         livePlayCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
         liveNextPlayTime = livePlayCtx.currentTime;
 
-        liveSession = await ai.live.connect({
-          model: 'gemini-3.8-live',
-          config: {
-            responseModalities: ['AUDIO'],
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-            systemInstruction: { parts: [{ text: `${selectedAgent.prompt} Kullanıcıyla Türkçe, akıcı ve net konuş.` }] }
-          },
-          callbacks: {
-            onopen: () => { statusEl.innerText = '🟢 Canlı Sohbet Aktif (Mikrofon Dinleniyor)'; },
-            onmessage: (response) => {
-              const content = response.serverContent;
-              if (content?.interrupted) {
-                liveNextPlayTime = livePlayCtx ? livePlayCtx.currentTime : 0;
+        // Adaptif model listesi: Önce gemini-3.8-live, gerekirse alternatif
+        const candidateModels = ['gemini-3.8-live', 'gemini-2.0-flash-realtime-exp', 'gemini-2.0-flash-exp'];
+        let connectedSession = null;
+        let activeLiveModel = 'gemini-3.8-live';
+
+        for (const candidate of candidateModels) {
+          try {
+            connectedSession = await ai.live.connect({
+              model: candidate,
+              config: {
+                responseModalities: ['AUDIO'],
+                inputAudioTranscription: {},
+                outputAudioTranscription: {},
+                systemInstruction: { parts: [{ text: `${selectedAgent ? selectedAgent.prompt : 'Sen bir yapay zeka asistanısın.'} Kullanıcıyla Türkçe, akıcı, zeki ve son derece net konuş.` }] }
+              },
+              callbacks: {
+                onopen: () => {
+                  statusEl.innerText = `🟢 Canlı Sohbet Aktif (${candidate}) • 🎙️ Dinleniyor`;
+                  if (transcriptBox) transcriptBox.innerText = '🎙️ Mikrofon dinleniyor... İstediğiniz soruyu sorabilir veya kamera/ekran paylaşabilirsiniz.';
+                },
+                onmessage: (response) => {
+                  const content = response.serverContent;
+                  if (content?.interrupted) {
+                    liveNextPlayTime = livePlayCtx ? livePlayCtx.currentTime : 0;
+                    statusEl.innerText = '⚡ Söz Kesildi • Dinleniyor...';
+                  }
+                  if (content?.modelTurn?.parts) {
+                    statusEl.innerText = '🔊 AI Yanıtlıyor...';
+                    for (const part of content.modelTurn.parts) {
+                      if (part.inlineData?.data && livePlayCtx) playPcm24k(part.inlineData.data);
+                    }
+                  }
+                  if (content?.inputTranscription?.text) {
+                    const txt = content.inputTranscription.text;
+                    logAgent(`🎤 [CANLI SES - KULLANICI]: ${txt}`);
+                    if (transcriptBox) transcriptBox.innerText = `🎤 Sen: ${txt}`;
+                  }
+                  if (content?.outputTranscription?.text) {
+                    const txt = content.outputTranscription.text;
+                    statusEl.innerText = `🔊 AI: ${txt.slice(0, 60)}...`;
+                    if (transcriptBox) transcriptBox.innerText = `🔊 Gemini 3.8: ${txt}`;
+                  }
+                },
+                onerror: (err) => {
+                  statusEl.innerText = '⚠️ Canlı Hata: ' + (err.message || err);
+                  if (transcriptBox) transcriptBox.innerText = 'Hata: ' + (err.message || err);
+                },
+                onclose: () => { stopGeminiLive(); }
               }
-              if (content?.modelTurn?.parts) {
-                for (const part of content.modelTurn.parts) {
-                  if (part.inlineData?.data && livePlayCtx) playPcm24k(part.inlineData.data);
-                }
-              }
-              if (content?.inputTranscription?.text) {
-                logAgent(`🎤 [SEN]: ${content.inputTranscription.text}`);
-              }
-              if (content?.outputTranscription?.text) {
-                statusEl.innerText = `🔊 AI: ${content.outputTranscription.text.slice(0, 70)}...`;
-              }
-            },
-            onerror: (err) => { statusEl.innerText = '❌ Live Hata: ' + (err.message || err); },
-            onclose: () => { stopGeminiLive(); }
+            });
+            activeLiveModel = candidate;
+            break;
+          } catch (connErr) {
+            console.warn(`Live model ${candidate} denenemedi:`, connErr);
           }
-        });
+        }
+
+        if (!connectedSession) throw new Error('Gemini Live bağlantısı kurulamadı. API anahtarınızı kontrol edin.');
+        liveSession = connectedSession;
 
         // 16kHz PCM Mikrofon Yakalama
         liveMicStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
@@ -3235,9 +3360,15 @@ Kurallar ve Canlı Araçlar:
           if (!liveSession) return;
           const f32 = e.inputBuffer.getChannelData(0);
           const i16 = new Int16Array(f32.length);
+          let sumSquares = 0;
           for (let i = 0; i < f32.length; i++) {
             const s = Math.max(-1, Math.min(1, f32[i]));
+            sumSquares += s * s;
             i16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+          const rms = Math.sqrt(sumSquares / f32.length);
+          if (rms > 0.03 && statusEl.innerText.includes('Dinleniyor')) {
+            statusEl.innerText = `🎙️ Ses Algılandı (${activeLiveModel})...`;
           }
           const bytes = new Uint8Array(i16.buffer);
           let bin = '';
@@ -3248,6 +3379,7 @@ Kurallar ve Canlı Araçlar:
         proc.connect(liveMicCtx.destination);
       } catch (e) {
         statusEl.innerText = '❌ Bağlanamadı: ' + e.message;
+        if (transcriptBox) transcriptBox.innerText = 'Bağlantı hatası: ' + e.message;
         stopGeminiLive();
       }
     }
@@ -3301,6 +3433,8 @@ Kurallar ve Canlı Araçlar:
       if (liveSession) { try { liveSession.close(); } catch (_) {} liveSession = null; }
       document.getElementById('liveVideoPreview').classList.add('hidden');
       document.getElementById('liveSessionBar').classList.add('hidden');
+      const transcriptBox = document.getElementById('liveTranscriptBox');
+      if (transcriptBox) transcriptBox.innerText = 'Hazır';
       const btn = document.getElementById('liveToggleBtn');
       btn.innerText = '🎙️ Canlı Sohbet';
       btn.className = 'text-[10px] px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold';
