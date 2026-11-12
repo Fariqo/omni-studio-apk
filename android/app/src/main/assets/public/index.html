@@ -1727,15 +1727,16 @@
         }
       };
 
-      // 1. Sıfır Sansür & Güvenlik/Etik Duvarlarını Kaldırma (BLOCK_NONE) - Kod ve teknik üretim boğulmaz
+      // 1. Geliştirici Filtre Esnekliği: En Düşük Filtre Eşiği (BLOCK_ONLY_HIGH)
+      // NOT: 'BLOCK_NONE' standart AI Studio hesaplarında HTTP 400 (INVALID_ARGUMENT) hatası verir!
+      // En esnek ve resmi olarak tüm anahtarlarla çalışan seviye 'BLOCK_ONLY_HIGH' (Block few) değeridir.
       const uncensored = document.getElementById('uncensoredToggle')?.checked !== false;
-      if (uncensored) {
+      if (uncensored && !options._retriedSafety) {
         payload.safetySettings = [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' }
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
         ];
       }
 
@@ -1755,6 +1756,9 @@
           const errTxt = await streamRes.text();
           let errMsg = errTxt;
           try { errMsg = JSON.parse(errTxt).error?.message || errTxt; } catch (_) {}
+          if (streamRes.status === 400 && !options._retriedSafety && (errMsg.includes('safety') || errMsg.includes('HarmBlock') || errMsg.includes('threshold') || errMsg.includes('BLOCK_'))) {
+            return callUniversalAI(systemPrompt, messagesArray, { ...options, _retriedSafety: true });
+          }
           throw new Error(errMsg || `HTTP ${streamRes.status}`);
         }
         const reader = streamRes.body.getReader();
@@ -1803,6 +1807,15 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) {
+        const errTxt = await res.text();
+        let errMsg = errTxt;
+        try { errMsg = JSON.parse(errTxt).error?.message || errTxt; } catch (_) {}
+        if (res.status === 400 && !options._retriedSafety && (errMsg.includes('safety') || errMsg.includes('HarmBlock') || errMsg.includes('threshold') || errMsg.includes('BLOCK_'))) {
+          return callUniversalAI(systemPrompt, messagesArray, { ...options, _retriedSafety: true });
+        }
+        throw new Error(errMsg || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       const usage = data.usageMetadata;
