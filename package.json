@@ -1,0 +1,44 @@
+{
+  "name": "omni-apex-studio-os",
+  "version": "2.0.0",
+  "description": "OMNI-APEX: AI Studio, RAG Engine & Multi-Platform App Factory",
+  "author": "Omni-Apex Studio",
+  "license": "MIT",
+  "main": "electron-main.js",
+  "scripts": {
+    "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});if(!fs.existsSync('dist/index.html'))fs.copyFileSync('index.html','dist/index.html');\"",
+    "android:sync": "npx cap sync android",
+    "electron:win": "npx electron-builder --win nsis msi portable",
+    "electron:mac": "npx electron-builder --mac dmg",
+    "electron:linux": "npx electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "com.omniapex.studio",
+    "productName": "OmniApexStudio",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.js"
+    ],
+    "win": {
+      "target": ["nsis", "msi", "portable"]
+    },
+    "mac": {
+      "target": ["dmg"]
+    },
+    "linux": {
+      "target": ["AppImage"]
+    }
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}
