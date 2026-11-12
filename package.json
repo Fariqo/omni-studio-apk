@@ -6,11 +6,11 @@
   "license": "MIT",
   "main": "electron-main.js",
   "scripts": {
-    "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});if(!fs.existsSync('dist/index.html'))fs.copyFileSync('index.html','dist/index.html');\"",
+    "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');\"",
     "android:sync": "npx cap sync android",
-    "electron:win": "npx electron-builder --win nsis msi portable",
-    "electron:mac": "npx electron-builder --mac dmg",
-    "electron:linux": "npx electron-builder --linux AppImage"
+    "electron:win": "electron-builder --win nsis msi portable",
+    "electron:mac": "electron-builder --mac dmg",
+    "electron:linux": "electron-builder --linux AppImage"
   },
   "build": {
     "appId": "com.omniapex.studio",
@@ -26,7 +26,8 @@
       "target": ["nsis", "msi", "portable"]
     },
     "mac": {
-      "target": ["dmg"]
+      "target": ["dmg"],
+      "identity": null
     },
     "linux": {
       "target": ["AppImage"]

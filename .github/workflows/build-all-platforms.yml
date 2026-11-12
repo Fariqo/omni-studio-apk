@@ -16,14 +16,14 @@ on:
       target_platform:
         description: 'Hedef Platform (all, android, windows, macos, ios)'
         required: true
-        default: 'android'
+        default: 'all'
 
 permissions:
   contents: write
 
 jobs:
   build-android:
-    if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'android'
+    if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'android' || !github.event.inputs.target_platform
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,22 +59,16 @@ jobs:
         with:
           name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-android-apk
           path: android/app/build/outputs/apk/debug/*.apk
-      - name: Publish APK to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Omni-Apex Build #${{ github.run_number }}
-          files: android/app/build/outputs/apk/debug/*.apk
 
   build-windows:
-    if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'windows'
+    if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'windows' || !github.event.inputs.target_platform
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Build Windows EXE / MSI
+      - name: Build Windows EXE / MSI / Portable
         run: |
           npm install
           npm run build:web
@@ -88,7 +82,7 @@ jobs:
             release/*.msi
 
   build-macos-ios:
-    if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || github.event.inputs.target_platform == 'ios'
+    if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || github.event.inputs.target_platform == 'ios' || !github.event.inputs.target_platform
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -96,23 +90,52 @@ jobs:
         with:
           node-version: '20'
       - name: Build macOS DMG
-        if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos'
+        if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || !github.event.inputs.target_platform
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
         run: |
           npm install
           npm run build:web
           npm run electron:mac
       - name: Prepare iOS Project (Unsigned Archive Ready)
-        if: github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'ios'
+        if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'ios' || !github.event.inputs.target_platform
         run: |
           npm install
           npm run build:web
           npm install @capacitor/ios
           npx cap add ios || true
           npx cap sync ios
+          if [ -d "ios" ]; then
+            mkdir -p release
+            zip -r release/OmniApexApp-ios-project.zip ios
+          fi
       - name: Upload Apple Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-apple-builds
           path: |
             release/*.dmg
-            ios/
+            release/*.zip
+
+  publish-release:
+    needs: [build-android, build-windows, build-macos-ios]
+    if: always() && !cancelled() && (needs.build-android.result == 'success' || needs.build-windows.result == 'success' || needs.build-macos-ios.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          find all-artifacts -type f \( -name "*.apk" -o -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.zip" \) -exec cp {} release-files/ \;
+          ls -la release-files/
+      - name: Publish All Platforms to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Omni-Apex Multi-Platform Build #${{ github.run_number }}
+          files: release-files/*
+
