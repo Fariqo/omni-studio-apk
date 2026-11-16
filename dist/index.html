@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#060911" />
   <link rel="manifest" href="./manifest.json" />
-  <title>OMNI-APEX v2.0: AI Sohbet, RAG & Çoklu-Platform Stüdyosu</title>
+  <title>OMNI-NEXUS APEX OS v5.0: Birleşik AI, Telefon, Drive/Yandisk, RAG & Siber Stüdyo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -30,7 +30,7 @@
       <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
       <div class="truncate">
         <h1 class="font-extrabold text-sm tracking-wider bg-gradient-to-r from-sky-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-          OMNI-APEX STUDIO OS v2.0
+          OMNI-NEXUS APEX OS v5.0
         </h1>
         <p class="text-[10px] text-slate-400 truncate" id="activeAgentBadge">Aktif Ajan: Baş Mimar • RAG: <span id="hdrRagCount">0</span> parça</p>
       </div>
@@ -55,14 +55,18 @@
 
   <!-- ANA SEKMELER -->
   <nav class="glass flex overflow-x-auto text-[11px] font-semibold border-b border-slate-800 sticky top-[52px] z-30">
-    <button onclick="switchMainView('chat')" id="nav_chat" class="flex-1 min-w-[88px] py-2.5 tab-active">💬 Sohbet & AI</button>
-    <button onclick="switchMainView('studio')" id="nav_studio" class="flex-1 min-w-[96px] py-2.5 text-slate-400">⚡ Stüdyo & Build</button>
-    <button onclick="switchMainView('rag')" id="nav_rag" class="flex-1 min-w-[96px] py-2.5 text-slate-400">🔍 GitHub & RAG</button>
-    <button onclick="switchMainView('agents')" id="nav_agents" class="flex-1 min-w-[84px] py-2.5 text-slate-400">🧠 120+ Ajan</button>
-    <button onclick="switchMainView('terminal')" id="nav_terminal" class="flex-1 min-w-[88px] py-2.5 text-slate-400">💻 Terminal</button>
-    <button onclick="switchMainView('hardware')" id="nav_hardware" class="flex-1 min-w-[88px] py-2.5 text-slate-400">🛡️ Donanım</button>
-    <button onclick="switchMainView('files')" id="nav_files" class="flex-1 min-w-[88px] py-2.5 text-slate-400">📂 Dosya & Git</button>
-    <button onclick="switchMainView('hub')" id="nav_hub" class="flex-1 min-w-[104px] py-2.5 text-slate-400">🧩 Keşfet & Beceriler</button>
+    <button onclick="switchMainView('chat')" id="nav_chat" class="flex-1 min-w-[82px] py-2.5 tab-active">💬 Sohbet</button>
+    <button onclick="switchMainView('comms')" id="nav_comms" class="flex-1 min-w-[100px] py-2.5 text-slate-400">📞 Tel & Mail</button>
+    <button onclick="switchMainView('cloud')" id="nav_cloud" class="flex-1 min-w-[100px] py-2.5 text-slate-400">☁️ Drive/Yandisk</button>
+    <button onclick="switchMainView('cyber')" id="nav_cyber" class="flex-1 min-w-[96px] py-2.5 text-slate-400">🛡️ RBP & OSINT</button>
+    <button onclick="switchMainView('nexus')" id="nav_nexus" class="flex-1 min-w-[104px] py-2.5 text-slate-400">🤖 7/24 & Donanım</button>
+    <button onclick="switchMainView('studio')" id="nav_studio" class="flex-1 min-w-[88px] py-2.5 text-slate-400">⚡ Stüdyo</button>
+    <button onclick="switchMainView('rag')" id="nav_rag" class="flex-1 min-w-[88px] py-2.5 text-slate-400">🔍 Git & RAG</button>
+    <button onclick="switchMainView('agents')" id="nav_agents" class="flex-1 min-w-[82px] py-2.5 text-slate-400">🧠 Ajanlar</button>
+    <button onclick="switchMainView('terminal')" id="nav_terminal" class="flex-1 min-w-[82px] py-2.5 text-slate-400">💻 Terminal</button>
+    <button onclick="switchMainView('hardware')" id="nav_hardware" class="flex-1 min-w-[82px] py-2.5 text-slate-400">📷 Sensör</button>
+    <button onclick="switchMainView('files')" id="nav_files" class="flex-1 min-w-[82px] py-2.5 text-slate-400">📂 Dosyalar</button>
+    <button onclick="switchMainView('hub')" id="nav_hub" class="flex-1 min-w-[86px] py-2.5 text-slate-400">🧩 Keşfet</button>
   </nav>
 
   <!-- ORTAK MODEL SEÇİM BAR -->
@@ -121,8 +125,8 @@
           <input type="range" id="rngTopK" min="1" max="100" step="1" value="15" oninput="OmniNeural.onManualSlide()" class="w-full accent-amber-400" />
         </div>
         <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
-          <div class="flex justify-between text-[10px] text-slate-400 mb-1"><span>📦 Max Token</span><strong id="valTokens" class="text-purple-400 font-mono">32K</strong></div>
-          <input type="range" id="rngTokens" min="512" max="32768" step="512" value="32768" oninput="OmniNeural.onManualSlide()" class="w-full accent-purple-400" />
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1"><span>📦 Max Token</span><strong id="valTokens" class="text-purple-400 font-mono">64K</strong></div>
+          <input type="range" id="rngTokens" min="512" max="65536" step="512" value="65536" oninput="OmniNeural.onManualSlide()" class="w-full accent-purple-400" />
         </div>
       </div>
       <div id="omniEntropyNotice" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-sky-950/50 border border-sky-700/40 text-sky-200">
@@ -747,6 +751,232 @@
       </div>
     </section>
 
+    <!-- 9. GÖRÜNÜM: 📞 TELEFON ALTYAPISI, ÇOKLU E-POSTA & MESAJLAŞMA -->
+    <section id="view_comms" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3 border border-emerald-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-emerald-400">📞 Programlanabilir Telefon Altyapısı (Twilio Media Streams / SIP / Android ADB + Gemini 3.8 Live)</h2>
+            <p class="text-[10px] text-slate-400" id="telephonyStatusTxt">Durum yükleniyor... (G.711 μ-law 8kHz ↔ PCM16 24kHz Ses Köprüsü)</p>
+          </div>
+          <div class="flex gap-1.5 flex-wrap">
+            <button onclick="refreshTelephonyStatus()" class="text-[11px] bg-slate-800 border border-slate-600 px-2.5 py-1 rounded text-sky-300">🔄 Durumu Çek</button>
+            <button onclick="startTelephonyWSS()" class="text-[11px] bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 rounded text-white font-bold">▶️ WSS :8766 Başlat</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-sky-400">📲 Dış Arama / ADB Telefon</div>
+            <input id="telToInput" type="text" placeholder="+905551234567" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <input id="telMsgInput" type="text" placeholder="Telefonda okunacak AI mesajı..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <div class="flex gap-1">
+              <button onclick="placeOutboundPhoneCall()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-1.5 rounded text-[11px]">📞 Twilio Ara</button>
+              <button onclick="adbPhoneAct('dial')" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1.5 rounded text-[11px]">🤖 ADB Ara</button>
+            </div>
+            <div class="flex gap-1">
+              <button onclick="adbPhoneAct('answer')" class="flex-1 bg-emerald-900/70 border border-emerald-600 text-emerald-200 py-1 rounded text-[10px]">✅ Gelen Çağrıyı Aç</button>
+              <button onclick="adbPhoneAct('end')" class="flex-1 bg-rose-900/70 border border-rose-600 text-rose-200 py-1 rounded text-[10px]">📵 Kapat</button>
+            </div>
+          </div>
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-amber-400">⚙️ AI Telefon Sekreteri & SIP Probe</div>
+            <input id="telWssInput" type="text" placeholder="Public WSS URL (wss://.../twilio-media)" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white text-[11px]" />
+            <input id="telGreetingInput" type="text" placeholder="Karşılama: Merhaba, asistanınıza ulaştınız..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white text-[11px]" />
+            <div class="flex gap-1">
+              <input id="sipHostInput" type="text" placeholder="SIP Sunucu IP/Host" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-white text-[11px]" />
+              <button onclick="probeSipServer()" class="bg-amber-600 text-white px-2.5 rounded text-[11px] font-bold">SIP Test</button>
+            </div>
+            <button onclick="saveTelephonyCfg()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-1.5 rounded text-[11px]">💾 Telefon Ayarlarını Kaydet</button>
+          </div>
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1">
+            <div class="font-bold text-emerald-400">📋 Son Arama Kayıtları & TwiML</div>
+            <div id="telCallLogsBox" class="text-[10px] font-mono text-slate-300 max-h-36 overflow-y-auto space-y-1">Henüz çağrı kaydı yok.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass rounded-xl p-3 space-y-3 border border-sky-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <h2 class="text-xs font-bold text-sky-400">✉️ Çoklu E-Posta (Gmail / Yandex / SMTP / IMAP) & Çok-Kanallı Mesaj Gönderici</h2>
+          <button onclick="refreshCommsStatus()" class="text-[11px] bg-slate-800 border border-slate-600 px-2.5 py-1 rounded text-sky-300">🔄 Profilleri Yenile</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-purple-300">➕ E-Posta Hesabı Bağla</div>
+            <select id="mailProvSel" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+              <option value="gmail">Gmail (SMTP:465 / IMAP:993)</option>
+              <option value="yandex">Yandex Mail (SMTP:465 / IMAP:993)</option>
+              <option value="outlook">Outlook / 365</option>
+              <option value="custom">Özel SMTP/IMAP</option>
+            </select>
+            <input id="mailAddrInput" type="email" placeholder="ornek@gmail.com / @yandex.com" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <input id="mailPassInput" type="password" placeholder="Uygulama Şifresi (App Password)" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <button onclick="addEmailProfile()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-1.5 rounded text-[11px]">💾 E-Posta Profilini Ekle</button>
+            <div id="mailProfilesList" class="text-[10px] text-slate-400"></div>
+          </div>
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-emerald-300">📤 E-Posta Gönder & Gelen Kutusu</div>
+            <input id="emailToInput" type="email" placeholder="Alıcı: hedef@domain.com" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <input id="emailSubjInput" type="text" placeholder="Konu..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <textarea id="emailBodyInput" rows="2" placeholder="E-posta içeriği..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white"></textarea>
+            <div class="flex gap-1">
+              <button onclick="sendRealEmail()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded text-[11px]">✉️ Gönder</button>
+              <button onclick="fetchEmailInbox()" class="flex-1 bg-sky-700 hover:bg-sky-600 text-white font-bold py-1.5 rounded text-[11px]">📥 Gelen Kutusu</button>
+            </div>
+            <div id="emailInboxOut" class="text-[10px] font-mono text-slate-300 max-h-24 overflow-y-auto"></div>
+          </div>
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-amber-300">💬 SMS / WhatsApp / Webhook Mesaj</div>
+            <select id="msgChanSel" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+              <option value="sms">Twilio SMS (+90...)</option>
+              <option value="whatsapp_twilio">Twilio WhatsApp (+90...)</option>
+              <option value="whatsapp_cloud">Meta WhatsApp Cloud API</option>
+              <option value="adb_sms">Android ADB SMS (USB/Wi-Fi)</option>
+              <option value="webhook">Discord / Slack / Ntfy URL</option>
+            </select>
+            <input id="msgTargetInput" type="text" placeholder="Telefon (+90...) veya Webhook URL" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <textarea id="msgTextInput" rows="2" placeholder="Gönderilecek mesaj..." class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white"></textarea>
+            <button onclick="sendOmniChannelMessage()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-1.5 rounded text-[11px]">🚀 Mesajı Gönder</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. GÖRÜNÜM: ☁️ ÇOKLU GOOGLE DRIVE & YANDEX DISK BULUT HUB -->
+    <section id="view_cloud" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3 border border-sky-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-sky-400">☁️ Çoklu Google Drive (Drive v3 / SA / Webhook) & Yandex Disk (OAuth REST + WebDAV)</h2>
+            <p class="text-[10px] text-slate-400">İstediğiniz kadar Drive ve Yandex Disk hesabını bağlayıp dosya listeleyin, yükleyin, indirin veya tek tıkla yedekleyin.</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="refreshStorageAccounts()" class="text-[11px] bg-slate-800 border border-slate-600 px-2.5 py-1 rounded text-sky-300">🔄 Hesapları Getir</button>
+            <button onclick="syncAllCloudStorage()" class="text-[11px] bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-white font-bold">🚀 Tüm Hesaplara Snapshot Yedekle</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+          <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-amber-300">➕ Yeni Bulut Hesabı Bağla</div>
+            <input id="cloudAccName" type="text" placeholder="Etiket (Örn: Yandex Ana, İş Drive 2)" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <select id="cloudAccProv" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white">
+              <option value="yandex_oauth">Yandex Disk (OAuth Token REST API)</option>
+              <option value="yandex_webdav">Yandex Disk (WebDAV Kullanıcı + Uygulama Şifresi)</option>
+              <option value="gdrive_oauth">Google Drive (OAuth2 Access Token)</option>
+              <option value="gdrive_sa">Google Drive (Service Account JSON)</option>
+              <option value="gdrive_webhook">Google Drive (Apps Script Webhook URL)</option>
+            </select>
+            <input id="cloudAccUser" type="text" placeholder="Kullanıcı adı (Sadece WebDAV için)" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <input id="cloudAccSecret" type="password" placeholder="OAuth Token / WebDAV Şifresi / Webhook URL / JSON Yolu" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <button onclick="addCloudStorageAccount()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-1.5 rounded text-[11px]">🔗 Bulut Hesabını Ekle</button>
+          </div>
+          <div class="md:col-span-2 p-2.5 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex justify-between items-center gap-2">
+              <span class="font-bold text-emerald-300">📂 Bağlı Bulut Hesapları & Dosya Gezgini</span>
+              <div class="flex gap-1">
+                <input id="cloudRemotePath" type="text" value="/" class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-[11px] text-white w-28 font-mono" />
+                <input id="cloudUploadLocal" type="text" placeholder="Yerel dosya yolu..." class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-[11px] text-white w-44 font-mono" />
+              </div>
+            </div>
+            <div id="cloudAccountsList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+            <div id="cloudFilesOut" class="p-2 rounded bg-slate-950 border border-slate-800 font-mono text-[10px] text-slate-300 max-h-40 overflow-y-auto">Hesap seçip "Listele" veya "Kota" butonuna basın.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. GÖRÜNÜM: 🛡️ SİBER RBP (RED/BLUE/PURPLE) + OSINT + GITHUB AJAN KADROLARI -->
+    <section id="view_cyber" class="hidden space-y-3">
+      <div class="glass rounded-xl p-3 space-y-3 border border-rose-500/30">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <div>
+            <h2 class="text-xs font-bold text-rose-400">🛡️ Red / Blue / Purple Team Siber Güvenlik & OSINT İstihbarat Matrisi</h2>
+            <p class="text-[10px] text-slate-400">Yetkili savunma/denetim: Canlı port-PID haritası, TLS/HTTP güvenlik başlıkları, SPF/DMARC, sızıntı Taraması & 60+ platform OSINT.</p>
+          </div>
+          <div class="flex gap-1.5 flex-wrap">
+            <button onclick="runCyberAudit('sockets')" class="text-[11px] bg-sky-700 hover:bg-sky-600 px-2.5 py-1 rounded text-white font-bold">🔌 Canlı Port/PID Denetimi</button>
+            <button onclick="runCyberAudit('posture')" class="text-[11px] bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1 rounded text-white font-bold">🛡️ Siber Duruş & MITRE/NIST</button>
+            <button onclick="runCyberAudit('secrets')" class="text-[11px] bg-amber-700 hover:bg-amber-600 px-2.5 py-1 rounded text-white font-bold">🔑 Kod Sızıntı/SAST Taraması</button>
+            <button onclick="loadGithubAgentRoster()" class="text-[11px] bg-purple-700 hover:bg-purple-600 px-2.5 py-1 rounded text-white font-bold">🏆 GitHub Ajan Kadroları (2026)</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+          <div class="flex gap-1 sm:col-span-2">
+            <input id="cyberDomainInput" type="text" placeholder="Domain / URL (TLS + Headers + DMARC)..." class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <button onclick="runCyberAudit('domain')" class="bg-rose-600 hover:bg-rose-500 text-white px-3 rounded font-bold">⚔️ Denetle</button>
+          </div>
+          <div class="flex gap-1">
+            <input id="osintUserInput" type="text" placeholder="OSINT Kullanıcı adı..." class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <button onclick="runCyberAudit('osint_user')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 rounded font-bold">🕵️ Ara</button>
+          </div>
+          <div class="flex gap-1">
+            <input id="osintGhInput" type="text" placeholder="GitHub Scout (örn: torvalds)" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <button onclick="runCyberAudit('github_scout')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 rounded font-bold">🐙 Analiz</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5 text-xs pt-1 border-t border-slate-800">
+          <input id="crawlUrlInput" type="text" placeholder="🌐 Tarayıcı Ajanı URL (Crawl4AI Web->Markdown / Headless DOM)..." class="flex-1 min-w-[240px] bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+          <label class="flex items-center gap-1 text-[11px] text-slate-300 px-1.5"><input id="crawlHeadlessChk" type="checkbox" /> Headless JS</label>
+          <button onclick="runBrowserCrawl()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1 rounded font-bold">🕷️ Sayfayı Çek</button>
+          <button onclick="loadBrowserCapabilities()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-300 px-2.5 py-1 rounded font-bold">🧭 Tarayıcı/CDP</button>
+        </div>
+        <pre id="cyberOutputBox" class="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-emerald-300 max-h-80 overflow-y-auto">Denetim çalıştırmak için yukarıdan araç seçin.</pre>
+      </div>
+    </section>
+
+    <!-- 12. GÖRÜNÜM: 🤖 TELEGRAM 7/24 KÖPRÜSÜ, GERÇEK DONANIM, MCP & ÇOKLU PROJE -->
+    <section id="view_nexus" class="hidden space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="glass rounded-xl p-3 space-y-2 border border-sky-500/30">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-sky-400">🤖 Telegram 7/24 Çoklu-Mod Bağlantı Merkezi</span>
+            <button onclick="refreshTelegramModes()" class="text-[10px] bg-slate-800 border border-slate-600 px-2 py-0.5 rounded text-sky-300">🔍 Webhook Kontrol</button>
+          </div>
+          <p class="text-[10px] text-slate-400">PC kapalıyken kesintisiz 0ms yanıt için Cloudflare Worker (`cloud_standby/cloudflare_worker.js`) veya Render/Fly Container URL'sini bağlayın (409 çakışması otomatik önlenir).</p>
+          <div class="flex gap-1">
+            <input id="tgWebhookUrlInput" type="text" placeholder="https://omni-nexus-cloud-worker.xxx.workers.dev" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-mono text-[11px]" />
+            <button onclick="setTelegramWebhookMode()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 rounded">☁️ 7/24 Bağla</button>
+            <button onclick="clearTelegramWebhookMode()" class="bg-amber-700 hover:bg-amber-600 text-white font-bold px-2.5 rounded" title="Yerel polling moduna geri döndür">🖥️ Yerel Poll</button>
+          </div>
+          <pre id="tgModesBox" class="p-2 bg-slate-950 border border-slate-800 rounded-lg font-mono text-[10px] text-slate-300 max-h-40 overflow-y-auto">Durum bekleniyor...</pre>
+        </div>
+
+        <div class="glass rounded-xl p-3 space-y-2 border border-emerald-500/30">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-emerald-400">🔧 Gerçek Donanım (USB/COM/GPU/ADB) & Wake-on-LAN</span>
+            <button onclick="refreshHardwareCensus()" class="text-[10px] bg-slate-800 border border-slate-600 px-2 py-0.5 rounded text-emerald-300">📡 Donanımı Tara</button>
+          </div>
+          <div class="flex gap-1">
+            <input id="wolMacInput" type="text" placeholder="Wake-on-LAN MAC (AA:BB:CC:DD:EE:FF)" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-mono text-[11px]" />
+            <button onclick="sendWolPacket()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 rounded">⚡ PC Uyandır (WoL)</button>
+          </div>
+          <pre id="hwCensusBox" class="p-2 bg-slate-950 border border-slate-800 rounded-lg font-mono text-[10px] text-emerald-300 max-h-40 overflow-y-auto">Canlı donanım telemetrisi için "Donanımı Tara" butonuna basın.</pre>
+        </div>
+
+        <div class="glass rounded-xl p-3 space-y-2 border border-purple-500/30 md:col-span-2">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <span class="font-bold text-purple-400">🔌 Gerçek MCP (stdio JSON-RPC 2.0), Zamansal Hafıza & Tek-Uygulama Senkron Merkezi</span>
+            <div class="flex gap-1.5 flex-wrap">
+              <button onclick="listMcpToolsLive()" class="text-[10px] bg-purple-700 hover:bg-purple-600 text-white font-bold px-2.5 py-1 rounded">🛠️ MCP Araçları</button>
+              <button onclick="loadMcpCatalog()" class="text-[10px] bg-indigo-700 hover:bg-indigo-600 text-white font-bold px-2.5 py-1 rounded">📦 MCP Katalog</button>
+              <button onclick="loadMultiWorkspaceTree()" class="text-[10px] bg-sky-700 hover:bg-sky-600 text-white font-bold px-2.5 py-1 rounded">📂 Tüm Projeler</button>
+              <button onclick="syncUnifiedMonorepo()" class="text-[10px] bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-2.5 py-1 rounded">🔗 Tek-Uygulama Eşitle</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-1.5 text-[11px]">
+            <input id="tfSubInput" type="text" placeholder="Özne (ör: Sistem)" class="bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <input id="tfPredInput" type="text" placeholder="İlişki (ör: bulut_modu)" class="bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <input id="tfObjInput" type="text" placeholder="Değer (ör: Cloudflare D1)" class="bg-slate-950 border border-slate-700 rounded p-1.5 text-white" />
+            <div class="flex gap-1">
+              <button onclick="saveTemporalFact()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded px-2">🧠 Olgu İşle</button>
+              <button onclick="queryTemporalFacts()" class="bg-slate-800 border border-slate-600 text-amber-300 rounded px-2">📜</button>
+            </div>
+          </div>
+          <pre id="mcpWorkspaceBox" class="p-2 bg-slate-950 border border-slate-800 rounded-lg font-mono text-[10px] text-sky-200 max-h-48 overflow-y-auto">MCP araçlarını, zamansal hafızayı veya birleşik proje ağacını görüntülemek için yukarıdan seçin.</pre>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- AYARLAR MODALI -->
@@ -796,6 +1026,16 @@
       <div>
         <label class="text-slate-400 block mb-1">Google Drive Apps Script Webhook URL</label>
         <input id="cfg_driveurl" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-slate-400 block mb-1">Birleşik Python Beyin URL (:8765)</label>
+          <input id="cfg_nexus_url" type="text" placeholder="http://127.0.0.1:8765" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
+        <div>
+          <label class="text-slate-400 block mb-1">WebGuard Commander Token (.env)</label>
+          <input id="cfg_commander_token" type="password" placeholder="Dış erişim için (localhost'ta opsiyonel)" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" />
+        </div>
       </div>
       <!-- 5-MODLU NÖRAL PARAMETRE & HİPERPARAMETRE PANELİ -->
       <div class="p-3 rounded-xl bg-slate-900 border border-emerald-500/40 space-y-2 text-xs">
@@ -950,6 +1190,35 @@
     const CUSTOM_AGENTS = JSON.parse(localStorage.getItem('omni_custom_agents') || '[]');
     CUSTOM_AGENTS.forEach(ca => ALL_AGENTS.unshift({ ...ca, id: idCounter++ }));
 
+    function persistCustomAgents() {
+      localStorage.setItem('omni_custom_agents', JSON.stringify(CUSTOM_AGENTS));
+      bridgeFetch('/api/save-agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agents: CUSTOM_AGENTS })
+      }).catch(() => {});
+    }
+
+    async function loadCustomAgentsFromBridge() {
+      try {
+        const r = await bridgeFetch('/api/load-agents');
+        if (r.ok) {
+          const d = await r.json();
+          if (Array.isArray(d.agents) && d.agents.length) {
+            const existingNames = new Set(ALL_AGENTS.map(a => a.name));
+            d.agents.forEach(a => {
+              if (!existingNames.has(a.name)) {
+                ALL_AGENTS.unshift(a);
+                CUSTOM_AGENTS.push(a);
+              }
+            });
+            localStorage.setItem('omni_custom_agents', JSON.stringify(CUSTOM_AGENTS));
+            renderAgentGrid();
+          }
+        }
+      } catch (_) {}
+    }
+
     function addCustomAgent() {
       const name = document.getElementById('customAgentName').value.trim();
       const cat = document.getElementById('customAgentCat').value.trim() || 'Özel Uzman';
@@ -957,7 +1226,7 @@
       if (!name || !prompt) return alert('Ajan adı ve sistem talimatı girin.');
       const newAgent = { id: Date.now(), name, category: cat, prompt };
       CUSTOM_AGENTS.unshift(newAgent);
-      localStorage.setItem('omni_custom_agents', JSON.stringify(CUSTOM_AGENTS));
+      persistCustomAgents();
       ALL_AGENTS.unshift(newAgent);
       selectedAgent = newAgent;
       document.getElementById('customAgentName').value = '';
@@ -1003,10 +1272,12 @@
       ghuser: localStorage.getItem('omni_ghuser') || '',
       ghrepo: localStorage.getItem('omni_ghrepo') || '',
       driveurl: localStorage.getItem('omni_driveurl') || '',
+      nexus_url: localStorage.getItem('omni_nexus_url') || 'http://127.0.0.1:8765',
+      commander_token: localStorage.getItem('omni_commander_token') || '',
       temp: parseFloat(localStorage.getItem('omni_temp') || '0.2')
     };
     function applyCfgToInputs() {
-      ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'temp'].forEach(k => {
+      ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'nexus_url', 'commander_token', 'temp'].forEach(k => {
         const el = document.getElementById('cfg_' + k);
         if (el) el.value = cfg[k];
       });
@@ -1047,7 +1318,7 @@
     }
 
     function saveConfig() {
-      ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'temp'].forEach(k => {
+      ['gemini', 'claude', 'openai', 'openai_url', 'ollama', 'ghtoken', 'ghuser', 'ghrepo', 'driveurl', 'nexus_url', 'commander_token', 'temp'].forEach(k => {
         const el = document.getElementById('cfg_' + k);
         if (el) {
           cfg[k] = k === 'temp' ? parseFloat(el.value) : el.value.trim();
@@ -1393,6 +1664,21 @@
     }
 
     async function indexWindowsFolderIntoRag() {
+      if (await checkLocalBridge()) {
+        try {
+          const r = await bridgeFetch('/api/list-files');
+          if (r.ok) {
+            const d = await r.json();
+            const candidates = (d.files || []).filter(f => /\.(html|js|ts|py|md|json|ps1|yml)$/i.test(f)).slice(0, 25);
+            let total = 0;
+            for (const f of candidates) {
+              const txt = await readWorkspaceRelFile(f).catch(() => '');
+              if (txt && txt.length < 100000) total += addDocumentToRag(`win:${f}`, txt);
+            }
+            return alert(`✅ Köprüyle ${candidates.length} proje dosyasından ${total} parça RAG indeksine eklendi!`);
+          }
+        } catch (_) {}
+      }
       if (!winDirHandle) {
         await connectWindowsFolder();
         if (!winDirHandle) return;
@@ -2314,7 +2600,7 @@ Kurallar ve Canlı Araçlar:
 
         let workingMsgs = CHAT_HISTORY.slice(-10);
         let reply = '';
-        for (let hop = 0; hop < 3; hop++) {
+        for (let hop = 0; hop < 5; hop++) {
           reply = await callUniversalAI(sys, workingMsgs, {
             skipIntentDetect: true,
             genConfig: gc,
@@ -2325,7 +2611,7 @@ Kurallar ve Canlı Araçlar:
           });
 
           const fileMatch = reply.match(/\[\[READ_FILE:\s*([^\]]+)\]\]/i);
-          if (!fileMatch || hop >= 2) break;
+          if (!fileMatch || hop >= 4) break;
           const relPath = fileMatch[1].trim().replace(/^["'`]|["'`]$/g, '');
           setStep(`📄 4/4 Dosya Okunuyor: ${relPath}`, `🔍 Ajan Diskten Okuyor: ${relPath}`);
           const fileTxt = await readWorkspaceRelFile(relPath);
@@ -2433,16 +2719,19 @@ Kurallar ve Canlı Araçlar:
 
     // 7. GÖRÜNÜM GEÇİŞLERİ & EMÜLATÖR HATA YAKALAYICI
     function switchMainView(view) {
-      ['chat', 'studio', 'rag', 'agents', 'terminal', 'hardware', 'files', 'hub'].forEach(v => {
+      ['chat', 'comms', 'cloud', 'cyber', 'nexus', 'studio', 'rag', 'agents', 'terminal', 'hardware', 'files', 'hub'].forEach(v => {
         const el = document.getElementById('view_' + v);
         const nav = document.getElementById('nav_' + v);
         if (el) el.classList.toggle('hidden', v !== view);
-        if (nav) nav.className = v === view ? 'flex-1 min-w-[88px] py-2.5 tab-active' : 'flex-1 min-w-[88px] py-2.5 text-slate-400';
+        if (nav) nav.className = v === view ? 'flex-1 min-w-[82px] py-2.5 tab-active' : 'flex-1 min-w-[82px] py-2.5 text-slate-400';
       });
       if (view === 'files') { renderSavedProjects(); loadBridgeWorkspaceFiles(); }
       if (view === 'rag') updateHeaderStatus();
       if (view === 'terminal') checkLocalBridge();
       if (view === 'hub') { renderHubNotes(); renderHubTasks(); renderFlashcards(); renderAutomations(); }
+      if (view === 'comms') { refreshTelephonyStatus(); refreshCommsStatus(); }
+      if (view === 'cloud') { refreshStorageAccounts(); }
+      if (view === 'nexus') { refreshTelegramModes(); }
     }
 
     function switchHubSubTab(sub) {
@@ -2981,6 +3270,14 @@ Kurallar ve Canlı Araçlar:
           if (d.ok) return d.content;
         }
       }
+      try {
+        const nd = await nexusFetch('/api/workspace/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: relPath })
+        });
+        if (nd.ok) return nd.content;
+      } catch (_) {}
       if (winDirHandle) {
         const parts = relPath.split('/');
         let dir = winDirHandle;
@@ -3419,47 +3716,47 @@ Kurallar ve Canlı Araçlar:
       liveNextPlayTime = livePlayCtx.currentTime;
 
       let wsConnected = false;
-      const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(cfg.gemini)}`;
+      let liveSetupDone = false;
+      const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(cfg.gemini)}`;
 
       try {
         const ws = new WebSocket(wsUrl);
         liveWs = ws;
 
         const connTimeout = setTimeout(() => {
-          if (!wsConnected && ws.readyState !== WebSocket.OPEN) {
-            console.warn('WebSocket zaman aşımı, Sesli Sohbet Yedek Modu başlatılıyor...');
+          if (!liveSetupDone && ws.readyState !== WebSocket.CLOSED) {
             ws.close();
-            startVoiceChatFallback('⚠️ WebSocket zaman aşımı. Adaptif Sesli Konuşma Modu devrede.');
+            startVoiceChatFallback('⚠️ Gemini Live el sıkışma zaman aşımı (API/Ağ kontrol edin). Adaptif Sesli Sohbet devrede.');
           }
-        }, 6000);
+        }, 7000);
 
         ws.onopen = async () => {
           wsConnected = true;
-          clearTimeout(connTimeout);
-          statusEl.innerText = '🟢 Canlı Gemini 3.8 Live Aktif • 🎙️ Dinleniyor';
-          if (transcriptBox) transcriptBox.innerText = '🎙️ Gemini 3.8 Live aktif! Konuşmaya başlayabilirsiniz (kamera veya ekran paylaşabilirsiniz).';
-
-          // 1. Initial Handshake Setup Message
+          statusEl.innerText = '🔄 Gemini 3.8 Live el sıkışması yapılıyor (setupComplete bekleniyor)...';
           ws.send(JSON.stringify({
             setup: {
               model: 'models/gemini-3.8-live',
               generationConfig: {
-                responseModalities: ['AUDIO']
+                responseModalities: ['AUDIO'],
+                speechConfig: {
+                  voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } }
+                }
               },
               systemInstruction: {
                 parts: [{ text: `${selectedAgent ? selectedAgent.prompt : 'Sen bir yapay zeka asistanısın.'} Kullanıcıyla Türkçe, akıcı, zeki, derinlikli ve son derece net konuş.` }]
               }
             }
           }));
+        };
 
-          // 2. 16kHz PCM Mikrofon Yakalama
+        const startMicCapture = async () => {
           try {
             liveMicStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
             liveMicCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
             const src = liveMicCtx.createMediaStreamSource(liveMicStream);
             const proc = liveMicCtx.createScriptProcessor(4096, 1, 1);
             proc.onaudioprocess = (e) => {
-              if (!liveWs || liveWs.readyState !== WebSocket.OPEN) return;
+              if (!liveWs || liveWs.readyState !== WebSocket.OPEN || !liveSetupDone) return;
               const f32 = e.inputBuffer.getChannelData(0);
               const i16 = new Int16Array(f32.length);
               let sumSquares = 0;
@@ -3468,8 +3765,7 @@ Kurallar ve Canlı Araçlar:
                 sumSquares += s * s;
                 i16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
               }
-              const rms = Math.sqrt(sumSquares / f32.length);
-              if (rms > 0.03) {
+              if (Math.sqrt(sumSquares / f32.length) > 0.03) {
                 statusEl.innerText = '🎙️ Konuşma Algılandı • Dinleniyor...';
               }
               const bytes = new Uint8Array(i16.buffer);
@@ -3477,7 +3773,7 @@ Kurallar ve Canlı Araçlar:
               for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
               liveWs.send(JSON.stringify({
                 realtimeInput: {
-                  mediaChunks: [{ mimeType: 'audio/pcm;rate=16000', data: btoa(bin) }]
+                  audio: { mimeType: 'audio/pcm;rate=16000', data: btoa(bin) }
                 }
               }));
             };
@@ -3496,6 +3792,15 @@ Kurallar ve Canlı Araçlar:
             else if (event.data instanceof Blob) msg = JSON.parse(await event.data.text());
           } catch (_) {}
           if (!msg) return;
+
+          if (msg.setupComplete !== undefined && !liveSetupDone) {
+            liveSetupDone = true;
+            clearTimeout(connTimeout);
+            statusEl.innerText = '🟢 Canlı Gemini 3.8 Live Aktif • 🎙️ Dinleniyor';
+            if (transcriptBox) transcriptBox.innerText = '🎙️ Gemini 3.8 Live aktif! Konuşmaya başlayabilirsiniz (kamera veya ekran paylaşabilirsiniz).';
+            await startMicCapture();
+            return;
+          }
 
           const content = msg.serverContent;
           if (content?.interrupted) {
@@ -3517,13 +3822,20 @@ Kurallar ve Canlı Araçlar:
 
         ws.onerror = (err) => {
           console.warn('Live WebSocket hatası:', err);
-          if (!wsConnected) {
-            startVoiceChatFallback('⚠️ Canlı WebSocket güvenlik kısıtlamasına takıldı. Çift yönlü Sesli Sohbet devrede.');
+          if (!liveSetupDone) {
+            clearTimeout(connTimeout);
+            startVoiceChatFallback('⚠️ Canlı WebSocket bağlantısı reddedildi. Çift yönlü Sesli Sohbet devrede.');
           }
         };
 
-        ws.onclose = () => {
-          if (!liveIsVoiceFallback && wsConnected) stopGeminiLive();
+        ws.onclose = (ev) => {
+          clearTimeout(connTimeout);
+          if (!liveSetupDone && !liveIsVoiceFallback) {
+            const reason = ev?.reason ? ` (${ev.code}: ${ev.reason})` : ` (Kod: ${ev?.code || '?'})`;
+            startVoiceChatFallback(`⚠️ Gemini Live sunucusu oturumu kapattı${reason}. Sesli Sohbet yedeğine geçildi.`);
+          } else if (!liveIsVoiceFallback && liveSetupDone) {
+            stopGeminiLive();
+          }
         };
 
       } catch (wsEx) {
@@ -3633,7 +3945,7 @@ Kurallar ve Canlı Araçlar:
           const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
           liveWs.send(JSON.stringify({
             realtimeInput: {
-              mediaChunks: [{ mimeType: 'image/jpeg', data: b64 }]
+              video: { mimeType: 'image/jpeg', data: b64 }
             }
           }));
         }, 1000);
@@ -3975,7 +4287,7 @@ Kurallar ve Canlı Araçlar:
       };
       CUSTOM_AGENTS.unshift(newAgent);
       ALL_AGENTS.unshift(newAgent);
-      localStorage.setItem('omni_custom_agents', JSON.stringify(CUSTOM_AGENTS));
+      persistCustomAgents();
       selectedAgent = newAgent;
       document.getElementById('hubNewAgentName').value = '';
       document.getElementById('hubNewAgentPrompt').value = '';
@@ -4065,6 +4377,321 @@ Kurallar ve Canlı Araçlar:
       alert('✅ Kişisel sistem kuralları kaydedildi ve tüm ajanlara bağlandı!');
     }
 
+    // =========================================================================
+    // 13. BİRLEŞİK PYTHON SÜPER-BEYİN (:8765) KONNEKTÖRÜ (Telefon / Mail / Drive / Yandex / RBP / MCP)
+    // =========================================================================
+    function getNexusBaseUrl() {
+      if (location.port === '8765' && location.protocol.startsWith('http')) return '';
+      return (cfg.nexus_url || 'http://127.0.0.1:8765').replace(/\/$/, '');
+    }
+
+    async function nexusFetch(ep, opts = {}) {
+      const base = getNexusBaseUrl();
+      const headers = { ...(opts.headers || {}) };
+      if (cfg.commander_token) headers['X-Commander-Token'] = cfg.commander_token;
+      const res = await fetch(base + ep, { ...opts, headers, credentials: base ? 'omit' : 'same-origin' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    async function refreshTelephonyStatus() {
+      const el = document.getElementById('telephonyStatusTxt');
+      try {
+        const d = await nexusFetch('/api/telephony/status');
+        const adbStr = d.adb_telephony?.call_state ? `ADB: ${d.adb_telephony.call_state}` : (d.adb_telephony?.reason || 'ADB Yok');
+        if (el) el.innerText = `WSS :${d.ws_local_port} ${d.ws_bridge_running ? '🟢 Açık' : '⚪ Kapalı'} • Twilio: ${d.twilio_configured ? '🟢 Hazır' : '⚪ Eksik'} • ${adbStr}`;
+        if (d.config_safe) {
+          if (document.getElementById('telWssInput')) document.getElementById('telWssInput').value = d.config_safe.public_wss_url || '';
+          if (document.getElementById('telGreetingInput')) document.getElementById('telGreetingInput').value = d.config_safe.greeting_tr || '';
+          if (document.getElementById('sipHostInput')) document.getElementById('sipHostInput').value = d.config_safe.sip_server || '';
+        }
+        const box = document.getElementById('telCallLogsBox');
+        if (box) box.innerText = (d.recent_calls || []).length ? JSON.stringify(d.recent_calls, null, 2) : 'Henüz çağrı kaydı yok.';
+      } catch (e) { if (el) el.innerText = '⚠️ Birleşik Beyin (:8765) offline: ' + e.message; }
+    }
+
+    async function startTelephonyWSS() {
+      try { alert(JSON.stringify(await nexusFetch('/api/telephony/start_ws', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }))); refreshTelephonyStatus(); }
+      catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function saveTelephonyCfg() {
+      try {
+        await nexusFetch('/api/telephony/config', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            public_wss_url: document.getElementById('telWssInput').value,
+            greeting_tr: document.getElementById('telGreetingInput').value,
+            sip_server: document.getElementById('sipHostInput').value
+          })
+        });
+        alert('✅ Telefon & SIP ayarları kaydedildi.');
+        refreshTelephonyStatus();
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function placeOutboundPhoneCall() {
+      try {
+        const d = await nexusFetch('/api/telephony/call', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: document.getElementById('telToInput').value, message: document.getElementById('telMsgInput').value })
+        });
+        alert(d.ok ? `📞 Arama başlatıldı: ${d.call_sid}` : `⚠️ Hata: ${d.error}`);
+        refreshTelephonyStatus();
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function adbPhoneAct(action) {
+      try {
+        const d = await nexusFetch('/api/telephony/adb_action', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, number: document.getElementById('telToInput').value })
+        });
+        alert(JSON.stringify(d));
+      } catch (e) { alert('ADB Hatası: ' + e.message); }
+    }
+
+    async function probeSipServer() {
+      try {
+        const d = await nexusFetch('/api/telephony/sip_probe', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ host: document.getElementById('sipHostInput').value, port: 5060 })
+        });
+        alert(JSON.stringify(d, null, 2));
+      } catch (e) { alert('SIP Hatası: ' + e.message); }
+    }
+
+    async function refreshCommsStatus() {
+      try {
+        const d = await nexusFetch('/api/comms/status');
+        const box = document.getElementById('mailProfilesList');
+        if (box) box.innerText = (d.email_accounts || []).length ? d.email_accounts.map(a => `📧 ${a.label} (${a.provider})`).join(' | ') : 'Henüz e-posta profili eklenmedi.';
+      } catch (_) {}
+    }
+
+    async function addEmailProfile() {
+      try {
+        const d = await nexusFetch('/api/comms/add_email', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: document.getElementById('mailProvSel').value,
+            email: document.getElementById('mailAddrInput').value,
+            password: document.getElementById('mailPassInput').value
+          })
+        });
+        alert(d.ok ? `✅ ${d.email} bağlandı!` : d.error);
+        refreshCommsStatus();
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function sendRealEmail() {
+      try {
+        const d = await nexusFetch('/api/comms/send_email', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: document.getElementById('emailToInput').value,
+            subject: document.getElementById('emailSubjInput').value,
+            body: document.getElementById('emailBodyInput').value
+          })
+        });
+        alert(d.ok ? `✅ E-posta gönderildi (${d.from} -> ${d.to})` : `❌ Hata: ${d.error}`);
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function fetchEmailInbox() {
+      const box = document.getElementById('emailInboxOut');
+      try {
+        const d = await nexusFetch('/api/comms/fetch_inbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"limit":8}' });
+        if (box) box.innerText = d.ok ? (d.messages || []).map(m => `• ${m.from}: ${m.subject}`).join('\n') : d.error;
+      } catch (e) { if (box) box.innerText = 'Hata: ' + e.message; }
+    }
+
+    async function sendOmniChannelMessage() {
+      try {
+        const d = await nexusFetch('/api/comms/send_message', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channel: document.getElementById('msgChanSel').value,
+            target: document.getElementById('msgTargetInput').value,
+            text: document.getElementById('msgTextInput').value
+          })
+        });
+        alert(d.ok ? '✅ Mesaj başarıyla gönderildi!' : `❌ Hata: ${d.error}`);
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function refreshStorageAccounts() {
+      const box = document.getElementById('cloudAccountsList');
+      try {
+        const d = await nexusFetch('/api/storage/accounts');
+        if (!box) return;
+        box.innerHTML = (d.accounts || []).length ? '' : '<div class="text-slate-500">Henüz Drive/Yandex hesabı bağlı değil.</div>';
+        (d.accounts || []).forEach(acc => {
+          const row = document.createElement('div');
+          row.className = 'p-2 rounded bg-slate-950 border border-slate-800 flex justify-between items-center gap-2 flex-wrap';
+          row.innerHTML = `<span><strong>${escapeHtml(acc.name)}</strong> <span class="text-sky-400">(${escapeHtml(acc.provider)})</span></span>
+            <div class="flex gap-1">
+              <button class="c-quota bg-slate-800 px-2 py-0.5 rounded text-[10px] text-amber-300">📊 Kota</button>
+              <button class="c-list bg-sky-700 px-2 py-0.5 rounded text-[10px] text-white">📂 Listele</button>
+              <button class="c-up bg-emerald-700 px-2 py-0.5 rounded text-[10px] text-white">⬆️ Yükle</button>
+            </div>`;
+          row.querySelector('.c-quota').onclick = async () => { document.getElementById('cloudFilesOut').innerText = JSON.stringify(await nexusFetch('/api/storage/quota', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: acc.id }) }), null, 2); };
+          row.querySelector('.c-list').onclick = async () => { document.getElementById('cloudFilesOut').innerText = JSON.stringify(await nexusFetch('/api/storage/list', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: acc.id, remote_path: document.getElementById('cloudRemotePath').value }) }), null, 2); };
+          row.querySelector('.c-up').onclick = async () => { document.getElementById('cloudFilesOut').innerText = JSON.stringify(await nexusFetch('/api/storage/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: acc.id, local_path: document.getElementById('cloudUploadLocal').value, remote_path: document.getElementById('cloudRemotePath').value }) }), null, 2); };
+          box.appendChild(row);
+        });
+      } catch (e) { if (box) box.innerText = '⚠️ :8765 bağlantısı yok: ' + e.message; }
+    }
+
+    async function addCloudStorageAccount() {
+      try {
+        const d = await nexusFetch('/api/storage/add', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('cloudAccName').value,
+            provider: document.getElementById('cloudAccProv').value,
+            username: document.getElementById('cloudAccUser').value,
+            token: document.getElementById('cloudAccSecret').value,
+            webhook_url: document.getElementById('cloudAccProv').value === 'gdrive_webhook' ? document.getElementById('cloudAccSecret').value : '',
+            service_account_json: document.getElementById('cloudAccProv').value === 'gdrive_sa' ? document.getElementById('cloudAccSecret').value : ''
+          })
+        });
+        alert(d.ok ? `✅ ${d.name} eklendi!` : d.error);
+        refreshStorageAccounts();
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function syncAllCloudStorage() {
+      try { document.getElementById('cloudFilesOut').innerText = JSON.stringify(await nexusFetch('/api/storage/sync_all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }), null, 2); }
+      catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function runCyberAudit(kind) {
+      const out = document.getElementById('cyberOutputBox');
+      if (out) out.innerText = '⏳ Siber denetim çalıştırılıyor...';
+      try {
+        let data;
+        if (kind === 'sockets') data = await nexusFetch('/api/cyber/sockets');
+        else if (kind === 'posture') data = await nexusFetch('/api/cyber/posture');
+        else if (kind === 'secrets') data = await nexusFetch('/api/cyber/secrets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        else if (kind === 'domain') data = await nexusFetch('/api/cyber/domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ domain: document.getElementById('cyberDomainInput').value }) });
+        else if (kind === 'osint_user') data = await nexusFetch('/api/cyber/osint_user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('osintUserInput').value }) });
+        else if (kind === 'github_scout') data = await nexusFetch('/api/cyber/github_scout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('osintGhInput').value }) });
+        if (out) out.innerText = JSON.stringify(data, null, 2);
+      } catch (e) { if (out) out.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function runBrowserCrawl() {
+      const out = document.getElementById('cyberOutputBox');
+      if (out) out.innerText = '⏳ Tarayıcı Ajanı sayfayı Markdown formatında çekiyor...';
+      try {
+        const res = await nexusFetch('/api/browser/crawl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: document.getElementById('crawlUrlInput').value,
+            use_headless_js: document.getElementById('crawlHeadlessChk').checked
+          })
+        });
+        if (out) out.innerText = JSON.stringify(res, null, 2);
+      } catch (e) { if (out) out.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function loadBrowserCapabilities() {
+      const out = document.getElementById('cyberOutputBox');
+      try { if (out) out.innerText = JSON.stringify(await nexusFetch('/api/browser/status'), null, 2); }
+      catch (e) { if (out) out.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function loadGithubAgentRoster() {
+      const out = document.getElementById('cyberOutputBox');
+      try { if (out) out.innerText = JSON.stringify(await nexusFetch('/api/cyber/roster'), null, 2); }
+      catch (e) { if (out) out.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function refreshTelegramModes() {
+      const box = document.getElementById('tgModesBox');
+      try { if (box) box.innerText = JSON.stringify(await nexusFetch('/api/telegram/modes'), null, 2); }
+      catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function setTelegramWebhookMode() {
+      const box = document.getElementById('tgModesBox');
+      try {
+        const res = await nexusFetch('/api/telegram/set_webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: document.getElementById('tgWebhookUrlInput').value }) });
+        if (box) box.innerText = JSON.stringify(res, null, 2);
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function clearTelegramWebhookMode() {
+      const box = document.getElementById('tgModesBox');
+      try {
+        const res = await nexusFetch('/api/telegram/clear_webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        if (box) box.innerText = JSON.stringify(res, null, 2);
+      } catch (e) { alert('Hata: ' + e.message); }
+    }
+
+    async function refreshHardwareCensus() {
+      const box = document.getElementById('hwCensusBox');
+      if (box) box.innerText = '⏳ Donanım sayımı (USB/COM/GPU/ADB/NIC) okunuyor...';
+      try { if (box) box.innerText = JSON.stringify(await nexusFetch('/api/hardware/census'), null, 2); }
+      catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function sendWolPacket() {
+      try { alert(JSON.stringify(await nexusFetch('/api/hardware/wol', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mac: document.getElementById('wolMacInput').value }) }))); }
+      catch (e) { alert('WoL Hatası: ' + e.message); }
+    }
+
+    async function listMcpToolsLive() {
+      const box = document.getElementById('mcpWorkspaceBox');
+      try { if (box) box.innerText = JSON.stringify(await nexusFetch('/api/mcp/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ server: 'antigravity-continuity-nexus', method: 'tools/list' }) }), null, 2); }
+      catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function loadMultiWorkspaceTree() {
+      const box = document.getElementById('mcpWorkspaceBox');
+      try { if (box) box.innerText = JSON.stringify(await nexusFetch('/api/workspace/list'), null, 2); }
+      catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function loadMcpCatalog() {
+      const box = document.getElementById('mcpWorkspaceBox');
+      try { if (box) box.innerText = JSON.stringify(await nexusFetch('/api/mcp/catalog'), null, 2); }
+      catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function saveTemporalFact() {
+      const box = document.getElementById('mcpWorkspaceBox');
+      try {
+        const res = await nexusFetch('/api/memory/fact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: document.getElementById('tfSubInput').value,
+            predicate: document.getElementById('tfPredInput').value,
+            object_val: document.getElementById('tfObjInput').value
+          })
+        });
+        if (box) box.innerText = JSON.stringify(res, null, 2);
+      } catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function queryTemporalFacts() {
+      const box = document.getElementById('mcpWorkspaceBox');
+      try { if (box) box.innerText = JSON.stringify(await nexusFetch('/api/memory/query?history=1'), null, 2); }
+      catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
+    async function syncUnifiedMonorepo() {
+      const box = document.getElementById('mcpWorkspaceBox');
+      try {
+        const res = await nexusFetch('/api/app/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ direction: 'from_scratch_to_unified' }) });
+        if (box) box.innerText = JSON.stringify(res, null, 2);
+      } catch (e) { if (box) box.innerText = '❌ Hata: ' + e.message; }
+    }
+
     // BAŞLANGIÇ
     updateHeaderStatus();
     renderModelOptions();
@@ -4072,6 +4699,7 @@ Kurallar ve Canlı Araçlar:
     renderChatSessionsBar();
     renderChatMessages();
     syncSettingsWithBridge();
+    loadCustomAgentsFromBridge();
     loadChatSessionsFromBridge();
     loadHubDataFromBridge();
     initAutomations();

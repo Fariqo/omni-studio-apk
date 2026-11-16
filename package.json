@@ -1,14 +1,14 @@
 {
   "name": "omni-apex-studio-os",
-  "version": "3.0.0",
-  "description": "OMNI-APEX: AI Studio, RAG Engine & Multi-Platform App Factory",
+  "version": "5.0.0",
+  "description": "OMNI-NEXUS APEX OS v5.0: Birlesik AI, Telefon/VoIP, Multi-Drive/Yandisk, OSINT/RBP & Coklu-Platform Fabrikasi",
   "author": "Omni-Apex Studio",
   "license": "MIT",
   "main": "electron-main.js",
   "scripts": {
     "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');if(fs.existsSync('manifest.json'))fs.copyFileSync('manifest.json','dist/manifest.json');\"",
     "android:sync": "npm run build:web && npx cap sync android",
-    "electron:win": "electron-builder --win nsis portable --publish never",
+    "electron:win": "electron-builder --win nsis portable msi --publish never",
     "electron:mac": "electron-builder --mac dmg zip --arm64 --x64 --publish never",
     "electron:linux": "electron-builder --linux AppImage --publish never"
   },
@@ -27,7 +27,11 @@
       "baslat.bat"
     ],
     "win": {
-      "target": ["nsis", "portable"]
+      "target": ["nsis", "portable", "msi"]
+    },
+    "msi": {
+      "perMachine": false,
+      "createDesktopShortcut": true
     },
     "mac": {
       "target": ["dmg", "zip"],

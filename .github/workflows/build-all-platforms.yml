@@ -74,12 +74,14 @@ jobs:
         run: |
           npm install
           npm run build:web
-          npm run electron:win
+          npm run electron:win || npx electron-builder --win nsis portable --publish never
       - name: Upload Windows Installers
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.app_name || 'OmniApexApp' }}-windows-setup
-          path: release/*.exe
+          path: |
+            release/*.exe
+            release/*.msi
 
   build-macos-ios:
     if: github.event_name == 'push' || github.event.inputs.target_platform == 'all' || github.event.inputs.target_platform == 'macos' || github.event.inputs.target_platform == 'ios' || !github.event.inputs.target_platform
@@ -135,8 +137,8 @@ jobs:
       - name: Publish All Platforms to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0.${{ github.run_number }}
-          name: Omni-Apex Studio OS v3.0.${{ github.run_number }}
+          tag_name: v5.0.${{ github.run_number }}
+          name: OMNI-NEXUS APEX OS v5.0.${{ github.run_number }}
           make_latest: true
           files: release-files/*
 
