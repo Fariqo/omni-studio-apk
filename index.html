@@ -1379,35 +1379,35 @@
       select.innerHTML = '<option>⏳ Tüm sağlayıcılar taranıyor...</option>';
       const discovered = {};
 
-      // A) Google Gemini - Gemini 4 & 3.x Gerçek Amiral Gemileri (Carbon, Argon, Hydrogen, Flash, Live)
+      // A) Google Gemini - Gemini 4 & 3.x Gerçek Amiral Gemileri (API Limitleriyle Birebir)
+      discovered['gemini-3.8-flash'] = {
+        provider: 'gemini',
+        displayName: '✨ Gemini 3.8 Flash (En Hızlı, Kesintisiz Multimodal 64K)',
+        outputLimit: 65536
+      };
       discovered['gemini-4-carbon'] = {
         provider: 'gemini',
-        displayName: '👑 Gemini 4 Carbon (Frontier Derin Akıl Yürütme & Kod)',
-        outputLimit: 65536
+        displayName: '👑 Gemini 4 Carbon (Frontier Derin Akıl Yürütme & Kod 32K)',
+        outputLimit: 32768
       };
       discovered['gemini-4-argon'] = {
         provider: 'gemini',
-        displayName: '⚡ Gemini 4 Argon (Amiral Gemisi Yazılım & Mühendislik)',
+        displayName: '⚡ Gemini 4 Argon (Amiral Gemisi Yazılım & Mühendislik 32K)',
         outputLimit: 32768
       };
       discovered['gemini-4-hydrogen'] = {
         provider: 'gemini',
-        displayName: '🚀 Gemini 4 Hydrogen (Ultra Hızlı Ajan & Kod İcrası)',
+        displayName: '🚀 Gemini 4 Hydrogen (Yüksek Kapasiteli Ajan & Kod 64K)',
         outputLimit: 65536
       };
-      discovered['gemini-3.8-flash'] = {
+      discovered['gemini-3.1-pro-preview'] = {
         provider: 'gemini',
-        displayName: '✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil Multimodal)',
-        outputLimit: 65536
-      };
-      discovered['gemini-3.1-pro'] = {
-        provider: 'gemini',
-        displayName: '🛠️ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu)',
+        displayName: '🛠️ Gemini 3.1 Pro Preview (Gelişmiş Kod & Araç Entegrasyonu 64K)',
         outputLimit: 65536
       };
       discovered['gemini-3.8-live'] = {
         provider: 'gemini',
-        displayName: '🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı)',
+        displayName: '🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı 8K)',
         outputLimit: 8192,
         isLive: true
       };
@@ -1495,23 +1495,23 @@
 
     function renderModelOptions() {
       const select = document.getElementById('modelSelect');
-      // Deprecated 2.5 ve uydurma 3.8-pro modellerini temizle
+      // Deprecated 2.5 ve geçersiz model kimliklerini temizle
       const entries = Object.entries(MODEL_META).filter(([id]) => 
-        !id.includes('2.5') && !id.includes('gemini-1.') && id !== 'gemini-3.8-pro'
+        !id.includes('2.5') && !id.includes('gemini-1.') && id !== 'gemini-3.8-pro' && id !== 'gemini-3.1-pro'
       );
       if (entries.length === 0) {
         select.innerHTML = `
-          <option value="gemini-4-carbon">👑 Gemini 4 Carbon (Frontier Derin Akıl Yürütme & Kod 64K)</option>
+          <option value="gemini-3.8-flash">✨ Gemini 3.8 Flash (En Hızlı, Kesintisiz Multimodal 64K)</option>
+          <option value="gemini-4-carbon">👑 Gemini 4 Carbon (Frontier Derin Akıl Yürütme & Kod 32K)</option>
           <option value="gemini-4-argon">⚡ Gemini 4 Argon (Amiral Gemisi Yazılım & Mühendislik 32K)</option>
-          <option value="gemini-4-hydrogen">🚀 Gemini 4 Hydrogen (Ultra Hızlı Ajan & Kod İcrası 64K)</option>
-          <option value="gemini-3.8-flash">✨ Gemini 3.8 Flash (Ultra Hızlı, En Stabil Multimodal 64K)</option>
-          <option value="gemini-3.1-pro">🛠️ Gemini 3.1 Pro (Gelişmiş Kod & Araç Entegrasyonu 64K)</option>
+          <option value="gemini-4-hydrogen">🚀 Gemini 4 Hydrogen (Yüksek Kapasiteli Ajan & Kod 64K)</option>
+          <option value="gemini-3.1-pro-preview">🛠️ Gemini 3.1 Pro Preview (Gelişmiş Kod & Araç Entegrasyonu 64K)</option>
           <option value="gemini-3.8-live">🎙️ Gemini 3.8 Live (Canlı Ses & Kamera Akışı 8K)</option>
         `;
         return;
       }
       const order = { gemini: 1, claude: 2, openai: 3, ollama: 4 };
-      const flagships = ['gemini-4-carbon', 'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.1-pro', 'gemini-3.8-live'];
+      const flagships = ['gemini-3.8-flash', 'gemini-4-carbon', 'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.1-pro-preview', 'gemini-3.8-live'];
       entries.sort(([idA, a], [idB, b]) => {
         if (order[a.provider] !== order[b.provider]) return (order[a.provider] || 9) - (order[b.provider] || 9);
         const idxA = flagships.indexOf(idA);
@@ -2000,9 +2000,11 @@
         return out;
       }
 
-      // Google Gemini (Tam Multimodal + Gerçek Zamanlı SSE Streaming)
+      // Google Gemini (Tam Multimodal + Dayanıklı SSE Akışı + Buffer Flush + Stall Watchdog + Yedek Kurtarma)
       if (!cfg.gemini) { toggleModal('settingsModal'); throw new Error('Google AI Studio API Anahtarı eksik!'); }
-      const maxOut = Math.min(65536, genCfg.maxOutputTokens || meta.outputLimit || 8192);
+      const targetModel = options.forceModel || modelId;
+      const targetMeta = MODEL_META[targetModel] || meta;
+      const maxOut = Math.min(targetMeta.outputLimit || 32768, genCfg.maxOutputTokens || targetMeta.outputLimit || 16384);
       const contents = messagesArray.map(m => {
         const parts = [];
         (m.attachments || []).forEach(att => {
@@ -2027,9 +2029,6 @@
         }
       };
 
-      // 1. Geliştirici Filtre Esnekliği: En Düşük Filtre Eşiği (BLOCK_ONLY_HIGH)
-      // NOT: 'BLOCK_NONE' standart AI Studio hesaplarında HTTP 400 (INVALID_ARGUMENT) hatası verir!
-      // En esnek ve resmi olarak tüm anahtarlarla çalışan seviye 'BLOCK_ONLY_HIGH' (Block few) değeridir.
       const uncensored = document.getElementById('uncensoredToggle')?.checked !== false;
       if (uncensored && !options._retriedSafety) {
         payload.safetySettings = [
@@ -2040,46 +2039,72 @@
         ];
       }
 
-      // 2. Google Canlı Web Arama & Grounding (Ezbere yanıt vermez, güncel webi anlık araştırır)
-      const webSearchEnabled = document.getElementById('webSearchToggle')?.checked !== false;
+      const webSearchEnabled = (document.getElementById('webSearchToggle')?.checked !== false) && !options.disableSearch;
       if (webSearchEnabled) {
         payload.tools = [{ googleSearch: {} }];
       }
 
+      window.__LAST_STREAM_META__ = { finishReason: null, interrupted: false, error: '', model: targetModel };
+
       if (typeof options.onStream === 'function') {
-        const streamRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:streamGenerateContent?alt=sse&key=${encodeURIComponent(cfg.gemini)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!streamRes.ok) {
-          const errTxt = await streamRes.text();
-          let errMsg = errTxt;
-          try { errMsg = JSON.parse(errTxt).error?.message || errTxt; } catch (_) {}
-          if (streamRes.status === 400 && !options._retriedSafety && (errMsg.includes('safety') || errMsg.includes('HarmBlock') || errMsg.includes('threshold') || errMsg.includes('BLOCK_'))) {
-            return callUniversalAI(systemPrompt, messagesArray, { ...options, _retriedSafety: true });
-          }
-          throw new Error(errMsg || `HTTP ${streamRes.status}`);
-        }
-        const reader = streamRes.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
+        const ctrl = new AbortController();
+        let stallTimer = null;
+        const resetStall = () => {
+          if (stallTimer) clearTimeout(stallTimer);
+          stallTimer = setTimeout(() => ctrl.abort(new Error('Akış 40 saniye boyunca yanıt üretmeden dondu')), 40000);
+        };
+        resetStall();
+
         let fullText = '';
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          for (const rawLine of lines) {
+        let finishReason = null;
+        try {
+          const streamRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${encodeURIComponent(cfg.gemini)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: ctrl.signal
+          });
+          if (!streamRes.ok) {
+            clearTimeout(stallTimer);
+            const errTxt = await streamRes.text();
+            let errMsg = errTxt;
+            try { errMsg = JSON.parse(errTxt).error?.message || errTxt; } catch (_) {}
+            if (streamRes.status === 400 && !options._retriedSafety && (errMsg.includes('safety') || errMsg.includes('HarmBlock') || errMsg.includes('threshold') || errMsg.includes('BLOCK_'))) {
+              return callUniversalAI(systemPrompt, messagesArray, { ...options, _retriedSafety: true });
+            }
+            if ((streamRes.status === 400 || streamRes.status === 404) && webSearchEnabled && !options.disableSearch) {
+              return callUniversalAI(systemPrompt, messagesArray, { ...options, disableSearch: true });
+            }
+            throw new Error(errMsg || `HTTP ${streamRes.status}`);
+          }
+
+          const reader = streamRes.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+
+          const processSseLine = (rawLine) => {
             const line = rawLine.trim();
-            if (!line.startsWith('data:')) continue;
+            if (!line.startsWith('data:')) return;
             const jsonStr = line.slice(5).trim();
-            if (!jsonStr || jsonStr === '[DONE]') continue;
+            if (!jsonStr || jsonStr === '[DONE]') return;
             try {
               const chunk = JSON.parse(jsonStr);
               if (chunk.error) throw new Error(chunk.error.message);
-              const piece = (chunk.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+              const cand = chunk.candidates?.[0] || {};
+              if (cand.finishReason) finishReason = cand.finishReason;
+              const partsArr = cand.content?.parts || [];
+              let piece = '';
+              let hasThoughtOnly = false;
+              for (const p of partsArr) {
+                if (p.thought === true) {
+                  hasThoughtOnly = true;
+                } else if (p.text) {
+                  piece += p.text;
+                }
+              }
+              if (hasThoughtOnly && !piece && !fullText && options.onStatus) {
+                options.onStatus('🧠 Model derin muhakeme (thinking) yapıyor...');
+              }
               if (piece) {
                 fullText += piece;
                 options.onStream(fullText);
@@ -2088,21 +2113,59 @@
                 const u = chunk.usageMetadata;
                 document.getElementById('tokenStats').innerText = `G:${u.promptTokenCount || 0} / Ç:${u.candidatesTokenCount || 0}`;
               }
-              if (chunk.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-                const srcTitles = chunk.candidates[0].groundingMetadata.groundingChunks.map(c => c.web?.title).filter(Boolean);
+              if (cand.groundingMetadata?.groundingChunks) {
+                const srcTitles = cand.groundingMetadata.groundingChunks.map(c => c.web?.title).filter(Boolean);
                 if (srcTitles.length) {
                   document.getElementById('tokenStats').innerText = `🌐 Canlı Web: ${srcTitles.slice(0, 2).join(', ')}`;
                 }
               }
             } catch (parseErr) {
-              if (parseErr.message && !/JSON/i.test(parseErr.message)) throw parseErr;
+              if (parseErr.message && !/JSON|Unexpected/i.test(parseErr.message)) throw parseErr;
             }
+          };
+
+          while (true) {
+            const { value, done } = await reader.read();
+            resetStall();
+            if (done) {
+              buffer += decoder.decode();
+              if (buffer.trim()) {
+                for (const rem of buffer.split('\n')) processSseLine(rem);
+              }
+              break;
+            }
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const rawLine of lines) processSseLine(rawLine);
           }
+          clearTimeout(stallTimer);
+          window.__LAST_STREAM_META__ = { finishReason: finishReason || 'UNKNOWN', interrupted: finishReason !== 'STOP', error: '', model: targetModel };
+
+          // Eğer düşünme modelinden hiç metin dönmeden stream bittiyse hızlı stabil modele/non-stream'e düş
+          if (!fullText.trim() && !options._fallbackUsed) {
+            const fbModel = targetModel !== 'gemini-3.8-flash' ? 'gemini-3.8-flash' : 'gemini-flash-latest';
+            logAgent(`⚠️ ${targetModel} boş akış döndürdü; ${fbModel} ile non-stream kurtarma devrede.`);
+            return callUniversalAI(systemPrompt, messagesArray, { ...options, forceModel: fbModel, _fallbackUsed: true, disableSearch: webSearchEnabled, onStream: undefined });
+          }
+          return fullText;
+        } catch (streamErr) {
+          clearTimeout(stallTimer);
+          // Yarıda koptu ama elde kısmi metin varsa ASLA SİLME! Metadata ile bildir ve koru
+          if (fullText.trim().length > 0) {
+            window.__LAST_STREAM_META__ = { finishReason: finishReason || 'NETWORK_INTERRUPT', interrupted: true, error: streamErr.message || String(streamErr), model: targetModel };
+            return fullText;
+          }
+          if (!options._fallbackUsed) {
+            const fbModel = targetModel !== 'gemini-3.8-flash' ? 'gemini-3.8-flash' : 'gemini-flash-latest';
+            logAgent(`⚠️ ${targetModel} akış hatası (${streamErr.message}); ${fbModel} ile otomatik kurtarma deneniyor...`);
+            return callUniversalAI(systemPrompt, messagesArray, { ...options, forceModel: fbModel, _fallbackUsed: true, onStream: undefined });
+          }
+          throw streamErr;
         }
-        return fullText;
       }
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${encodeURIComponent(cfg.gemini)}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${encodeURIComponent(cfg.gemini)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -2120,7 +2183,9 @@
       if (data.error) throw new Error(data.error.message);
       const usage = data.usageMetadata;
       if (usage) document.getElementById('tokenStats').innerText = `G:${usage.promptTokenCount} / Ç:${usage.candidatesTokenCount}`;
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cand0 = data.candidates?.[0] || {};
+      window.__LAST_STREAM_META__ = { finishReason: cand0.finishReason || 'STOP', interrupted: Boolean(cand0.finishReason && cand0.finishReason !== 'STOP'), error: '', model: targetModel };
+      return (cand0.content?.parts || []).filter(p => p.thought !== true).map(p => p.text || '').join('');
     }
 
     // 6. SOHBET MOTORU (KALICI ÇOKLU-SEANS, MULTİMODAL DOSYA/FOTO/VİDEO + KOD BLOĞU AYRIŞTIRMA)
@@ -2403,6 +2468,10 @@
         footer.innerHTML = `<button class="f-copy text-slate-400 hover:text-white">📋 Cevabı Kopyala</button>`;
         footer.querySelector('.f-copy').onclick = (e) => copyTextWithFeedback(msg.content, e.target);
         if (msg.role === 'assistant') {
+          const contBtn = document.createElement('button');
+          contBtn.className = 'text-amber-400 hover:text-amber-300 font-bold';
+          contBtn.innerText = '▶️ Devam Et';
+          contBtn.onclick = () => continueResponse(msgIdx);
           const regenBtn = document.createElement('button');
           regenBtn.className = 'text-sky-400 hover:text-sky-300';
           regenBtn.innerText = '🔄 Yeniden Üret';
@@ -2411,6 +2480,7 @@
           ttsBtn.className = 'text-emerald-400 hover:text-emerald-300';
           ttsBtn.innerText = '🔊 Sesli Oku';
           ttsBtn.onclick = () => speakText(msg.content);
+          footer.appendChild(contBtn);
           footer.appendChild(regenBtn);
           footer.appendChild(ttsBtn);
         }
@@ -2600,19 +2670,55 @@ Kurallar ve Canlı Araçlar:
 
         let workingMsgs = CHAT_HISTORY.slice(-10);
         let reply = '';
+        const readSeen = new Set();
         for (let hop = 0; hop < 5; hop++) {
           reply = await callUniversalAI(sys, workingMsgs, {
             skipIntentDetect: true,
             genConfig: gc,
+            onStatus: (sTxt) => setStep('🧠 Model Düşünüyor...', sTxt),
             onStream: (partial) => {
               if (streamOutEl) streamOutEl.innerText = partial;
               box.scrollTop = box.scrollHeight;
             }
           });
 
-          const fileMatch = reply.match(/\[\[READ_FILE:\s*([^\]]+)\]\]/i);
+          // Akış MAX_TOKENS veya bağlantı kesintisiyle STOP almadan yarım kaldıysa otomatik tamamlama (max 2 tur)
+          for (let contHop = 0; contHop < 2; contHop++) {
+            const st = window.__LAST_STREAM_META__ || {};
+            if (!st.interrupted || st.finishReason === 'STOP' || !reply.trim()) break;
+            if (st.finishReason === 'SAFETY' || st.finishReason === 'RECITATION') break;
+            setStep('🔄 Kesinti Algılandı, Kaldığı Yerden Devam Ediliyor...', `⚡ Neden: ${st.finishReason || 'Stream kesintisi'} (${st.error || 'Otomatik devam'})`);
+            const tailSnippet = reply.slice(-240);
+            const contMsgs = [
+              ...workingMsgs,
+              { role: 'assistant', content: reply },
+              { role: 'user', content: `Yanıtın tam şu kısımda kesildi:\n"""\n${tailSnippet}\n"""\nHiçbir giriş/özür yazmadan ve yukarıdakini tekrar etmeden KALDIĞIN TAM HARFTEN İTİBAREN devamını getirip cevabı eksiksiz tamamla.` }
+            ];
+            const baseText = reply;
+            const fbIfNetwork = st.error ? 'gemini-3.8-flash' : undefined;
+            const extra = await callUniversalAI(sys, contMsgs, {
+              skipIntentDetect: true,
+              genConfig: gc,
+              forceModel: fbIfNetwork,
+              onStream: (partialCont) => {
+                if (streamOutEl) streamOutEl.innerText = baseText + partialCont;
+                box.scrollTop = box.scrollHeight;
+              }
+            });
+            if (!extra.trim()) break;
+            reply = baseText + extra;
+          }
+
+          const stFinal = window.__LAST_STREAM_META__ || {};
+          if (stFinal.interrupted && stFinal.finishReason !== 'STOP' && reply.trim()) {
+            reply += `\n\n> ⚠️ *Akış uyarı nedeniyle tam kapanamadı (${stFinal.finishReason}${stFinal.error ? ': ' + stFinal.error : ''}). Devamını görmek için aşağıdaki **▶️ Devam Et** butonuna basabilirsin.*`;
+          }
+
+          const fileMatch = reply.match(/(?:^|\n)\s*\[\[READ_FILE:\s*([^\]]+)\]\]/i);
           if (!fileMatch || hop >= 4) break;
           const relPath = fileMatch[1].trim().replace(/^["'`]|["'`]$/g, '');
+          if (readSeen.has(relPath)) break;
+          readSeen.add(relPath);
           setStep(`📄 4/4 Dosya Okunuyor: ${relPath}`, `🔍 Ajan Diskten Okuyor: ${relPath}`);
           const fileTxt = await readWorkspaceRelFile(relPath);
           const snippet = fileTxt
@@ -2627,13 +2733,40 @@ Kurallar ve Canlı Araçlar:
           if (streamOutEl) streamOutEl.innerText = `📂 ${relPath} okundu, gerçek kod üzerinden analiz ediliyor...`;
         }
 
-        CHAT_HISTORY.push({ role: 'assistant', content: reply });
+        CHAT_HISTORY.push({ role: 'assistant', content: reply || '⚠️ Model boş yanıt döndürdü; lütfen ▶️ Devam Et veya farklı bir model (örn. Gemini 3.8 Flash) seçin.' });
         saveAllChatSessions();
-        renderChatMessages();
+        try { renderChatMessages(); } catch (re) { console.error(re); }
       } catch (e) {
         CHAT_HISTORY.push({ role: 'assistant', content: `❌ Hata: ${e.message}` });
         saveAllChatSessions();
-        renderChatMessages();
+        try { renderChatMessages(); } catch (_) {}
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Gönder ➤';
+      }
+    }
+
+    async function continueResponse(assistantIdx) {
+      const targetMsg = CHAT_HISTORY[assistantIdx];
+      if (!targetMsg || targetMsg.role !== 'assistant') return;
+      const btn = document.getElementById('chatSendBtn');
+      btn.disabled = true;
+      btn.innerText = '▶️...';
+      try {
+        const sys = await buildLiveSystemContext();
+        const sliceMsgs = CHAT_HISTORY.slice(Math.max(0, assistantIdx - 8), assistantIdx + 1);
+        const tail = (targetMsg.content || '').replace(/\n\n> ⚠️ \*Akış[\s\S]*$/m, '').slice(-260);
+        const cont = await callUniversalAI(sys, [
+          ...sliceMsgs,
+          { role: 'user', content: `Önceki yanıtın tam şu noktada kalmıştı:\n"""\n${tail}\n"""\nTekrar etmeden tam kaldığı yerden devamını getir.` }
+        ], { skipIntentDetect: true });
+        if (cont && cont.trim()) {
+          targetMsg.content = (targetMsg.content || '').replace(/\n\n> ⚠️ \*Akış[\s\S]*$/m, '') + cont;
+          saveAllChatSessions();
+          renderChatMessages();
+        }
+      } catch (e) {
+        alert('Devam ettirme hatası: ' + e.message);
       } finally {
         btn.disabled = false;
         btn.innerText = 'Gönder ➤';
