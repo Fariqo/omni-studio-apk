@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🤖 Otomasyon Stüdyosu — OMNI-NEXUS APEX v6.0</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <div class="container" style="display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="margin:0;font-size:19px;">🤖 Otonom İş Akışı & Zamanlayıcı Stüdyosu</h2>
+        <div style="color:var(--muted);font-size:12.5px;">PC açıkken arka planda otomatik çalışan görevler, web takibi, bulut yedekleme ve Telegram raporları.</div>
+      </div>
+      <span id="schedBadge" class="pill pill-ok">🟢 Zamanlayıcı Aktif</span>
+    </div>
+
+    <!-- Hazır Tek-Tık Şablonlar -->
+    <div class="card">
+      <div class="card-title"><span>⚡ Tek-Tık Hazır Otomasyon Şablonları</span></div>
+      <div id="presetGrid" class="grid-3"></div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Yeni Otomasyon Oluştur -->
+      <div class="card">
+        <div class="card-title"><span>➕ Özel Otomasyon Oluştur</span></div>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <input id="autoName" class="input" placeholder="Görev Adı (ör. Sabah GitHub & Sistem Kontrolü)" />
+          <div class="grid-2" style="gap:8px;">
+            <select id="autoKind" class="select">
+              <option value="agent_prompt">⚡ Otonom Ajan Görevi (Doğal Dil)</option>
+              <option value="web_monitor">🌐 Web Sayfası Değişiklik Takibi</option>
+              <option value="shell_command">💻 PowerShell Komutu (Politika Onaylı)</option>
+              <option value="health_telegram_report">🛡️ Sistem & Siber Sağlık Raporu</option>
+              <option value="cloud_backup">☁️ Çoklu Drive & Yandex Yedekleme</option>
+              <option value="monorepo_sync">🔗 Tek-Uygulama Senkronizasyonu</option>
+            </select>
+            <input id="autoInterval" type="number" min="1" value="60" class="input" placeholder="Aralık (dakika)" />
+          </div>
+          <textarea id="autoTarget" class="textarea" rows="3" placeholder="Ajan talimatı, takip edilecek URL veya PowerShell komutu..."></textarea>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;">
+            <input id="autoTelegram" type="checkbox" checked /> Sonucu Telegram botuma gönder
+          </label>
+          <button class="btn btn-primary" onclick="createAutomation()">💾 Otomasyonu Kaydet & Başlat</button>
+        </div>
+      </div>
+
+      <!-- Aktif Otomasyonlar -->
+      <div class="card">
+        <div class="card-title"><span>📋 Aktif Otomasyonlar</span><button class="btn btn-sm" onclick="loadAll()">🔄 Yenile</button></div>
+        <div id="activeList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Çalışma Geçmişi -->
+    <div class="card">
+      <div class="card-title"><span>📜 Son Çalışma Geçmişi</span></div>
+      <div id="runsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
+  <script src="assets/shared.js"></script>
+  <script>
+    OmniV6.mountShell('auto');
+
+    async function loadAll() {
+      const d = await OmniV6.apiGet('/api/automations');
+      document.getElementById('schedBadge').textContent = d.scheduler_active ? '🟢 Zamanlayıcı Aktif (30sn döngü)' : '⚪ Beklemede';
+
+      document.getElementById('presetGrid').innerHTML = (d.presets || []).map(p => `
+        <div class="card" style="background:var(--bg-input);display:flex;flex-direction:column;justify-content:space-between;gap:8px;">
+          <div>
+            <div style="font-weight:700;font-size:13px;">${OmniV6.esc(p.name)}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:4px;">${OmniV6.esc(p.description)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="pill">⏱️ ${p.interval_minutes} dk</span>
+            <button class="btn btn-sm btn-primary" onclick="installPreset('${OmniV6.esc(p.id)}')">+ Ekle</button>
+          </div>
+        </div>
+      `).join('');
+
+      const list = d.automations || [];
+      document.getElementById('activeList').innerHTML = list.map(a => `
+        <div class="card" style="background:var(--bg-input);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <div>
+              <strong>${OmniV6.esc(a.name)}</strong>
+              <div style="font-size:11px;color:var(--muted);">${OmniV6.esc(a.kind)} • Her ${a.interval_minutes} dk • Son: ${OmniV6.esc(a.last_run_str || 'Henüz çalışmadı')} (${OmniV6.esc(a.last_status)})</div>
+            </div>
+            <div style="display:flex;gap:5px;">
+              <button class="btn btn-sm btn-ok" onclick="runNow('${OmniV6.esc(a.id)}')">▶️ Çalıştır</button>
+              <button class="btn btn-sm" onclick="toggleAuto('${OmniV6.esc(a.id)}', ${!a.enabled})">${a.enabled ? '⏸️ Duraklat' : '▶️ Aç'}</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteAuto('${OmniV6.esc(a.id)}')">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `).join('') || '<div style="color:var(--muted);font-size:12.5px;">Henüz otomasyon eklenmedi. Yukarıdaki hazır şablonlardan tek tıkla ekleyebilirsiniz.</div>';
+
+      document.getElementById('runsList').innerHTML = (d.recent_runs || []).map(r => `
+        <div class="card" style="background:var(--bg-input);padding:9px 12px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;">
+            <strong>${r.ok ? '✅' : '❌'} ${OmniV6.esc(r.name)}</strong>
+            <span style="color:var(--muted);">${OmniV6.esc(r.timestamp)} (${r.duration_sec}s)</span>
+          </div>
+          <div style="color:var(--muted);margin-top:4px;white-space:pre-wrap;">${OmniV6.esc(r.summary)}</div>
+        </div>
+      `).join('') || '<div style="color:var(--muted);font-size:12.5px;">Henüz çalışma kaydı yok.</div>';
+    }
+
+    async function installPreset(pid) {
+      await OmniV6.apiPost('/api/automations/preset', { preset_id: pid });
+      OmniV6.toast('✅ Şablon eklendi.');
+      loadAll();
+    }
+
+    async function createAutomation() {
+      const res = await OmniV6.apiPost('/api/automations/add', {
+        name: document.getElementById('autoName').value,
+        kind: document.getElementById('autoKind').value,
+        interval_minutes: parseInt(document.getElementById('autoInterval').value, 10) || 60,
+        target: document.getElementById('autoTarget').value,
+        notify_telegram: document.getElementById('autoTelegram').checked,
+      });
+      if (!res.ok) return OmniV6.toast('❌ ' + res.error);
+      document.getElementById('autoName').value = '';
+      document.getElementById('autoTarget').value = '';
+      OmniV6.toast('✅ Otomasyon oluşturuldu.');
+      loadAll();
+    }
+
+    async function runNow(id) {
+      OmniV6.toast('⏳ Otomasyon şimdi çalıştırılıyor...');
+      const res = await OmniV6.apiPost('/api/automations/run', { id });
+      OmniV6.toast(res.run?.ok ? '✅ Otomasyon başarıyla tamamlandı!' : '⚠️ Hata oluştu.');
+      loadAll();
+    }
+
+    async function toggleAuto(id, enabled) {
+      await OmniV6.apiPost('/api/automations/toggle', { id, enabled });
+      loadAll();
+    }
+
+    async function deleteAuto(id) {
+      if (!confirm('Bu otomasyon silinsin mi?')) return;
+      await OmniV6.apiPost('/api/automations/delete', { id });
+      loadAll();
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>

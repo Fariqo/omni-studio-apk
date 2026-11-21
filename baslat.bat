@@ -1,21 +1,22 @@
 @echo off
 chcp 65001 >nul
-title OMNI-NEXUS APEX OS v5.0 - BIRLESIK BASLATICI
+title OMNI-NEXUS APEX OS v6.0 - TEK PORTLU BASLATICI
 cd /d "%~dp0"
-echo [*] Onceki acik Omni-Bridge oturumlari guvenle kontrol ediliyor...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'powershell.exe' -or $_.Name -eq 'pwsh.exe') -and $_.CommandLine -like '*omni-bridge.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
-timeout /t 1 /nobreak >nul
 
-if exist "C:\OtonomAsistan\Antigravity_V4_Ultra\daemon_supervisor.py" (
-    echo [*] Birlesik Python Super-Beyin (:8765 + Telefon WSS :8766 + Telegram) baslatiliyor...
-    start "OMNI_NEXUS_APEX" /min py "C:\OtonomAsistan\Antigravity_V4_Ultra\daemon_supervisor.py" --replace
+set "DAEMON=C:\OtonomAsistan\Antigravity_V4_Ultra\daemon_supervisor.py"
+if not exist "%DAEMON%" (
+    if exist "%~dp0..\daemon_supervisor.py" set "DAEMON=%~dp0..\daemon_supervisor.py"
 )
 
-echo [*] Multi-Root Omni-Bridge (:8080+) baslatiliyor...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0omni-bridge.ps1"
-if %errorlevel% neq 0 (
-    echo.
-    echo [UYARI] Bridge portu dolu veya baslatilamadi. Ana panel aciliyor...
+if exist "%DAEMON%" (
+    echo [*] OMNI-NEXUS APEX OS v6.0 Sunucusu (:8765 + WSS :8766 + Telegram) baslatiliyor...
+    start "OMNI_NEXUS_APEX_V6" /min py "%DAEMON%" --replace
+    timeout /t 3 /nobreak >nul
     start "" "http://127.0.0.1:8765/"
-    pause
+    echo [OK] Arayuz acildi: http://127.0.0.1:8765/
+    exit /b 0
 )
+
+echo [UYARI] daemon_supervisor.py bulunamadi. Yerel v6 arayuz aciliyor...
+start "" "%~dp0dist\index.html"
+pause

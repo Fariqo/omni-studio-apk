@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚡ Otonom Ajan Merkezi — OMNI-NEXUS APEX v6.0</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <div class="agent-shell">
+    <!-- SOL KENAR ÇUBUĞU: Oturumlar, Hızlı Görevler & Yetki Özeti -->
+    <aside class="sidebar">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:800;font-size:12.5px;color:var(--accent);">💬 Görev Oturumları</span>
+        <button class="btn btn-primary btn-sm" onclick="newSession()">+ Yeni</button>
+      </div>
+      <div id="sessionList" style="display:flex;flex-direction:column;gap:5px;"></div>
+
+      <div style="border-top:1px solid var(--border);padding-top:10px;">
+        <div style="font-weight:700;font-size:12px;color:var(--muted);margin-bottom:6px;">🚀 Tek-Tık Otonom Görevler</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn btn-sm" style="justify-content:flex-start;" onclick="quickPrompt('C:\\OtonomAsistan ve scratch çalışma klasörlerimdeki projeleri listele ve özet çıkar.')">📂 PC Projelerimi Tara</button>
+          <button class="btn btn-sm" style="justify-content:flex-start;" onclick="quickPrompt('GitHub repolarımı ve son Actions derleme durumlarını kontrol edip Türkçe özetle.')">🐙 GitHub & Build Durumu</button>
+          <button class="btn btn-sm" style="justify-content:flex-start;" onclick="quickPrompt('Bilgisayarımın gerçek donanım telemetrisini, açık portlarını ve siber güvenlik duruşunu denetle.')">🛡️ Donanım & Siber Denetim</button>
+          <button class="btn btn-sm" style="justify-content:flex-start;" onclick="quickPrompt('Web araması ile 2026 yılındaki en iyi açık kaynak otonom AI ajan ve MCP araçlarını araştırıp 5 maddede özetle.')">🌐 Canlı Web Araştırması</button>
+          <button class="btn btn-sm" style="justify-content:flex-start;" onclick="quickPrompt('Mevcut zamanlanmış otomasyonlarımı ve bağlı bulut depolama hesaplarımı listele.')">🤖 Otomasyon & Bulut Kontrolü</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:auto;padding:10px 12px;font-size:11.5px;">
+        <div style="font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;">
+          <span>🔒 Otonomi Kalkanı</span>
+          <a href="/settings" onclick="OmniV6.go('settings');return false;" style="font-size:11px;">Düzenle</a>
+        </div>
+        <div id="policySummary" style="color:var(--muted);line-height:1.6;">Yükleniyor...</div>
+      </div>
+    </aside>
+
+    <!-- ANA SOHBET & GERÇEK ARAÇ İCRA ALANI -->
+    <main class="main-chat">
+      <div class="chat-toolbar">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:12px;font-weight:700;color:var(--muted);">Model:</span>
+          <select id="modelSelect" class="select" style="width:auto;min-width:210px;padding:5px 10px;font-size:12.5px;">
+            <option value="gemini-3.8-flash">✨ gemini-3.8-flash (Hızlı & Stabil)</option>
+            <option value="gemini-4-carbon">👑 gemini-4-carbon (Derin Akıl)</option>
+            <option value="gemini-4-argon">⚡ gemini-4-argon (Mühendislik)</option>
+            <option value="gemini-4-hydrogen">🚀 gemini-4-hydrogen (Ajan & Kod)</option>
+            <option value="gemini-3.1-pro-preview">🛠️ gemini-3.1-pro-preview</option>
+          </select>
+          <span id="toolsBadge" class="pill pill-ok">🛠️ 14 Gerçek Araç Bağlı</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span id="runStatus" class="pill">🟢 Hazır</span>
+          <button class="btn btn-sm" onclick="clearCurrentSession()">🗑️ Temizle</button>
+        </div>
+      </div>
+
+      <div id="chatFeed" class="chat-feed"></div>
+
+      <div class="chat-composer">
+        <textarea id="promptInput" class="textarea" rows="2" placeholder="Bir görev ver... (Örn: 'Desktop klasöründeki dosyaları incele', 'Yeni bir Python aracı yazıp çalıştır', 'GitHub repolarımı kontrol et') — Enter: Gönder, Shift+Enter: Yeni satır" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTask();}"></textarea>
+        <button id="sendBtn" class="btn btn-primary" style="height:46px;min-width:110px;" onclick="sendTask()">Gönder ➤</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/shared.js"></script>
+  <script>
+    OmniV6.mountShell('agent');
+    let activeSessionId = localStorage.getItem('omni_v6_session') || 'main';
+
+    async function loadInit() {
+      try {
+        const [polData, modData, toolsData] = await Promise.all([
+          OmniV6.apiGet('/api/policy'),
+          OmniV6.apiGet('/api/models').catch(() => ({ gemini_models: [] })),
+          OmniV6.apiGet('/api/agent/tools').catch(() => ({ tools: [] })),
+        ]);
+        const p = polData.policy || {};
+        document.getElementById('policySummary').innerHTML = `
+          <div>🟢 Çalışma Klasörü: <strong>${p.auto_approve_workspace_write ? 'Tam Otonom' : 'Onaylı'}</strong></div>
+          <div>🐙 GitHub: <strong>${p.auto_approve_github ? 'Tam Otonom' : 'Onaylı'}</strong></div>
+          <div>🟡 Dış Klasörler: <strong>${p.confirm_write_outside_workspace ? 'Onaylı' : 'Otonom'}</strong></div>
+          <div>🔴 Sistem & Ödeme: <strong>Sadece Bilgi (Kilitli)</strong></div>
+          <div>💾 Yedekleme: <strong>Zorunlu _backup</strong></div>
+        `;
+        if (toolsData.tools?.length) {
+          document.getElementById('toolsBadge').textContent = `🛠️ ${toolsData.tools.length} Gerçek Araç Bağlı`;
+        }
+        const sel = document.getElementById('modelSelect');
+        const list = modData.gemini_models || [];
+        if (list.length) {
+          const priority = ['gemini-3.8-flash', 'gemini-4-carbon', 'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.1-pro-preview', 'gemini-flash-latest'];
+          const ordered = [...new Set([...priority.filter(x => list.includes(x) || x.startsWith('gemini-')), ...list.slice(0, 15)])];
+          sel.innerHTML = ordered.map(m => `<option value="${OmniV6.esc(m)}">${OmniV6.esc(m)}</option>`).join('');
+          sel.value = p.default_model || 'gemini-3.8-flash';
+        }
+      } catch (e) {
+        OmniV6.toast('⚠️ Başlangıç verisi alınamadı: ' + e.message);
+      }
+      await refreshSessions();
+      await loadSession(activeSessionId);
+    }
+
+    async function refreshSessions() {
+      const box = document.getElementById('sessionList');
+      try {
+        const d = await OmniV6.apiGet('/api/agent/sessions');
+        const list = d.sessions || [];
+        if (!list.length) {
+          box.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px;">Henüz kayıtlı görev yok.</div>`;
+          return;
+        }
+        box.innerHTML = list.map(s => `
+          <div style="display:flex;gap:4px;align-items:center;">
+            <button class="btn btn-sm ${s.id === activeSessionId ? 'btn-primary' : ''}" style="flex:1;justify-content:flex-start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="loadSession('${OmniV6.esc(s.id)}')">
+              ${OmniV6.esc(s.title || s.id)}
+            </button>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    function newSession() {
+      activeSessionId = 'task_' + Date.now();
+      localStorage.setItem('omni_v6_session', activeSessionId);
+      renderMessages([]);
+      refreshSessions();
+    }
+
+    async function clearCurrentSession() {
+      await OmniV6.apiPost('/api/agent/delete_session', { session_id: activeSessionId });
+      newSession();
+      OmniV6.toast('🗑️ Oturum temizlendi.');
+    }
+
+    async function loadSession(sid) {
+      activeSessionId = sid;
+      localStorage.setItem('omni_v6_session', sid);
+      try {
+        const d = await OmniV6.apiGet('/api/agent/session?id=' + encodeURIComponent(sid));
+        const appData = await OmniV6.apiGet('/api/agent/approvals').catch(() => ({ approvals: [] }));
+        renderMessages(d.session?.messages || [], (appData.approvals || []).filter(a => a.session_id === sid));
+      } catch (e) {
+        OmniV6.toast('Oturum yüklenemedi: ' + e.message);
+      }
+      refreshSessions();
+    }
+
+    function renderToolTrace(trace) {
+      if (!trace || !trace.length) return '';
+      return `<div class="tool-trace-list">` + trace.map(st => {
+        const cls = st.status === 'OK' || st.status === 'APPROVED_OK' ? 'pill-ok' : (st.status === 'AWAITING_APPROVAL' ? 'pill-warn' : 'pill-danger');
+        return `
+          <details class="tool-step">
+            <summary>
+              <span>#${st.step} <strong>${OmniV6.esc(st.tool)}</strong>(${OmniV6.esc(JSON.stringify(st.args || {}).slice(0, 90))})</span>
+              <span class="pill ${cls}" style="padding:1px 7px;font-size:10.5px;">${OmniV6.esc(st.status)} • ${st.duration_sec || 0}s</span>
+            </summary>
+            <pre>${OmniV6.esc(st.preview || st.reason || '')}</pre>
+          </details>
+        `;
+      }).join('') + `</div>`;
+    }
+
+    function renderMessages(messages, pendingApprovals = []) {
+      const feed = document.getElementById('chatFeed');
+      if (!messages.length) {
+        feed.innerHTML = `
+          <div class="msg msg-ai" style="text-align:center;padding:28px;">
+            <div style="font-size:24px;margin-bottom:8px;">⚡ OMNI-NEXUS APEX v6.0 Otonom Ajan</div>
+            <div style="color:var(--muted);max-width:600px;margin:0 auto;">
+              PC dosyalarını okuyup düzenleyebilir, PowerShell/Python komutları çalıştırabilir, canlı web tarayabilir, GitHub'da commit/push yapabilir, e-posta/Drive/Yandex ve otomasyonları tek cümleyle yürütebilirim.
+            </div>
+          </div>
+        `;
+        return;
+      }
+      feed.innerHTML = messages.map(m => `
+        <div class="msg ${m.role === 'user' ? 'msg-user' : 'msg-ai'}">
+          <div class="msg-head">
+            <span>${m.role === 'user' ? '👤 Sen' : '🤖 OMNI-NEXUS Ajan' + (m.model ? ' • ' + m.model : '')}</span>
+            <span>${OmniV6.esc(m.timestamp || '')}</span>
+          </div>
+          ${m.role === 'assistant' ? renderToolTrace(m.tool_trace) : ''}
+          <div class="msg-body">${OmniV6.renderMarkdown(m.content)}</div>
+        </div>
+      `).join('');
+
+      pendingApprovals.forEach(ap => {
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML = `
+          <div class="approval-box">
+            <div style="font-weight:800;color:var(--warn);margin-bottom:6px;">⏸️ Kullanıcı Onayı Gerekiyor: ${OmniV6.esc(ap.tool_name)}</div>
+            <div style="font-size:12.5px;margin-bottom:6px;">${OmniV6.esc(ap.reason)}</div>
+            <pre style="font-size:11.5px;background:var(--bg);padding:8px;border-radius:6px;overflow:auto;">${OmniV6.esc(JSON.stringify(ap.args, null, 2))}</pre>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button class="btn btn-ok" onclick="resolveApproval('${OmniV6.esc(ap.approval_id)}', true)">✅ Onayla & Uygula</button>
+              <button class="btn btn-danger" onclick="resolveApproval('${OmniV6.esc(ap.approval_id)}', false)">❌ Reddet</button>
+            </div>
+          </div>
+        `;
+        feed.appendChild(div);
+      });
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function quickPrompt(txt) {
+      document.getElementById('promptInput').value = txt;
+      sendTask();
+    }
+
+    async function sendTask() {
+      const inp = document.getElementById('promptInput');
+      const prompt = inp.value.trim();
+      if (!prompt) return;
+      inp.value = '';
+      const btn = document.getElementById('sendBtn');
+      const st = document.getElementById('runStatus');
+      btn.disabled = true;
+      st.textContent = '⏳ Araçlar & Ajan çalışıyor...';
+      st.className = 'pill pill-warn';
+
+      const feed = document.getElementById('chatFeed');
+      const tmp = document.createElement('div');
+      tmp.className = 'msg msg-user';
+      tmp.innerHTML = `<div class="msg-head"><span>👤 Sen</span><span>Şimdi</span></div><div class="msg-body">${OmniV6.esc(prompt)}</div>`;
+      feed.appendChild(tmp);
+      const waitBox = document.createElement('div');
+      waitBox.className = 'msg msg-ai';
+      waitBox.innerHTML = `<div class="msg-head"><span>🤖 OMNI-NEXUS Ajan</span><span>Çalışıyor</span></div><div style="color:var(--accent);">⚡ PC, Web veya GitHub araçları planlanıyor ve yürütülüyor...</div>`;
+      feed.appendChild(waitBox);
+      feed.scrollTop = feed.scrollHeight;
+
+      try {
+        const res = await OmniV6.apiPost('/api/agent/run', {
+          prompt,
+          session_id: activeSessionId,
+          model: document.getElementById('modelSelect').value,
+        });
+        if (!res.ok) throw new Error(res.error || 'Bilinmeyen hata');
+        await loadSession(activeSessionId);
+        st.textContent = res.status === 'awaiting_approval' ? '⏸️ Onay Bekliyor' : '🟢 Tamamlandı';
+        st.className = res.status === 'awaiting_approval' ? 'pill pill-warn' : 'pill pill-ok';
+      } catch (e) {
+        waitBox.innerHTML = `<div class="msg-head"><span>❌ Hata</span></div><div style="color:var(--danger);">${OmniV6.esc(e.message)}</div>`;
+        st.textContent = '❌ Hata';
+        st.className = 'pill pill-danger';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function resolveApproval(id, approved) {
+      const st = document.getElementById('runStatus');
+      st.textContent = approved ? '⏳ Onaylandı, devam ediliyor...' : '⏳ Reddediliyor...';
+      try {
+        await OmniV6.apiPost('/api/agent/approve', { approval_id: id, approved });
+        await loadSession(activeSessionId);
+        st.textContent = '🟢 Tamamlandı';
+        st.className = 'pill pill-ok';
+        OmniV6.toast(approved ? '✅ İşlem onaylandı ve uygulandı.' : '❌ İşlem reddedildi.');
+      } catch (e) {
+        OmniV6.toast('Hata: ' + e.message);
+      }
+    }
+
+    loadInit();
+  </script>
+</body>
+</html>

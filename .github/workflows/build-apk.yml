@@ -26,11 +26,14 @@ jobs:
           npm init -y
           npm install --legacy-peer-deps @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
           mkdir -p dist
-          if [ -f index.html ]; then
+          if [ -d v6 ]; then
+            cp -r v6/* dist/
+          elif [ -f index.html ]; then
             cp index.html dist/index.html
           elif [ ! -f dist/index.html ]; then
-            echo "<!DOCTYPE html><html><body><h1>Omni-Apex Hazir</h1></body></html>" > dist/index.html
+            echo "<!DOCTYPE html><html><body><h1>Omni-Apex v6.0 Hazir</h1></body></html>" > dist/index.html
           fi
+          [ -f manifest.json ] && cp manifest.json dist/manifest.json || true
           APP_NAME="${{ github.event.inputs.app_name }}"
           APP_ID="${{ github.event.inputs.app_id }}"
           npx cap init "${APP_NAME:-OmniApexStudio}" "${APP_ID:-com.fariqo.omniapex}" --web-dir dist
@@ -45,6 +48,6 @@ jobs:
           ./gradlew assembleDebug --no-daemon
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: "APK v1.0.${{ github.run_number }}"
+          tag_name: v6.0-apk.${{ github.run_number }}
+          name: "OMNI-APEX v6.0 APK #${{ github.run_number }}"
           files: android/app/build/outputs/apk/debug/app-debug.apk

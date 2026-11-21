@@ -1,12 +1,12 @@
 {
   "name": "omni-apex-studio-os",
-  "version": "5.0.0",
-  "description": "OMNI-NEXUS APEX OS v5.0: Birlesik AI, Telefon/VoIP, Multi-Drive/Yandisk, OSINT/RBP & Coklu-Platform Fabrikasi",
+  "version": "6.0.0",
+  "description": "OMNI-NEXUS APEX OS v6.0: 5 Uzman Arayuz, Gercek Gemini Function Calling Ajan, PC IDE, Otomasyon, Siber RBP & Coklu-Bulut",
   "author": "Omni-Apex Studio",
   "license": "MIT",
   "main": "electron-main.js",
   "scripts": {
-    "build:web": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');if(fs.existsSync('manifest.json'))fs.copyFileSync('manifest.json','dist/manifest.json');\"",
+    "build:web": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync('dist',{recursive:true});if(fs.existsSync('v6')){fs.cpSync('v6','dist',{recursive:true});}else if(fs.existsSync('index.html')){fs.copyFileSync('index.html','dist/index.html');}if(fs.existsSync('manifest.json'))fs.copyFileSync('manifest.json','dist/manifest.json');\"",
     "android:sync": "npm run build:web && npx cap sync android",
     "electron:win": "electron-builder --win nsis portable msi --publish never",
     "electron:mac": "electron-builder --mac dmg zip --arm64 --x64 --publish never",
@@ -23,8 +23,8 @@
       "electron-main.js"
     ],
     "extraResources": [
-      "omni-bridge.ps1",
-      "baslat.bat"
+      "baslat.bat",
+      "omni-bridge.ps1"
     ],
     "win": {
       "target": ["nsis", "portable", "msi"]

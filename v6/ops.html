@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡️ Ops, Siber, Donanım & Bulut — OMNI-NEXUS APEX v6.0</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <div class="container" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="margin:0;font-size:19px;">🛡️ Siber RBP, Donanım, İletişim & Çoklu Bulut Kokpiti</h2>
+        <div style="color:var(--muted);font-size:12.5px;">Gerçek fiziksel donanım ölçümleri, siber güvenlik duruşu, web tarayıcı, telefon/e-posta ve Drive/Yandex yönetimi.</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="refreshAllKpis()">🔄 Canlı Ölçüm Al</button>
+    </div>
+
+    <!-- CANLI KPI KARTLARI -->
+    <div class="grid-4">
+      <div class="kpi"><div class="kpi-label">İşlemci & RAM</div><div id="kpiSys" class="kpi-val">...</div><div id="kpiSysSub" class="kpi-sub">Ölçülüyor</div></div>
+      <div class="kpi"><div class="kpi-label">Açık Portlar & Firewall</div><div id="kpiCyber" class="kpi-val">...</div><div id="kpiCyberSub" class="kpi-sub">Denetleniyor</div></div>
+      <div class="kpi"><div class="kpi-label">Telegram 7/24 Botlar</div><div id="kpiTg" class="kpi-val">...</div><div id="kpiTgSub" class="kpi-sub">Kontrol ediliyor</div></div>
+      <div class="kpi"><div class="kpi-label">Telefon WS & Bulut</div><div id="kpiCloud" class="kpi-val">...</div><div id="kpiCloudSub" class="kpi-sub">Kontrol ediliyor</div></div>
+    </div>
+
+    <div class="subtabs">
+      <button class="subtab-btn active" onclick="openSub('sec', this)">🛡️ Siber RBP, OSINT & Web Tarayıcı</button>
+      <button class="subtab-btn" onclick="openSub('hw', this)">🔧 Donanım, USB/COM, ARP & WoL</button>
+      <button class="subtab-btn" onclick="openSub('comms', this)">📞 Telefon, E-Posta & Telegram 7/24</button>
+      <button class="subtab-btn" onclick="openSub('storage', this)">☁️ Çoklu Drive, Yandex & Hafıza</button>
+    </div>
+
+    <!-- 1. SİBER & WEB TARAYICI -->
+    <section id="sub_sec" class="grid-2">
+      <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card-title"><span>⚔️ Red / Blue / Purple Güvenlik & OSINT</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-primary" onclick="runSec('posture')">🛡️ 6-Çerçeveli Duruş</button>
+          <button class="btn btn-sm" onclick="runSec('sockets')">🔌 Açık Port/PID</button>
+          <button class="btn btn-sm btn-warn" onclick="runSec('secrets')">🔑 Gizli Anahtar SAST</button>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <input id="secDomain" class="input" placeholder="Domain TLS/SPF/DMARC denetle (ör. github.com)" />
+          <button class="btn btn-sm btn-danger" onclick="runSec('domain')">Denetle</button>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <input id="secOsint" class="input" placeholder="OSINT / GitHub kullanıcı adı..." />
+          <button class="btn btn-sm btn-ok" onclick="runSec('osint')">🕵️ OSINT</button>
+          <button class="btn btn-sm" onclick="runSec('gh')">🐙 GitHub</button>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-weight:700;font-size:12.5px;color:var(--accent);">🕷️ AI Web Tarayıcı & Markdown Çıkarıcı</div>
+          <div style="display:flex;gap:6px;">
+            <input id="crawlUrl" class="input" placeholder="https://..." />
+            <label style="display:flex;align-items:center;gap:4px;font-size:11.5px;white-space:nowrap;"><input id="crawlJs" type="checkbox" /> JS</label>
+            <button class="btn btn-sm btn-primary" onclick="runCrawl()">Çek</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📊 Denetim & Tarama Çıktısı</span></div>
+        <div id="secOut" style="max-height:360px;overflow:auto;font-size:12.5px;white-space:pre-wrap;font-family:var(--font-mono);color:#a7f3d0;">Bir araç çalıştırın.</div>
+      </div>
+    </section>
+
+    <!-- 2. DONANIM & MCP -->
+    <section id="sub_hw" class="grid-2" style="display:none;">
+      <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card-title"><span>🔧 Donanım Envanteri & Wake-on-LAN</span><button class="btn btn-sm btn-primary" onclick="loadHw()">📡 Tara</button></div>
+        <div style="display:flex;gap:6px;">
+          <input id="wolMac" class="input" placeholder="MAC Adresi (AA:BB:CC:DD:EE:FF)" />
+          <button class="btn btn-sm btn-warn" onclick="sendWol()">⚡ PC Uyandır</button>
+        </div>
+        <div id="hwCards" style="max-height:300px;overflow:auto;font-size:12px;display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card-title"><span>📦 Tek-Tık MCP Sunucu Kataloğu</span><button class="btn btn-sm" onclick="loadMcp()">🔄 Yenile</button></div>
+        <div id="mcpList" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto;"></div>
+      </div>
+    </section>
+
+    <!-- 3. TELEFON, MAİL & TELEGRAM -->
+    <section id="sub_comms" class="grid-2" style="display:none;">
+      <div class="card" style="display:flex;flex-direction:column;gap:9px;">
+        <div class="card-title"><span>📧 Çoklu E-Posta & Mesajlaşma</span></div>
+        <div class="grid-2" style="gap:6px;">
+          <input id="mailLabel" class="input" placeholder="Profil Adı (ör. İş Gmail)" />
+          <select id="mailProv" class="select"><option value="gmail">Gmail</option><option value="yandex">Yandex Mail</option><option value="outlook">Outlook</option></select>
+          <input id="mailAddr" class="input" placeholder="E-posta adresi" />
+          <input id="mailPass" type="password" class="input" placeholder="Uygulama Şifresi" />
+        </div>
+        <button class="btn btn-sm btn-ok" onclick="addMailAcc()">➕ E-Posta Hesabı Ekle</button>
+        <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:6px;">
+          <input id="sendTo" class="input" placeholder="Alıcı E-posta" />
+          <input id="sendSubj" class="input" placeholder="Konu" />
+          <textarea id="sendBody" class="textarea" rows="2" placeholder="Mesaj metni..."></textarea>
+          <button class="btn btn-sm btn-primary" onclick="sendMailNow()">📤 E-Posta Gönder</button>
+        </div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:9px;">
+        <div class="card-title"><span>🤖 Telegram 7/24 & 📞 Telefon Köprüsü</span></div>
+        <div id="tgSummary" style="font-size:12px;color:var(--muted);">Yükleniyor...</div>
+        <div style="display:flex;gap:6px;">
+          <input id="cfWebhook" class="input" placeholder="Cloudflare Worker URL (0ms 7/24 mod için)" />
+          <button class="btn btn-sm btn-ok" onclick="setTgWebhook()">☁️ Bağla</button>
+          <button class="btn btn-sm btn-warn" onclick="clearTgWebhook()">🖥️ Yerel</button>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-weight:700;font-size:12px;">📞 Twilio / SIP / ADB Telefon</div>
+          <div id="telSummary" style="font-size:12px;color:var(--muted);"></div>
+          <div style="display:flex;gap:6px;">
+            <input id="callTo" class="input" placeholder="+905..." />
+            <button class="btn btn-sm btn-primary" onclick="startCall()">📞 Ara</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. ÇOKLU DRİVE, YANDEX & HAFIZA -->
+    <section id="sub_storage" class="grid-2" style="display:none;">
+      <div class="card" style="display:flex;flex-direction:column;gap:9px;">
+        <div class="card-title"><span>☁️ Çoklu Google Drive & Yandex Disk</span><button class="btn btn-sm btn-ok" onclick="syncAllCloud()">🔄 Tümünü Yedekle</button></div>
+        <div class="grid-2" style="gap:6px;">
+          <input id="stName" class="input" placeholder="Hesap Adı (ör. Yandex Ana / Drive 2)" />
+          <select id="stProv" class="select">
+            <option value="yandex_oauth">Yandex Disk (OAuth Token)</option>
+            <option value="yandex_webdav">Yandex Disk (WebDAV)</option>
+            <option value="gdrive_oauth">Google Drive (OAuth Token)</option>
+            <option value="gdrive_webhook">Google Drive (Apps Script Webhook)</option>
+          </select>
+        </div>
+        <input id="stToken" type="password" class="input" placeholder="Token / Uygulama Şifresi / Webhook URL" />
+        <button class="btn btn-sm btn-primary" onclick="addCloudAcc()">➕ Bulut Hesabı Bağla</button>
+        <div id="cloudAccList" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:9px;">
+        <div class="card-title"><span>🧠 Zamansal Bilgi Çizgesi & Hafıza</span></div>
+        <div class="grid-3" style="gap:6px;">
+          <input id="memSub" class="input" placeholder="Özne (ör. Proje)" />
+          <input id="memPred" class="input" placeholder="İlişki (ör. hedef)" />
+          <input id="memObj" class="input" placeholder="Değer" />
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-primary" onclick="saveFact()">💾 Olgu Kaydet</button>
+          <button class="btn btn-sm" onclick="loadFacts()">📜 Geçmişi Göster</button>
+        </div>
+        <div id="memList" style="max-height:250px;overflow:auto;font-size:12px;display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="assets/shared.js"></script>
+  <script>
+    OmniV6.mountShell('ops');
+
+    function openSub(key, btn) {
+      ['sec', 'hw', 'comms', 'storage'].forEach(k => {
+        document.getElementById('sub_' + k).style.display = k === key ? 'grid' : 'none';
+      });
+      document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      if (key === 'hw') { loadHw(); loadMcp(); }
+      if (key === 'storage') { loadCloudAccs(); loadFacts(); }
+    }
+
+    async function refreshAllKpis() {
+      try {
+        const [tel, cyb, tg, ph, st] = await Promise.all([
+          OmniV6.apiGet('/api/telemetry'),
+          OmniV6.apiGet('/api/cyber/posture'),
+          OmniV6.apiGet('/api/telegram/modes'),
+          OmniV6.apiGet('/api/telephony/status'),
+          OmniV6.apiGet('/api/storage/accounts'),
+        ]);
+        document.getElementById('kpiSys').textContent = `CPU %${tel.cpu_pct} • RAM %${tel.ram_pct}`;
+        document.getElementById('kpiSysSub').textContent = `${tel.cpu_cores} Çekirdek • ${tel.disk_free_gb} GB Boş`;
+        document.getElementById('kpiCyber').textContent = `${cyb.total_listening_ports} Port`;
+        document.getElementById('kpiCyberSub').textContent = `${(cyb.firewall_profiles || []).join(' ')} • SAST: ${cyb.core_sast_findings}`;
+        document.getElementById('kpiTg').textContent = `${tg.bots_count || 0} Aktif Bot`;
+        document.getElementById('kpiTgSub').textContent = (tg.bots || []).map(b => '@' + b.username).join(', ');
+        document.getElementById('kpiCloud').textContent = ph.ws_bridge_running ? 'WS :8766 Açık' : 'WS Kapalı';
+        document.getElementById('kpiCloudSub').textContent = `${(st.accounts || []).length} Bulut Hesabı Bağlı`;
+
+        document.getElementById('tgSummary').innerHTML = (tg.bots || []).map(b => `<div>🤖 <strong>@${OmniV6.esc(b.username)}</strong> — Mod: <code>${OmniV6.esc(b.mode)}</code> ${b.webhook_url ? '(' + OmniV6.esc(b.webhook_url) + ')' : ''}</div>`).join('');
+        document.getElementById('telSummary').textContent = `WSS :${ph.ws_local_port} (${ph.ws_bridge_running ? 'Açık' : 'Kapalı'}) • Twilio: ${ph.twilio_configured ? 'Hazır' : 'Yapılandırılmadı'}`;
+      } catch (e) { OmniV6.toast('⚠️ ' + e.message); }
+    }
+
+    async function runSec(kind) {
+      const out = document.getElementById('secOut');
+      out.textContent = '⏳ Çalıştırılıyor...';
+      try {
+        let d;
+        if (kind === 'posture') d = await OmniV6.apiGet('/api/cyber/posture');
+        else if (kind === 'sockets') d = await OmniV6.apiGet('/api/cyber/sockets');
+        else if (kind === 'secrets') d = await OmniV6.apiPost('/api/cyber/secrets', {});
+        else if (kind === 'domain') d = await OmniV6.apiPost('/api/cyber/domain', { domain: document.getElementById('secDomain').value });
+        else if (kind === 'osint') d = await OmniV6.apiPost('/api/cyber/osint_user', { username: document.getElementById('secOsint').value });
+        else if (kind === 'gh') d = await OmniV6.apiPost('/api/cyber/github_scout', { username: document.getElementById('secOsint').value });
+        out.textContent = JSON.stringify(d, null, 2);
+      } catch (e) { out.textContent = '❌ ' + e.message; }
+    }
+
+    async function runCrawl() {
+      const out = document.getElementById('secOut');
+      out.textContent = '🕷️ Sayfa Markdown olarak çekiliyor...';
+      const d = await OmniV6.apiPost('/api/browser/crawl', { url: document.getElementById('crawlUrl').value, use_headless_js: document.getElementById('crawlJs').checked });
+      out.textContent = d.ok ? `# ${d.title}\n(${d.engine})\n\n${d.markdown}` : ('❌ ' + d.error);
+    }
+
+    async function loadHw() {
+      const box = document.getElementById('hwCards');
+      box.innerHTML = '⏳ Donanım sayımı yapılıyor...';
+      const d = await OmniV6.apiGet('/api/hardware/census');
+      const s = d.system || {};
+      box.innerHTML = `
+        <div class="card" style="background:var(--bg-input);padding:8px;"><strong>💻 ${OmniV6.esc(s.hostname)}</strong> — CPU %${s.cpu_percent} (${s.cpu_cores} çekirdek), RAM ${s.ram_used_gb}/${s.ram_total_gb} GB</div>
+        <div class="card" style="background:var(--bg-input);padding:8px;"><strong>🎮 GPU:</strong> ${(d.gpus || []).map(g => OmniV6.esc(g.name || g)).join(', ') || 'Tespit edilmedi'}</div>
+        <div class="card" style="background:var(--bg-input);padding:8px;"><strong>🔌 COM Seri Portlar:</strong> ${(d.serial_ports || []).map(p => OmniV6.esc(p.device + ' (' + p.description + ')')).join(', ') || 'Yok'}</div>
+        <div class="card" style="background:var(--bg-input);padding:8px;"><strong>📱 ADB Cihazlar:</strong> ${(d.adb_devices || []).length} adet • <strong>USB PnP:</strong> ${(d.usb_pnp_devices || []).length} aygıt</div>
+      `;
+    }
+
+    async function sendWol() {
+      const r = await OmniV6.apiPost('/api/hardware/wol', { mac: document.getElementById('wolMac').value });
+      OmniV6.toast(r.ok ? '⚡ Wake-on-LAN sihirli paketi gönderildi!' : '❌ ' + r.error);
+    }
+
+    async function loadMcp() {
+      const d = await OmniV6.apiGet('/api/mcp/catalog');
+      document.getElementById('mcpList').innerHTML = (d.presets || []).map(p => `
+        <div class="card" style="background:var(--bg-input);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <strong>${OmniV6.esc(p.id)}</strong> ${p.runtime_available ? '<span class="pill pill-ok">Hazır</span>' : '<span class="pill pill-warn">' + OmniV6.esc(p.command) + ' yok</span>'}
+            <div style="font-size:11px;color:var(--muted);">${OmniV6.esc(p.description)}</div>
+          </div>
+          <button class="btn btn-sm ${p.installed ? '' : 'btn-primary'}" onclick="installMcp('${OmniV6.esc(p.id)}')">${p.installed ? '✅ Kayıtlı' : '+ Ekle'}</button>
+        </div>
+      `).join('');
+    }
+
+    async function installMcp(id) {
+      const r = await OmniV6.apiPost('/api/mcp/install_preset', { preset_id: id });
+      OmniV6.toast(r.ok ? '✅ MCP sunucusu eklendi.' : '❌ ' + r.error);
+      loadMcp();
+    }
+
+    async function addMailAcc() {
+      const r = await OmniV6.apiPost('/api/comms/add_email', {
+        label: document.getElementById('mailLabel').value,
+        provider: document.getElementById('mailProv').value,
+        email: document.getElementById('mailAddr').value,
+        password: document.getElementById('mailPass').value,
+      });
+      OmniV6.toast(r.ok ? '✅ E-posta profili eklendi.' : '❌ ' + r.error);
+    }
+
+    async function sendMailNow() {
+      const r = await OmniV6.apiPost('/api/comms/send_email', {
+        to: document.getElementById('sendTo').value,
+        subject: document.getElementById('sendSubj').value,
+        body: document.getElementById('sendBody').value,
+      });
+      OmniV6.toast(r.ok ? '✅ E-posta gönderildi!' : '❌ ' + r.error);
+    }
+
+    async function setTgWebhook() {
+      const r = await OmniV6.apiPost('/api/telegram/set_webhook', { url: document.getElementById('cfWebhook').value });
+      OmniV6.toast(r.ok ? '☁️ 7/24 Webhook bağlandı!' : '⚠️ ' + JSON.stringify(r));
+      refreshAllKpis();
+    }
+
+    async function clearTgWebhook() {
+      await OmniV6.apiPost('/api/telegram/clear_webhook', {});
+      OmniV6.toast('🖥️ Yerel polling moduna geçildi.');
+      refreshAllKpis();
+    }
+
+    async function startCall() {
+      const r = await OmniV6.apiPost('/api/telephony/call', { to: document.getElementById('callTo').value });
+      OmniV6.toast(r.ok ? '📞 Arama başlatıldı!' : '⚠️ ' + r.error);
+    }
+
+    async function addCloudAcc() {
+      const prov = document.getElementById('stProv').value;
+      const val = document.getElementById('stToken').value;
+      const body = { name: document.getElementById('stName').value, provider: prov };
+      if (prov === 'gdrive_webhook') body.webhook_url = val; else body.token = val;
+      const r = await OmniV6.apiPost('/api/storage/add', body);
+      OmniV6.toast(r.ok ? '☁️ Bulut hesabı eklendi.' : '❌ ' + r.error);
+      loadCloudAccs();
+    }
+
+    async function loadCloudAccs() {
+      const d = await OmniV6.apiGet('/api/storage/accounts');
+      document.getElementById('cloudAccList').innerHTML = (d.accounts || []).map(a => `
+        <div class="card" style="background:var(--bg-input);padding:8px 10px;display:flex;justify-content:space-between;">
+          <span>☁️ <strong>${OmniV6.esc(a.name)}</strong> (${OmniV6.esc(a.provider)})</span>
+          <span class="pill pill-ok">Bağlı</span>
+        </div>
+      `).join('') || '<div style="color:var(--muted);font-size:12px;">Henüz Google Drive veya Yandex Disk hesabı eklenmedi.</div>';
+    }
+
+    async function syncAllCloud() {
+      const r = await OmniV6.apiPost('/api/storage/sync_all', {});
+      OmniV6.toast(r.ok ? '✅ Tüm hesaplara yedeklendi!' : '⚠️ ' + (r.error || 'Hesap ekleyin'));
+    }
+
+    async function saveFact() {
+      const r = await OmniV6.apiPost('/api/memory/fact', {
+        subject: document.getElementById('memSub').value,
+        predicate: document.getElementById('memPred').value,
+        object_val: document.getElementById('memObj').value,
+      });
+      OmniV6.toast(r.ok ? `🧠 Kaydedildi (${r.action})` : '❌ ' + r.error);
+      loadFacts();
+    }
+
+    async function loadFacts() {
+      const d = await OmniV6.apiGet('/api/memory/query?history=1');
+      document.getElementById('memList').innerHTML = (d.items || []).map(it => `
+        <div class="card" style="background:var(--bg-input);padding:7px 9px;">
+          <span class="pill ${it.status === 'ACTIVE' ? 'pill-ok' : 'pill-warn'}">${it.status}</span>
+          <strong>${OmniV6.esc(it.subject)}</strong> → <code>${OmniV6.esc(it.predicate)}</code> → ${OmniV6.esc(it.object_val)}
+          <div style="font-size:10.5px;color:var(--muted);">${OmniV6.esc(it.valid_from_str)}</div>
+        </div>
+      `).join('') || '<div style="color:var(--muted);">Henüz zamansal olgu eklenmedi.</div>';
+    }
+
+    refreshAllKpis();
+  </script>
+</body>
+</html>

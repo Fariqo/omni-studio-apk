@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚙️ Otonomi & Güvenlik Ayarları — OMNI-NEXUS APEX v6.0</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <div class="container" style="max-width:1040px;display:flex;flex-direction:column;gap:16px;">
+    <div>
+      <h2 style="margin:0;font-size:19px;">⚙️ Otonomi Politikaları, Güvenlik Kalkanı & API Ayarları</h2>
+      <div style="color:var(--muted);font-size:12.5px;">Ajanın hangi klasörlerde tam otonom, hangilerinde onaylı çalışacağını ve yedekleme kurallarını buradan yönetin.</div>
+    </div>
+
+    <div class="grid-2">
+      <!-- OTONOMİ & GÜVENLİK MATRİSİ -->
+      <div class="card">
+        <div class="card-title"><span>🛡️ Otonomi & İzin Politikası</span><button class="btn btn-sm btn-ok" onclick="savePolicy()">💾 Politikayı Kaydet</button></div>
+
+        <div style="margin-bottom:10px;">
+          <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;">📂 Tam Otonom Çalışma Klasörleri (Her satıra 1 yol):</label>
+          <textarea id="polRoots" class="textarea textarea-mono" rows="3"></textarea>
+        </div>
+
+        <div class="switch-row">
+          <div><strong>🟢 Çalışma Klasörlerinde Tam Otonom Yazma</strong><div style="font-size:11.5px;color:var(--muted);">Yukarıdaki klasörlerde ajan dosya oluşturup düzenleyebilir.</div></div>
+          <input id="polWsWrite" type="checkbox" />
+        </div>
+        <div class="switch-row">
+          <div><strong>💻 Çalışma Klasörlerinde Tam Otonom Terminal</strong><div style="font-size:11.5px;color:var(--muted);">PowerShell / Python / Git komutlarını onay sormadan çalıştırır.</div></div>
+          <input id="polWsShell" type="checkbox" />
+        </div>
+        <div class="switch-row">
+          <div><strong>🐙 GitHub İşlemlerinde Tam Otonom</strong><div style="font-size:11.5px;color:var(--muted);">Repo oluşturma, commit/push ve Actions tetikleme (.env daima hariç).</div></div>
+          <input id="polGithub" type="checkbox" />
+        </div>
+        <div class="switch-row">
+          <div><strong>🟡 Diğer Klasörlerde (Masaüstü/İndirilenler vb.) Onay İste</strong><div style="font-size:11.5px;color:var(--muted);">Çalışma alanı dışındaki yazma/düzenlemelerde sizden tek-tık onay alır.</div></div>
+          <input id="polExtWrite" type="checkbox" />
+        </div>
+        <div class="switch-row">
+          <div><strong>📖 Diğer Klasörlerde Salt-Okunur İnceleme</strong><div style="font-size:11.5px;color:var(--muted);">Ajan dış klasörlerdeki dosyaları okuyup analiz edebilir (değiştiremez).</div></div>
+          <input id="polExtRead" type="checkbox" />
+        </div>
+        <div class="switch-row">
+          <div><strong>📧 Dış İletişimde (E-posta / Telegram) Onay İste</strong><div style="font-size:11.5px;color:var(--muted);">Mesaj veya e-posta göndermeden önce önizleme + onay gösterir.</div></div>
+          <input id="polComms" type="checkbox" />
+        </div>
+        <div class="switch-row">
+          <div><strong>💾 Tüm Yazmalarda & Kendi Dosyalarında Zorunlu Yedek (_backup)</strong><div style="font-size:11.5px;color:var(--muted);">Her değişiklik öncesi SHA-256 doğrulamalı kopya alınır.</div></div>
+          <input id="polBackup" type="checkbox" checked />
+        </div>
+        <div class="switch-row">
+          <div><strong style="color:var(--danger);">🔒 Sistem Dosyaları (C:\Windows, Program Files, Registry) Engeli</strong><div style="font-size:11.5px;color:var(--muted);">Asla dokunmaz; yalnızca bilgi ve rehberlik verir.</div></div>
+          <input id="polSysBlock" type="checkbox" checked />
+        </div>
+        <div class="switch-row">
+          <div><strong style="color:var(--danger);">💳 Ödeme, Banka, Kredi Kartı & Satın Alma Engeli</strong><div style="font-size:11.5px;color:var(--muted);">Ödeme ve finansal işlemleri kesinlikle yürütmez; sadece bilgi verir.</div></div>
+          <input id="polPayBlock" type="checkbox" checked />
+        </div>
+      </div>
+
+      <!-- MODEL, API & YEDEK YÖNETİMİ -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div class="card-title"><span>🔑 API Anahtarları & Varsayılan Model</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:12px;color:var(--muted);">Varsayılan Otonom Model</label>
+            <select id="polModel" class="select">
+              <option value="gemini-3.8-flash">✨ gemini-3.8-flash (Önerilen Hızlı & Kesintisiz)</option>
+              <option value="gemini-4-carbon">👑 gemini-4-carbon (Derin Akıl)</option>
+              <option value="gemini-4-argon">⚡ gemini-4-argon (Yazılım & Mühendislik)</option>
+              <option value="gemini-4-hydrogen">🚀 gemini-4-hydrogen (Ajan & Kod)</option>
+              <option value="gemini-3.1-pro-preview">🛠️ gemini-3.1-pro-preview</option>
+            </select>
+            <label style="font-size:12px;color:var(--muted);">Maksimum Otonom Araç Adımı (1–20)</label>
+            <input id="polSteps" type="number" min="1" max="20" value="12" class="input" />
+            <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;" />
+            <label style="font-size:12px;color:var(--muted);">Google AI Studio GEMINI_API_KEY (Güncellemek isterseniz girin)</label>
+            <input id="apiGemini" type="password" class="input" placeholder="Mevcut anahtar .env içinde aktif" />
+            <label style="font-size:12px;color:var(--muted);">GitHub Personal Access Token (repo + workflow)</label>
+            <input id="apiGithub" type="password" class="input" placeholder="ghp_... (Mevcut anahtar .env içinde aktif)" />
+            <button class="btn btn-primary" onclick="saveApiKeys()">🔐 Anahtarları .env'ye Güvenle Kaydet</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>🕒 Son Zorunlu Yedekler (_backup)</span><button class="btn btn-sm" onclick="loadBackups()">🔄</button></div>
+          <div id="bakList" style="max-height:240px;overflow:auto;font-size:12px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/shared.js"></script>
+  <script>
+    OmniV6.mountShell('settings');
+
+    async function loadPolicy() {
+      const d = await OmniV6.apiGet('/api/policy');
+      const p = d.policy || {};
+      document.getElementById('polRoots').value = (p.workspace_roots || []).join('\n');
+      document.getElementById('polWsWrite').checked = !!p.auto_approve_workspace_write;
+      document.getElementById('polWsShell').checked = !!p.auto_approve_workspace_shell;
+      document.getElementById('polGithub').checked = !!p.auto_approve_github;
+      document.getElementById('polExtWrite').checked = !!p.confirm_write_outside_workspace;
+      document.getElementById('polExtRead').checked = !!p.allow_read_outside_workspace;
+      document.getElementById('polComms').checked = !!p.confirm_external_comms;
+      document.getElementById('polBackup').checked = !!p.always_backup_all_writes;
+      document.getElementById('polSysBlock').checked = !!p.hard_block_system_paths;
+      document.getElementById('polPayBlock').checked = !!p.hard_block_payments;
+      document.getElementById('polModel').value = p.default_model || 'gemini-3.8-flash';
+      document.getElementById('polSteps').value = p.max_agent_steps || 12;
+    }
+
+    async function savePolicy() {
+      const res = await OmniV6.apiPost('/api/policy', {
+        workspace_roots: document.getElementById('polRoots').value,
+        auto_approve_workspace_write: document.getElementById('polWsWrite').checked,
+        auto_approve_workspace_shell: document.getElementById('polWsShell').checked,
+        auto_approve_github: document.getElementById('polGithub').checked,
+        confirm_write_outside_workspace: document.getElementById('polExtWrite').checked,
+        allow_read_outside_workspace: document.getElementById('polExtRead').checked,
+        confirm_external_comms: document.getElementById('polComms').checked,
+        always_backup_all_writes: document.getElementById('polBackup').checked,
+        hard_block_system_paths: document.getElementById('polSysBlock').checked,
+        hard_block_payments: document.getElementById('polPayBlock').checked,
+        default_model: document.getElementById('polModel').value,
+        max_agent_steps: parseInt(document.getElementById('polSteps').value, 10) || 12,
+      });
+      OmniV6.toast(res.ok ? '✅ Otonomi & güvenlik politikaları kaydedildi!' : '❌ Kayıt hatası');
+    }
+
+    async function saveApiKeys() {
+      const payload = {};
+      const gk = document.getElementById('apiGemini').value.trim();
+      const gh = document.getElementById('apiGithub').value.trim();
+      if (gk) payload.GEMINI_API_KEY = gk;
+      if (gh) payload.GITHUB_PERSONAL_ACCESS_TOKEN = gh;
+      if (!Object.keys(payload).length) return OmniV6.toast('Değiştirilecek yeni anahtar girilmedi.');
+      await OmniV6.apiPost('/api/save_config', payload);
+      document.getElementById('apiGemini').value = '';
+      document.getElementById('apiGithub').value = '';
+      OmniV6.toast('🔐 API anahtarları .env kasasına kaydedildi!');
+    }
+
+    async function loadBackups() {
+      const d = await OmniV6.apiGet('/api/backups');
+      document.getElementById('bakList').innerHTML = (d.backups || []).map(b => `
+        <div class="switch-row" style="padding:6px 0;">
+          <div>
+            <div style="font-family:var(--font-mono);font-size:11.5px;">${OmniV6.esc(b.original_path)}</div>
+            <div style="font-size:10.5px;color:var(--muted);">${OmniV6.esc(b.timestamp)} • ${b.size_bytes}B</div>
+          </div>
+          <button class="btn btn-sm btn-warn" onclick="restoreBak('${OmniV6.esc(b.id)}')">↩️ Geri Al</button>
+        </div>
+      `).join('') || '<div style="color:var(--muted);">Henüz yedek kaydı yok.</div>';
+    }
+
+    async function restoreBak(id) {
+      if (!confirm('Bu yedekten dosya geri yüklensin mi?')) return;
+      const r = await OmniV6.apiPost('/api/backups/restore', { backup_id: id });
+      OmniV6.toast(r.ok ? '✅ Geri yüklendi!' : '❌ ' + r.error);
+    }
+
+    loadPolicy();
+    loadBackups();
+  </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📂 PC Dosya & Kod Editörü — OMNI-NEXUS APEX v6.0</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <div class="ide-shell">
+    <!-- SOL PANEL: Çok-Klasörlü Dosya Gezgini & Kod Arama -->
+    <aside class="sidebar">
+      <div style="font-weight:800;font-size:13px;color:var(--accent);">📂 PC Dosya Gezgini</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">
+        <button class="btn btn-sm" onclick="browseDir('C:\\OtonomAsistan\\Antigravity_V4_Ultra')">🏠 Ana Uygulama</button>
+        <button class="btn btn-sm" onclick="browseDir('C:\\Users\\dhm16596\\.gemini\\antigravity\\scratch')">🧪 Scratch</button>
+        <button class="btn btn-sm" onclick="browseDir('C:\\Users\\dhm16596\\Desktop')">🖥️ Masaüstü</button>
+        <button class="btn btn-sm" onclick="browseDir('C:\\Users\\dhm16596\\Downloads')">📥 İndirilenler</button>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <input id="dirPathInput" class="input" style="font-size:11.5px;font-family:var(--font-mono);" value="C:\OtonomAsistan\Antigravity_V4_Ultra" onkeydown="if(event.key==='Enter')browseDir(this.value)" />
+        <button class="btn btn-sm btn-primary" onclick="browseDir(document.getElementById('dirPathInput').value)">Git</button>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <input id="grepInput" class="input" style="font-size:11.5px;" placeholder="Klasörde metin/kod ara (grep)..." onkeydown="if(event.key==='Enter')runGrep()" />
+        <button class="btn btn-sm" onclick="runGrep()">🔍</button>
+      </div>
+      <div id="fileList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
+    </aside>
+
+    <!-- SAĞ ALAN: Kod Editörü + Git Barı + Canlı Terminal + Yedekler -->
+    <main style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+      <div class="chat-toolbar">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px;">
+          <input id="activeFilePath" class="input" style="font-family:var(--font-mono);font-size:12px;" placeholder="Soldan bir dosya seçin veya yeni dosya yolu yazın..." />
+          <button class="btn btn-ok btn-sm" onclick="saveCurrentFile()">💾 Yedekle & Kaydet (Ctrl+S)</button>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="checkGitStatus()">🐙 Git Durumu</button>
+          <button class="btn btn-primary btn-sm" onclick="gitCommitPush()">🚀 GitHub Push</button>
+          <button class="btn btn-sm" onclick="toggleBackups()">🕒 Yedekler</button>
+        </div>
+      </div>
+
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:12px;gap:10px;">
+        <textarea id="codeEditor" class="textarea textarea-mono" style="flex:1;resize:none;" placeholder="Dosya içeriği burada açılır..."></textarea>
+
+        <div id="backupDrawer" class="card" style="display:none;max-height:190px;overflow-y:auto;">
+          <div class="card-title"><span>🕒 Zorunlu SHA-256 Yedek Geçmişi (_backup)</span><button class="btn btn-sm" onclick="toggleBackups()">✕</button></div>
+          <div id="backupList" style="font-size:12px;"></div>
+        </div>
+
+        <!-- Entegre Terminal -->
+        <div class="card" style="padding:10px 12px;">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+            <span style="font-weight:700;font-size:12px;color:var(--ok);">💻 Entegre Terminal</span>
+            <select id="shellSelect" class="select" style="width:auto;padding:3px 8px;font-size:11.5px;">
+              <option value="powershell">PowerShell</option>
+              <option value="cmd">CMD</option>
+              <option value="bash">Git Bash</option>
+            </select>
+            <input id="termCmdInput" class="input textarea-mono" style="flex:1;padding:5px 9px;font-size:12px;" placeholder="Komut yaz (ör. py --version, git log -n 5 --oneline, dir)..." onkeydown="if(event.key==='Enter')runTerminal()" />
+            <button class="btn btn-primary btn-sm" onclick="runTerminal()">▶️ Çalıştır</button>
+          </div>
+          <pre id="termOut" style="margin:0;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:var(--font-mono);font-size:11.5px;max-height:165px;overflow:auto;color:#a7f3d0;">Hazır.</pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/shared.js"></script>
+  <script>
+    OmniV6.mountShell('ide');
+    let currentDir = 'C:\\OtonomAsistan\\Antigravity_V4_Ultra';
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveCurrentFile();
+      }
+    });
+
+    async function browseDir(pathStr) {
+      currentDir = pathStr;
+      document.getElementById('dirPathInput').value = pathStr;
+      const box = document.getElementById('fileList');
+      box.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:6px;">⏳ Yükleniyor...</div>';
+      try {
+        const res = await OmniV6.apiPost('/api/agent/tool', { tool: 'fs_list_dir', args: { path: pathStr } });
+        if (!res.ok) {
+          box.innerHTML = `<div style="color:var(--danger);font-size:12px;padding:6px;">${OmniV6.esc(res.error || res.reason)}</div>`;
+          return;
+        }
+        const items = (res.items || []).sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : (a.type === 'dir' ? -1 : 1)));
+        const parent = pathStr.replace(/[\\/]+$/, '').split(/[\\/]/).slice(0, -1).join('\\');
+        let html = parent ? `<div class="file-row" onclick="browseDir('${parent.replace(/\\/g, '\\\\')}')"><span>⬆️ ..</span><span>Üst</span></div>` : '';
+        html += items.map(it => {
+          const escP = it.path.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+          if (it.type === 'dir') {
+            return `<div class="file-row" onclick="browseDir('${escP}')"><span>📁 ${OmniV6.esc(it.name)}</span><span style="color:var(--muted);">DIR</span></div>`;
+          }
+          return `<div class="file-row" onclick="openFile('${escP}')"><span>📄 ${OmniV6.esc(it.name)}</span><span style="color:var(--muted);">${Math.max(1, Math.round(it.size / 1024))}KB</span></div>`;
+        }).join('');
+        box.innerHTML = html || '<div style="color:var(--muted);font-size:12px;padding:6px;">Klasör boş.</div>';
+      } catch (e) {
+        box.innerHTML = `<div style="color:var(--danger);font-size:12px;">${OmniV6.esc(e.message)}</div>`;
+      }
+    }
+
+    async function runGrep() {
+      const q = document.getElementById('grepInput').value.trim();
+      if (!q) return browseDir(currentDir);
+      const box = document.getElementById('fileList');
+      box.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:6px;">🔍 Aranıyor...</div>';
+      const res = await OmniV6.apiPost('/api/agent/tool', { tool: 'fs_search_text', args: { path: currentDir, query: q } });
+      if (!res.ok) return box.innerHTML = `<div style="color:var(--danger);font-size:12px;">${OmniV6.esc(res.error)}</div>`;
+      box.innerHTML = (res.hits || []).map(h => {
+        const escP = h.file.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `<div class="file-row" style="flex-direction:column;" onclick="openFile('${escP}')"><span style="color:var(--accent);">${OmniV6.esc(h.file.split('\\').pop())}:${h.line}</span><span style="color:var(--muted);font-size:11px;">${OmniV6.esc(h.text)}</span></div>`;
+      }).join('') || '<div style="color:var(--muted);font-size:12px;padding:6px;">Sonuç bulunamadı.</div>';
+    }
+
+    async function openFile(pathStr) {
+      document.getElementById('activeFilePath').value = pathStr;
+      const res = await OmniV6.apiPost('/api/agent/tool', { tool: 'fs_read_file', args: { path: pathStr, start_line: 1, end_line: 1500 } });
+      if (!res.ok) return OmniV6.toast('❌ ' + (res.error || res.reason));
+      // Strip line number prefix "12: " for clean editing
+      const raw = (res.content || '').split('\n').map(l => l.replace(/^\d+:\s/, '')).join('\n');
+      document.getElementById('codeEditor').value = raw;
+      OmniV6.toast('📄 Açıldı: ' + pathStr.split('\\').pop());
+    }
+
+    async function saveCurrentFile(forceApproved = false) {
+      const pathStr = document.getElementById('activeFilePath').value.trim();
+      const content = document.getElementById('codeEditor').value;
+      if (!pathStr) return OmniV6.toast('Önce dosya yolu belirtin.');
+      const res = await OmniV6.apiPost('/api/agent/tool', { tool: 'fs_write_file', args: { path: pathStr, content }, approved: forceApproved });
+      if (res.policy_status === 'REQUIRE_APPROVAL') {
+        if (confirm(`⚠️ ONAY GEREKLİ:\n${res.reason}\n\nYedek alarak yazmayı onaylıyor musunuz?`)) {
+          return saveCurrentFile(true);
+        }
+        return;
+      }
+      if (!res.ok) return OmniV6.toast('❌ ' + (res.error || res.reason));
+      OmniV6.toast(res.backup_id ? `✅ Kaydedildi & Yedeklendi (${res.backup_id})` : '✅ Dosya kaydedildi.');
+    }
+
+    async function runTerminal(forceApproved = false) {
+      const cmd = document.getElementById('termCmdInput').value.trim();
+      if (!cmd) return;
+      const out = document.getElementById('termOut');
+      out.textContent = '⏳ Çalıştırılıyor...';
+      const res = await OmniV6.apiPost('/api/agent/tool', {
+        tool: 'shell_exec',
+        args: { command: cmd, cwd: currentDir, shell: document.getElementById('shellSelect').value },
+        approved: forceApproved,
+      });
+      if (res.policy_status === 'REQUIRE_APPROVAL') {
+        if (confirm(`⚠️ TERMİNAL ONAYI:\n${res.reason}\n\nKomut: ${cmd}\nÇalıştırılsın mı?`)) return runTerminal(true);
+        out.textContent = '❌ İptal edildi.';
+        return;
+      }
+      if (!res.ok && res.policy_status === 'BLOCK_INFO_ONLY') {
+        out.textContent = '🛡️ ENGELLENDİ: ' + res.error;
+        return;
+      }
+      out.textContent = `[exit ${res.exitCode}]\n${res.stdout || ''}${res.stderr ? '\n[STDERR]\n' + res.stderr : ''}`;
+    }
+
+    async function checkGitStatus() {
+      const res = await OmniV6.apiPost('/api/agent/tool', { tool: 'github_ops', args: { action: 'git_status', local_dir: currentDir } });
+      document.getElementById('termOut').textContent = JSON.stringify(res, null, 2);
+    }
+
+    async function gitCommitPush() {
+      const msg = prompt('Commit mesajı:', 'chore: OMNI-NEXUS IDE update');
+      if (!msg) return;
+      document.getElementById('termOut').textContent = '🚀 GitHub push yapılıyor...';
+      const res = await OmniV6.apiPost('/api/agent/tool', { tool: 'github_ops', args: { action: 'git_commit_push', local_dir: currentDir, message: msg } });
+      document.getElementById('termOut').textContent = JSON.stringify(res, null, 2);
+      OmniV6.toast(res.ok ? '✅ GitHub push başarılı!' : '⚠️ Push hatası: ' + (res.error || ''));
+    }
+
+    async function toggleBackups() {
+      const d = document.getElementById('backupDrawer');
+      d.style.display = d.style.display === 'none' ? 'block' : 'none';
+      if (d.style.display === 'block') {
+        const res = await OmniV6.apiGet('/api/backups');
+        const list = res.backups || [];
+        document.getElementById('backupList').innerHTML = list.map(b => `
+          <div class="switch-row" style="padding:6px 0;">
+            <div>
+              <strong style="font-family:var(--font-mono);">${OmniV6.esc(b.original_path)}</strong>
+              <div style="font-size:11px;color:var(--muted);">${OmniV6.esc(b.timestamp)} • ${b.size_bytes}B • ${OmniV6.esc(b.id)}</div>
+            </div>
+            <button class="btn btn-sm btn-warn" onclick="restoreBackup('${OmniV6.esc(b.id)}')">↩️ Geri Yükle</button>
+          </div>
+        `).join('') || '<div style="color:var(--muted);">Henüz yedek kaydı yok.</div>';
+      }
+    }
+
+    async function restoreBackup(id) {
+      if (!confirm('Bu yedekten dosya geri yüklensin mi? (Mevcut halin de yedeği alınır)')) return;
+      const res = await OmniV6.apiPost('/api/backups/restore', { backup_id: id });
+      OmniV6.toast(res.ok ? '✅ Geri yüklendi: ' + res.restored_to : '❌ ' + res.error);
+    }
+
+    browseDir(currentDir);
+  </script>
+</body>
+</html>

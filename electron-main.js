@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session, desktopCapturer } = require('electron');
+const { app, BrowserWindow, session, desktopCapturer, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -14,52 +14,68 @@ if (!fs.existsSync(userDataPath)) {
 }
 app.setPath('userData', userDataPath);
 
-let bridgeProc = null;
+const DAEMON_URL = 'http://127.0.0.1:8765';
 let backendProc = null;
 
-function ensureUnifiedServicesRunning() {
-  // 1. Start Multi-Root Bridge (-NoBrowser so Chrome/Edge doesn't pop alongside Electron)
-  const reqBridge = http.get('http://127.0.0.1:8080/api/ping', () => {});
-  reqBridge.on('error', () => {
-    const candidates = [
-      path.join(__dirname, '..', 'omni-bridge.ps1'),
-      path.join(__dirname, 'omni-bridge.ps1'),
-      path.join(process.cwd(), 'omni-bridge.ps1'),
-      path.join(process.resourcesPath || '', 'omni-bridge.ps1'),
-      path.join(process.resourcesPath || '', 'app', 'omni-bridge.ps1')
-    ];
-    const script = candidates.find(p => { try { return fs.existsSync(p); } catch (_) { return false; } });
-    if (script && process.platform === 'win32') {
-      try {
-        bridgeProc = spawn('powershell.exe', [
-          '-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', script, '-NoBrowser'
-        ], { detached: false, stdio: 'ignore' });
-      } catch (_) {}
-    }
-  });
-
-  // 2. Start Unified Python Super-Backend (localhost:8765) if installed on Windows
-  const reqPy = http.get('http://127.0.0.1:8765/manifest.json', () => {});
-  reqPy.on('error', () => {
-    const daemonScript = 'C:\\OtonomAsistan\\Antigravity_V4_Ultra\\daemon_supervisor.py';
-    if (process.platform === 'win32' && fs.existsSync(daemonScript)) {
-      try {
-        backendProc = spawn('py', [daemonScript], {
-          cwd: path.dirname(daemonScript),
-          detached: true,
-          stdio: 'ignore'
-        });
-        backendProc.unref();
-      } catch (_) {}
-    }
+function pingDaemon(timeoutMs = 700) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (ok) => { if (!settled) { settled = true; resolve(ok); } };
+    const req = http.get(`${DAEMON_URL}/api/ping`, { timeout: timeoutMs }, (res) => {
+      res.resume();
+      done(res.statusCode === 200);
+    });
+    req.on('error', () => done(false));
+    req.on('timeout', () => { req.destroy(); done(false); });
   });
 }
 
-function createWindow() {
-  ensureUnifiedServicesRunning();
+function findDaemonScript() {
+  const candidates = [
+    'C:\\OtonomAsistan\\Antigravity_V4_Ultra\\daemon_supervisor.py',
+    path.join(__dirname, '..', 'daemon_supervisor.py'),
+    path.join(process.cwd(), 'daemon_supervisor.py'),
+  ];
+  return candidates.find((p) => { try { return fs.existsSync(p); } catch (_) { return false; } }) || null;
+}
 
+async function ensureDaemonRunning() {
+  if (await pingDaemon(600)) return true;
+  const daemonScript = findDaemonScript();
+  if (!daemonScript) return false;
+
+  try {
+    const pyCmd = process.platform === 'win32' ? 'py' : 'python3';
+    backendProc = spawn(pyCmd, [daemonScript, '--replace'], {
+      cwd: path.dirname(daemonScript),
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    backendProc.unref();
+  } catch (_) {
+    return false;
+  }
+
+  for (let i = 0; i < 18; i++) {
+    await new Promise((r) => setTimeout(r, 350));
+    if (await pingDaemon(600)) return true;
+  }
+  return false;
+}
+
+const SPLASH_HTML = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><style>
+body{margin:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+background:#060911;color:#e5edf7;font-family:Segoe UI,system-ui,sans-serif;gap:14px}
+.dot{width:14px;height:14px;border-radius:50%;background:#38bdf8;box-shadow:0 0 22px #38bdf8;animation:p 1.2s infinite}
+@keyframes p{0%,100%{opacity:.4;transform:scale(.9)}50%{opacity:1;transform:scale(1.25)}}
+h2{margin:0;font-size:18px;letter-spacing:.4px}p{margin:0;font-size:13px;color:#94a3b8}
+</style></head><body><div class="dot"></div><h2>OMNI-NEXUS APEX OS v6.0</h2>
+<p>Tek-portlu yerel otonom sunucu (:8765) başlatılıyor...</p></body></html>`;
+
+async function createWindow() {
   const customSession = session.fromPartition('persist:omni_apex_session');
-  [session.defaultSession, customSession].forEach(s => {
+  [session.defaultSession, customSession].forEach((s) => {
     if (!s) return;
     s.setDisplayMediaRequestHandler((request, callback) => {
       desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
@@ -72,29 +88,41 @@ function createWindow() {
   });
 
   const win = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    width: 1440,
+    height: 920,
+    minWidth: 960,
+    minHeight: 640,
     backgroundColor: '#060911',
     autoHideMenuBar: true,
-    title: 'OMNI-NEXUS APEX OS v5.0 — Birleşik AI, Telefon, Drive/Yandex & RBP Stüdyosu',
+    title: 'OMNI-NEXUS APEX OS v6.0 — Otonom Ajan, PC IDE, Otomasyon & Siber/Bulut Kokpiti',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      partition: 'persist:omni_apex_session'
-    }
+      partition: 'persist:omni_apex_session',
+    },
   });
 
-  // Prefer live Unified Localhost Server if ready (auto loopback auth), fallback to dist/index.html
-  http.get('http://127.0.0.1:8765/manifest.json', (res) => {
-    if (res.statusCode === 200) win.loadURL('http://127.0.0.1:8765/');
-    else win.loadFile(path.join(__dirname, 'dist', 'index.html'));
-  }).on('error', () => {
-    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  // External http(s) links outside localhost open cleanly in default OS browser
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://127.0.0.1:8765') || url.startsWith('http://localhost:8765')) {
+      return { action: 'allow' };
+    }
+    shell.openExternal(url).catch(() => {});
+    return { action: 'deny' };
   });
+
+  // Show instant splash while booting local Python v6 daemon
+  win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(SPLASH_HTML)}`);
+
+  const liveReady = await ensureDaemonRunning();
+  if (liveReady) {
+    win.loadURL(`${DAEMON_URL}/`);
+  } else {
+    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  }
 }
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
-  if (bridgeProc) { try { bridgeProc.kill(); } catch (_) {} }
   if (process.platform !== 'darwin') app.quit();
 });

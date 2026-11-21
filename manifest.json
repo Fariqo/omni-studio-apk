@@ -1,9 +1,9 @@
 {
-  "name": "OMNI-APEX: AI Studio & Antigravity OS",
-  "short_name": "OMNI-APEX",
+  "name": "OMNI-NEXUS APEX OS v6.0",
+  "short_name": "OMNI-APEX v6",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#060911",
   "theme_color": "#060911",
-  "description": "Otonom Çoklu-Ajan AI Stüdyosu, Canlı Emülatör ve Bulut APK Fabrikası"
+  "description": "5 Uzman Arayüzlü Otonom AI Ajan Merkezi, PC IDE, Otomasyon, Siber RBP ve Çoklu-Bulut Kokpiti"
 }
